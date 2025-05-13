@@ -6,11 +6,10 @@ import { LanguageSwitcherComponent } from '../language-switcher/language-switche
 import { Notification } from '../../interfaces/notification';
 
 @Component({
-  selector: 'app-navbar',
-  templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.css'],
-  standalone: true,
-  imports: [CommonModule, RouterModule, LanguageSwitcherComponent]
+    selector: 'app-navbar',
+    templateUrl: './navbar.component.html',
+    styleUrls: ['./navbar.component.css'],
+    imports: [CommonModule, RouterModule, LanguageSwitcherComponent]
 })
 export class NavbarComponent {
   showNotifications = false;

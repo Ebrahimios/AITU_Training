@@ -20,20 +20,19 @@ interface Student {
 }
 
 @Component({
-  selector: 'app-edit-student-modal',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatSelectModule
-  ],
-  template: `
+    selector: 'app-edit-student-modal',
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatIconModule,
+        MatSelectModule
+    ],
+    template: `
     <div class="modal-overlay" (click)="dialogRef.close()">
       <div class="student-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
@@ -113,7 +112,7 @@ interface Student {
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .modal-overlay {
       position: fixed;
       top: 0;

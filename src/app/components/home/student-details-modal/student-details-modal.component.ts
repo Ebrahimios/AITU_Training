@@ -43,19 +43,18 @@ interface NewBand {
 }
 
 @Component({
-  selector: 'app-student-details-modal',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule
-  ],
-  templateUrl: './student-details-modal.component.html',
-  styleUrls: ['./student-details-modal.component.css']
+    selector: 'app-student-details-modal',
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatIconModule,
+        MatProgressBarModule
+    ],
+    templateUrl: './student-details-modal.component.html',
+    styleUrls: ['./student-details-modal.component.css']
 })
 export class StudentDetailsModalComponent {
   student: Student;

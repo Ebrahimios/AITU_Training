@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { TranslationService } from '../../services/translation.service';
 
 @Component({
-  selector: 'app-language-switcher',
-  template: `
+    selector: 'app-language-switcher',
+    template: `
     <div class="lang-switcher">
       <button 
         class="lang-btn" 
@@ -20,7 +20,7 @@ import { TranslationService } from '../../services/translation.service';
       </button>
     </div>
   `,
-  styles: [`
+    styles: [`
     .lang-switcher {
       display: flex;
       gap: 0.5rem;
@@ -51,8 +51,7 @@ import { TranslationService } from '../../services/translation.service';
       color: white;
     }
   `],
-  standalone: true,
-  imports: [CommonModule]
+    imports: [CommonModule]
 })
 export class LanguageSwitcherComponent {
   constructor(public translationService: TranslationService) {}

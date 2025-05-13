@@ -31,11 +31,10 @@ interface Factory {
 }
 
 @Component({
-  selector: 'app-student-distribution',
-  standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, DragDropModule, NavbarComponent, RouterModule],
-  templateUrl: './student-distribution.component.html',
-  styleUrls: ['./student-distribution.component.css']
+    selector: 'app-student-distribution',
+    imports: [CommonModule, FormsModule, MatDialogModule, DragDropModule, RouterModule],
+    templateUrl: './student-distribution.component.html',
+    styleUrls: ['./student-distribution.component.css']
 })
 export class StudentDistributionComponent implements OnInit {
   @ViewChildren(CdkDropList) dropLists!: QueryList<CdkDropList>;

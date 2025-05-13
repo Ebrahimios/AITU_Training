@@ -2,14 +2,13 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../services/firebase.service';
 
 @Component({
-  selector: 'app-sign-up',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  templateUrl: './sign-up.component.html',
-  styleUrls: ['./sign-up.component.css']
+    selector: 'app-sign-up',
+    imports: [CommonModule, FormsModule, ReactiveFormsModule],
+    templateUrl: './sign-up.component.html',
+    styleUrls: ['./sign-up.component.css']
 })
 export class SignUpComponent {
   signupForm: FormGroup;

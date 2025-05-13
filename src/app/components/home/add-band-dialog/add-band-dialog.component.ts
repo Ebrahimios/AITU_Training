@@ -20,20 +20,19 @@ interface Student {
 }
 
 @Component({
-  selector: 'app-add-band-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatButtonModule,
-    MatInputModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatProgressBarModule
-  ],
-  template: `
+    selector: 'app-add-band-dialog',
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatInputModule,
+        MatFormFieldModule,
+        MatIconModule,
+        MatProgressBarModule
+    ],
+    template: `
     <div class="modal-overlay" (click)="onCancel()">
       <div class="band-dialog" (click)="$event.stopPropagation()">
         <div class="modal-header">
@@ -81,7 +80,7 @@ interface Student {
       </div>
     </div>
   `,
-  styles: [`
+    styles: [`
     .modal-overlay {
       position: fixed;
       top: 0;

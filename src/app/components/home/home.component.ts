@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../services/firebase.service';
 import { EditStudentModalComponent } from './edit-student-modal/edit-student-modal.component';
 import { StudentDetailsModalComponent } from './student-details-modal/student-details-modal.component';
 import { AddBandDialogComponent } from './add-band-dialog/add-band-dialog.component';
@@ -25,18 +25,17 @@ interface Student {
 export type TranslationKeys = 'dashboard' | 'students_distribution' | 'analytics' | 'settings' | 'student' | 'filters' | 'sort' | 'export' | 'add_student' | 'total_students' | 'departments' | 'active' | 'growth' | 'sort_by' | 'department' | 'factory' | 'batch' | 'stage' | 'year' | 'month' | 'department_distribution' | 'showing' | 'to' | 'of' | 'entries' | 'per_page_5' | 'per_page_10' | 'per_page_20' | 'reset';
 
 @Component({
-  selector: 'app-home',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatIconModule,
-    RouterModule,
-    NavbarComponent
-  ],
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+    selector: 'app-home',
+    imports: [
+        CommonModule,
+        FormsModule,
+        MatDialogModule,
+        MatIconModule,
+        RouterModule,
+        NavbarComponent
+    ],
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
   Math = Math;
