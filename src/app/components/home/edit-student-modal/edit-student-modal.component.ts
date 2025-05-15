@@ -1,354 +1,245 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
+import { FormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 interface Student {
   id: number;
   student: string;
   department: string;
   factory: string;
-  batch: string;
+  group: string;
   stage: string;
   date: string;
   selected: boolean;
 }
 
 @Component({
-    selector: 'app-edit-student-modal',
-    imports: [
-        CommonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatInputModule,
-        MatFormFieldModule,
-        MatIconModule,
-        MatSelectModule
-    ],
-    template: `
-    <div class="modal-overlay" (click)="dialogRef.close()">
-      <div class="student-modal" (click)="$event.stopPropagation()">
+  selector: 'app-edit-student-modal',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="modal-overlay">
+      <div class="modal-content">
         <div class="modal-header">
-          <h2>{{ isEdit ? 'Edit' : 'Add' }} Student</h2>
-          <button mat-icon-button (click)="dialogRef.close()">
-            <mat-icon>close</mat-icon>
+          <h5 class="modal-title">{{ isEdit ? 'Edit' : 'Add' }} Student</h5>
+          <button type="button" class="btn-close" (click)="dialogRef.close()">
+            <i class="bi bi-x-lg"></i>
           </button>
         </div>
-
-        <div class="modal-content">
-          <form [formGroup]="studentForm" class="student-form">
-            <div class="form-section">
-              <h3>Student Information</h3>
-              <div class="form-grid">
-                <div class="form-item">
-                  <label>Student Name</label>
-                  <div class="input-with-icon">
-                    <mat-icon class="field-icon">person</mat-icon>
-                    <input matInput formControlName="student" placeholder="Enter student name">
-                  </div>
-                </div>
-
-                <div class="form-item">
-                  <label>Stage</label>
-                  <div class="input-with-icon">
-                    <mat-icon class="field-icon">school</mat-icon>
-                    <mat-select formControlName="stage" (selectionChange)="onStageChange($event.value)">
-                      <mat-option *ngFor="let stage of stages" [value]="stage">{{stage}}</mat-option>
-                    </mat-select>
-                  </div>
-                </div>
-
-                <div class="form-item">
-                  <label>Batch</label>
-                  <div class="input-with-icon">
-                    <mat-icon class="field-icon">groups</mat-icon>
-                    <mat-select formControlName="batch" [disabled]="!studentForm.get('stage')?.value">
-                      <mat-option *ngFor="let batch of filteredBatches" [value]="batch">{{batch}}</mat-option>
-                    </mat-select>
-                  </div>
-                </div>
-
-                <div class="form-item">
-                  <label>Department</label>
-                  <div class="input-with-icon">
-                    <mat-icon class="field-icon">business</mat-icon>
-                    <mat-select formControlName="department">
-                      <mat-option *ngFor="let dept of departments" [value]="dept">{{dept}}</mat-option>
-                    </mat-select>
-                  </div>
-                </div>
-
-                <div class="form-item">
-                  <label>Factory</label>
-                  <div class="input-with-icon">
-                    <mat-icon class="field-icon">factory</mat-icon>
-                    <mat-select formControlName="factory">
-                      <mat-option *ngFor="let factory of factories" [value]="factory">{{factory}}</mat-option>
-                    </mat-select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button mat-button (click)="dialogRef.close()">
-                <mat-icon>close</mat-icon>
-                Cancel
-              </button>
-              <button mat-raised-button color="primary" (click)="save()" [disabled]="studentForm.invalid">
-                <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon>
-                {{ isEdit ? 'Save Changes' : 'Add Student' }}
-              </button>
-            </div>
-          </form>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="studentName" class="form-label">Student Name</label>
+            <input type="text" class="form-control" id="studentName" [(ngModel)]="editedStudent.student" placeholder="Enter student name">
+          </div>
+          <div class="mb-3">
+            <label for="department" class="form-label">Department</label>
+            <select class="form-select" id="department" [(ngModel)]="editedStudent.department">
+              <option value="" disabled>Select department</option>
+              <option *ngFor="let dept of departments" [value]="dept">{{dept}}</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="factory" class="form-label">Factory</label>
+            <select class="form-select" id="factory" [(ngModel)]="editedStudent.factory">
+              <option value="" disabled>Select factory</option>
+              <option *ngFor="let factory of factories" [value]="factory">{{factory}}</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="group" class="form-label">Group</label>
+            <select class="form-select" id="group" [(ngModel)]="editedStudent.group">
+              <option value="" disabled>Select group</option>
+              <option *ngFor="let group of groups" [value]="group">{{group}}</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="stage" class="form-label">Stage</label>
+            <select class="form-select" id="stage" [(ngModel)]="editedStudent.stage">
+              <option value="" disabled>Select stage</option>
+              <option *ngFor="let stage of stages" [value]="stage">{{stage}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="dialogRef.close()">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="save()">{{ isEdit ? 'Save Changes' : 'Add Student' }}</button>
         </div>
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 999;
+      background-color: rgba(0, 0, 0, 0.5);
       display: flex;
+      align-items: center;
       justify-content: center;
-      align-items: center;
-    }
-
-    .student-modal {
-      background: #ffffff;
-      padding: 24px;
-      max-width: 600px;
-      width: 95%;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-      z-index: 1000;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #edf2f7;
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      color: #1a202c;
-      font-size: 1.75rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .modal-header button {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px;
-      background: #f7fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      color: #4a5568;
-      transition: all 0.2s ease;
-    }
-
-    .modal-header button:hover {
-      background: #edf2f7;
-      transform: translateY(-1px);
+      z-index: 1050;
     }
 
     .modal-content {
-      max-height: 82vh;
-      overflow-y: auto;
-    }
-
-    .form-section {
-      background: #f7fafc;
-      border-radius: 12px;
+      background: white;
       padding: 24px;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
-      margin-bottom: 24px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      margin: 20px;
+      position: relative;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+                  0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      animation: modalFadeIn 0.3s ease-out;
     }
 
-    h3 {
-      color: #1a202c;
-      margin: 0 0 16px;
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
       font-size: 1.25rem;
       font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .form-grid {
-      display: grid;
-      gap: 24px;
-    }
-
-    .form-item {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .form-item label {
       color: #2d3748;
-      font-size: 0.9rem;
-      font-weight: 600;
+      margin: 0;
     }
 
-    .input-with-icon {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .field-icon {
-      position: absolute;
-      left: 12px;
+    .btn-close {
+      background: none;
+      border: none;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
       color: #718096;
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      line-height: 20px;
-      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
     }
 
-    .input-with-icon input,
-    .input-with-icon mat-select {
+    .btn-close:hover {
+      background-color: #f7fafc;
+      color: #4a5568;
+    }
+
+    .btn-close i {
+      font-size: 1.25rem;
+    }
+
+    .form-label {
+      font-weight: 500;
+      color: #4a5568;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .form-control, .form-select {
       width: 100%;
-      padding: 12px 12px 12px 40px;
+      padding: 0.625rem;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
       color: #2d3748;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
 
-    .input-with-icon input:focus,
-    .input-with-icon mat-select:focus {
-      border-color: #3182ce;
-      box-shadow: 0 0 0 4px rgba(49, 130, 206, 0.1);
+    .form-control::placeholder {
+      color: #a0aec0;
+    }
+
+    .form-control:focus, .form-select:focus {
       outline: none;
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
     }
 
-    .form-actions {
+    .modal-footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 1rem;
+      margin-top: 1rem;
       display: flex;
       justify-content: flex-end;
-      gap: 16px;
-      margin-top: 24px;
+      gap: 0.75rem;
     }
 
-    .form-actions button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: all 0.2s ease;
+    .btn {
+      padding: 0.625rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    .form-actions button mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      line-height: 18px;
+    .btn-secondary {
+      background-color: #edf2f7;
+      border: 1px solid #e2e8f0;
+      color: #4a5568;
     }
 
-    .form-actions button:hover:not(:disabled) {
-      transform: translateY(-1px);
+    .btn-secondary:hover {
+      background-color: #e2e8f0;
     }
 
-    .form-actions button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    .btn-primary {
+      background-color: #4299e1;
+      border: 1px solid #3182ce;
+      color: white;
     }
 
-    @media (max-width: 600px) {
-      .student-modal {
-        width: 90%;
-        padding: 16px;
-      }
+    .btn-primary:hover {
+      background-color: #3182ce;
+    }
 
-      .modal-header h2 {
-        font-size: 1.5rem;
-      }
-
-      .form-section {
-        padding: 16px;
-      }
+    .mb-3 {
+      margin-bottom: 1rem;
     }
   `]
 })
 export class EditStudentModalComponent {
-  studentForm!: FormGroup;
-  departments = ['IT', 'Mechanics', 'Electrical'];
+  editedStudent: Student;
+  departments = ['Engineering', 'Science', 'Arts'];
   factories = ['Factory A', 'Factory B', 'Factory C'];
-  allBatches: string[] = ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
-  batches: string[] = this.allBatches;
-  stages: string[] = ['School', 'Institute', 'Faculty'];
+  groups = ['Group 1', 'Group 2', 'Group 3'];
+  stages = ['Stage 1', 'Stage 2', 'Stage 3'];
   isEdit: boolean;
 
   constructor(
     public dialogRef: MatDialogRef<EditStudentModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { student?: Student, isEdit: boolean },
-    private fb: FormBuilder
+    @Inject(MAT_DIALOG_DATA) public data: { student?: Student, isEdit: boolean }
   ) {
     this.isEdit = data.isEdit;
-    this.initializeForm();
-
-    if (data.student) {
-      this.studentForm.patchValue(data.student);
-    }
-  }
-
-  initializeForm() {
-    this.studentForm = this.fb.group({
-      student: ['', [Validators.required, Validators.minLength(3)]],
-      stage: ['', Validators.required],
-      batch: ['', Validators.required],
-      department: ['', Validators.required],
-      factory: ['', Validators.required]
-    });
-  }
-
-  get filteredBatches(): string[] {
-    const stage = this.studentForm.get('stage')?.value;
-    switch (stage) {
-      case 'School': return ['Batch 1', 'Batch 2', 'Batch 3'];
-      case 'Institute': return ['Batch 1', 'Batch 2'];
-      case 'Faculty': return ['Batch 3', 'Batch 4'];
-      default: return this.allBatches;
-    }
-  }
-
-  onStageChange(stage: string) {
-    this.studentForm.patchValue({ batch: '' });
+    this.editedStudent = data.student ? { ...data.student } : {
+      id: 0,
+      student: '',
+      department: this.departments[0],
+      factory: this.factories[0],
+      group: this.groups[0],
+      stage: this.stages[0],
+      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      selected: false
+    };
   }
 
   save() {
-    if (this.studentForm.valid) {
-      const studentData = this.studentForm.value;
-      if (this.isEdit && this.data.student) {
-        studentData.id = this.data.student.id;
-      }
-      this.dialogRef.close(studentData);
-    }
+    this.dialogRef.close(this.editedStudent);
   }
 }

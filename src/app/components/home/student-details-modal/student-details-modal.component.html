@@ -1,162 +1,211 @@
-<div class="modal-overlay" (click)="close()">
-  <div class="student-details-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2>Student Details</h2>
-      <button mat-icon-button (click)="close()">
-        </button>
-    </div>
-
+<!-- Bootstrap Modal -->
+<div class="modal fade show" id="studentDetailsModal" tabindex="-1" role="dialog" aria-labelledby="studentDetailsModalLabel" aria-hidden="true" style="display: block;">
+  <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
-      <div class="student-info">
-        <div class="info-section">
-          <h3>Basic Information</h3>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="label">Name:</span>
-              <span class="value">{{ student.student }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Department:</span>
-              <span class="value">{{ student.department }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Factory:</span>
-              <span class="value">{{ student.factory }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Batch:</span>
-              <span class="value">{{ student.batch }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Stage:</span>
-              <span class="value">{{ student.stage }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Start Date:</span>
-              <span class="value">{{ student.date | date }}</span>
+      <div class="modal-header">
+        <h5 class="modal-title" id="studentDetailsModalLabel">Student Details</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="close()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="student-info">
+          <div class="info-section">
+            <h3>Basic Information</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">Name:</span>
+                <span class="value">{{ student.student }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Department:</span>
+                <span class="value">{{ student.department }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Factory:</span>
+                <span class="value">{{ student.factory }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Batch:</span>
+                <span class="value">{{ student.batch }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Stage:</span>
+                <span class="value">{{ student.stage }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Start Date:</span>
+                <span class="value">{{ student.date | date }}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="progress-section" *ngIf="!isLoading && student.progress !== undefined">
-          <h3>Progress & Performance</h3>
-          <div class="progress-grid">
-            <div class="progress-item">
-              <span class="label">Overall Progress</span>
-              <mat-progress-bar [value]="student.progress"
-                              [color]="getProgressColor(student.progress)">
-              </mat-progress-bar>
-              <span class="progress-value">{{ student.progress }}%</span>
-              <span class="status">{{ getPerformanceStatus(student.progress) }}</span>
+          <div class="progress-section" *ngIf="!isLoading && student.progress !== undefined">
+            <h3>Progress & Performance</h3>
+            <div class="progress-grid">
+              <div class="progress-item">
+                <span class="label">Overall Progress</span>
+                <div class="progress">
+                  <div class="progress-bar" 
+                       [ngClass]="{
+                         'bg-success': student.progress! >= 80,
+                         'bg-warning': student.progress! >= 60 && student.progress! < 80,
+                         'bg-danger': student.progress! < 60
+                       }"
+                       role="progressbar" 
+                       [style.width.%]="student.progress!" 
+                       [attr.aria-valuenow]="student.progress" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                    {{ student.progress }}%
+                  </div>
+                </div>
+                <span class="status">{{ getPerformanceStatus(student.progress) }}</span>
+              </div>
+              <div class="progress-item">
+                <span class="label">Attendance</span>
+                <div class="progress">
+                  <div class="progress-bar" 
+                       [ngClass]="{
+                         'bg-success': student.attendance! >= 80,
+                         'bg-warning': student.attendance! >= 60 && student.attendance! < 80,
+                         'bg-danger': student.attendance! < 60
+                       }"
+                       role="progressbar" 
+                       [style.width.%]="student.attendance!" 
+                       [attr.aria-valuenow]="student.attendance" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                    {{ student.attendance }}%
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="progress-item">
-              <span class="label">Attendance</span>
-              <mat-progress-bar [value]="student.attendance"
-                              [color]="getProgressColor(student.attendance)">
-              </mat-progress-bar>
-              <span class="progress-value">{{ student.attendance }}%</span>
+            <div class="performance-grid" *ngIf="student.performance">
+              <div class="performance-item">
+                <span class="label">Technical Skills</span>
+                <div class="progress">
+                  <div class="progress-bar" 
+                       [ngClass]="{
+                         'bg-success': student.performance.technical >= 80,
+                         'bg-warning': student.performance.technical >= 60 && student.performance.technical < 80,
+                         'bg-danger': student.performance.technical < 60
+                       }"
+                       role="progressbar" 
+                       [style.width.%]="student.performance.technical" 
+                       [attr.aria-valuenow]="student.performance.technical" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                    {{ student.performance.technical }}%
+                  </div>
+                </div>
+              </div>
+              <div class="performance-item">
+                <span class="label">Communication</span>
+                <div class="progress">
+                  <div class="progress-bar" 
+                       [ngClass]="{
+                         'bg-success': student.performance.communication >= 80,
+                         'bg-warning': student.performance.communication >= 60 && student.performance.communication < 80,
+                         'bg-danger': student.performance.communication < 60
+                       }"
+                       role="progressbar" 
+                       [style.width.%]="student.performance.communication" 
+                       [attr.aria-valuenow]="student.performance.communication" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                    {{ student.performance.communication }}%
+                  </div>
+                </div>
+              </div>
+              <div class="performance-item">
+                <span class="label">Teamwork</span>
+                <div class="progress">
+                  <div class="progress-bar" 
+                       [ngClass]="{
+                         'bg-success': student.performance.teamwork >= 80,
+                         'bg-warning': student.performance.teamwork >= 60 && student.performance.teamwork < 80,
+                         'bg-danger': student.performance.teamwork < 60
+                       }"
+                       role="progressbar" 
+                       [style.width.%]="student.performance.teamwork" 
+                       [attr.aria-valuenow]="student.performance.teamwork" 
+                       aria-valuemin="0" 
+                       aria-valuemax="100">
+                    {{ student.performance.teamwork }}%
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="performance-grid" *ngIf="student.performance">
-            <div class="performance-item">
-              <span class="label">Technical Skills</span>
-              <mat-progress-bar [value]="student.performance.technical"
-                              [color]="getProgressColor(student.performance.technical)">
-              </mat-progress-bar>
-              <span class="progress-value">{{ student.performance.technical }}%</span>
-            </div>
-            <div class="performance-item">
-              <span class="label">Communication</span>
-              <mat-progress-bar [value]="student.performance.communication"
-                              [color]="getProgressColor(student.performance.communication)">
-              </mat-progress-bar>
-              <span class="progress-value">{{ student.performance.communication }}%</span>
-            </div>
-            <div class="performance-item">
-              <span class="label">Teamwork</span>
-              <mat-progress-bar [value]="student.performance.teamwork"
-                              [color]="getProgressColor(student.performance.teamwork)">
-              </mat-progress-bar>
-              <span class="progress-value">{{ student.performance.teamwork }}%</span>
+
+          <div class="reports-section">
+            <h3>Reports</h3>
+            <div class="report-buttons">
+              <button class="btn btn-primary me-2" (click)="openReport('progress')" [disabled]="isLoading">
+                <i class="bi bi-file-earmark-text"></i> Progress Report
+              </button>
+              <button class="btn btn-info" (click)="openReport('final')" [disabled]="isLoading">
+                <i class="bi bi-file-earmark-pdf"></i> Final Report
+              </button>
             </div>
           </div>
-        </div>
 
-        <div class="reports-section">
-          <h3>Reports</h3>
-          <div class="report-buttons">
-            <button mat-raised-button color="primary" (click)="openReport('progress')" [disabled]="isLoading">
-              <i class="bi bi-file-earmark-text"></i>
+          <div class="evaluation-section" *ngIf="isSupervisor">
+            <h3>Capacity Evaluation</h3>
+            <form [formGroup]="evaluationForm" class="evaluation-form">
+              <div class="row mb-3">
+                <div class="col-md-4 mb-3">
+                  <label for="technicalSkills" class="form-label">Technical Skills</label>
+                  <input type="number" class="form-control" id="technicalSkills" formControlName="technicalSkills" min="0" max="10">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="communication" class="form-label">Communication</label>
+                  <input type="number" class="form-control" id="communication" formControlName="communication" min="0" max="10">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="teamwork" class="form-label">Teamwork</label>
+                  <input type="number" class="form-control" id="teamwork" formControlName="teamwork" min="0" max="10">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="problemSolving" class="form-label">Problem Solving</label>
+                  <input type="number" class="form-control" id="problemSolving" formControlName="problemSolving" min="0" max="10">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="attendance" class="form-label">Attendance</label>
+                  <input type="number" class="form-control" id="attendance" formControlName="attendance" min="0" max="10">
+                </div>
+              </div>
 
-            </button>
-            <button mat-raised-button color="accent" (click)="openReport('final')" [disabled]="isLoading">
-              <i class="bi bi-file-earmark-text"></i>
-              Final Report
-            </button>
-          </div>
-        </div>
-
-        <div class="evaluation-section" *ngIf="isSupervisor">
-          <h3>Capacity Evaluation</h3>
-          <form [formGroup]="evaluationForm" class="evaluation-form">
-            <div class="evaluation-grid">
-              <div class="evaluation-item">
-                <label>Technical Skills</label>
-                <input type="number" formControlName="technicalSkills" min="0" max="10">
-              </div>
-              <div class="evaluation-item">
-                <label>Communication</label>
-                <input type="number" formControlName="communication" min="0" max="10">
-              </div>
-              <div class="evaluation-item">
-                <label>Teamwork</label>
-                <input type="number" formControlName="teamwork" min="0" max="10">
-              </div>
-              <div class="evaluation-item">
-                <label>Problem Solving</label>
-                <input type="number" formControlName="problemSolving" min="0" max="10">
-              </div>
-              <div class="evaluation-item">
-                <label>Attendance</label>
-                <input type="number" formControlName="attendance" min="0" max="10">
-              </div>
-              <div class="add-band">
-                <button mat-raised-button color="accent" (click)="addNewBand()">
-                  <mat-icon>add</mat-icon>
-                  Add New Band
+              <div class="mb-3">
+                <button class="btn btn-primary" (click)="calculateOverallRating()">
+                  <i class="bi bi-calculator"></i> Calculate Overall Rating
                 </button>
               </div>
-            </div>
 
-            <div class="calculate-rating">
-              <button mat-raised-button color="primary" (click)="calculateOverallRating()">
-                <mat-icon>calculate</mat-icon>
-                Calculate Overall Rating
-              </button>
-            </div>
-
-            <div class="overall-rating">
-              <label>Overall Rating</label>
-              <div class="rating-value">
-                {{ evaluationForm.get('overallRating')?.value || 0 }}/10
+              <div class="mb-3">
+                <label class="form-label">Overall Rating</label>
+                <div class="h4">
+                  {{ evaluationForm.get('overallRating')?.value || 0 }}/10
+                </div>
               </div>
-            </div>
 
-            <div class="comments-section">
-              <label>Comments</label>
-              <textarea formControlName="comments" rows="4" placeholder="Enter your evaluation comments..."></textarea>
-            </div>
+              <div class="mb-3">
+                <label for="comments" class="form-label">Comments</label>
+                <textarea class="form-control" id="comments" formControlName="comments" rows="4" placeholder="Enter your evaluation comments..."></textarea>
+              </div>
 
-            <div class="form-actions">
-              <button mat-raised-button color="primary"
-                      (click)="submitEvaluation()"
-                      [disabled]="evaluationForm.invalid || isLoading">
-                Submit Evaluation
-              </button>
-            </div>
-          </form>
+              <div class="form-actions">
+                <button class="btn btn-success" (click)="submitEvaluation()" [disabled]="evaluationForm.invalid || isLoading">
+                  <i class="bi bi-check-circle"></i> Submit Evaluation
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close()">Close</button>
       </div>
     </div>
   </div>
 </div>
+<div class="modal-backdrop fade show"></div>

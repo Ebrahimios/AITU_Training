@@ -2,11 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AddBandDialogComponent } from '../add-band-dialog/add-band-dialog.component';
 
 interface Student {
   id: number;
@@ -37,21 +33,13 @@ interface CapacityEvaluation {
   lastUpdated?: Date;
 }
 
-interface NewBand {
-  name: string;
-  value: number;
-}
-
 @Component({
     selector: 'app-student-details-modal',
     imports: [
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
-        MatDialogModule,
-        MatButtonModule,
-        MatIconModule,
-        MatProgressBarModule
+        MatDialogModule
     ],
     templateUrl: './student-details-modal.component.html',
     styleUrls: ['./student-details-modal.component.css']
@@ -114,20 +102,6 @@ export class StudentDetailsModalComponent {
     ];
     const average = ratings.reduce((a, b) => a + b, 0) / ratings.length;
     this.evaluationForm.patchValue({ overallRating: average });
-  }
-
-  addNewBand() {
-    const dialogRef = this.dialog.open(AddBandDialogComponent, {
-      width: '400px',
-      data: { student: this.student }
-    });
-
-    dialogRef.afterClosed().subscribe((result: NewBand) => {
-      if (result) {
-        // Handle the new band data here
-        console.log('New band added:', result);
-      }
-    });
   }
 
   private loadStudentProgress() {

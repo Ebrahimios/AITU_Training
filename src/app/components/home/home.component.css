@@ -144,6 +144,10 @@
   align-items: center;
   justify-content: center;
 }
+.logo{
+  margin-top: -80px;
+  margin-bottom: -80px;
+}
 
 .stat-icon i {
   font-size: 1.5rem;
