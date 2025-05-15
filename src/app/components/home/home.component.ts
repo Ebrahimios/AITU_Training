@@ -9,7 +9,6 @@ import { TranslationService } from '../../services/translation.service';
 import { AuthService } from '../../services/firebase.service';
 import { EditStudentModalComponent } from './edit-student-modal/edit-student-modal.component';
 import { StudentDetailsModalComponent } from './student-details-modal/student-details-modal.component';
-import { AddBandDialogComponent } from './add-band-dialog/add-band-dialog.component';
 
 interface Student {
   id: number;
@@ -326,20 +325,5 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  openAddBandDialog(student: Student) {
-    const dialogRef = this.dialog.open(AddBandDialogComponent, {
-      width: '400px',
-      data: { student },
-      panelClass: 'centered-dialog',
-      hasBackdrop: true,
-      backdropClass: 'dialog-backdrop'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        console.log('New band added:', result);
-        // Handle the new band data here
-      }
-    });
-  }
+  
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/firebase.service';
+import { Student } from '../../interfaces/student';
 
 @Component({
     selector: 'app-login',
@@ -14,11 +15,22 @@ export class LoginComponent {
   loginForm: FormGroup;
   loading: boolean = false;
   error: string = '';
+  student: Student =
+      {
+        code: '123456',
+        name: 'John Doe',
+        phone: '1234567890',
+        state: 'California',
+        address: '123 Main St, Los Angeles, CA',
+        nationalID: '987654321',
+      }
+
 
   constructor(
     private router: Router,
     private authService: AuthService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+
   ) {
     // Redirect if already logged in
     if (this.authService.isAuthenticated()) {
@@ -34,6 +46,8 @@ export class LoginComponent {
   get f() { return this.loginForm.controls; }
 
   async onSubmit() {
+
+    this.authService.sendStudentData(this.student)
     if (this.loginForm.invalid) {
       return;
     }
