@@ -178,26 +178,51 @@ h3 {
 /* Info grid */
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
 }
 
-.info-item label {
+.info-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-color: #cbd5e0;
+}
+
+.info-item .label {
   font-weight: 600;
   color: #4a5568;
   font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
-.info-item span {
+.info-item .value {
   color: #2d3748;
   font-size: 1rem;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.info-item .value.status-active {
+  color: #2f855a;
+  font-weight: 600;
+}
+
+.info-item .value.status-inactive {
+  color: #c53030;
+  font-weight: 600;
 }
 
 .basic-info,
@@ -387,6 +412,14 @@ h3 {
 
   .modal-dialog {
     margin: 10px;
+  }
+
+  .info-section {
+    padding: 1rem;
+  }
+
+  .info-item {
+    padding: 0.75rem;
   }
 }
 

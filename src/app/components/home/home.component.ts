@@ -21,7 +21,36 @@ interface Student {
   selected: boolean;
 }
 
-export type TranslationKeys = 'dashboard' | 'students_distribution' | 'analytics' | 'settings' | 'student' | 'filters' | 'sort' | 'export' | 'add_student' | 'total_students' | 'departments' | 'active' | 'growth' | 'sort_by' | 'department' | 'factory' | 'batch' | 'stage' | 'year' | 'month' | 'department_distribution' | 'showing' | 'to' | 'of' | 'entries' | 'per_page_5' | 'per_page_10' | 'per_page_20' | 'reset';
+export type TranslationKeys =
+  | 'dashboard'
+  | 'students_distribution'
+  | 'analytics'
+  | 'settings'
+  | 'student'
+  | 'filters'
+  | 'sort'
+  | 'export'
+  | 'add_student'
+  | 'total_students'
+  | 'departments'
+  | 'active'
+  | 'growth'
+  | 'sort_by'
+  | 'department'
+  | 'factory'
+  | 'batch'
+  | 'stage'
+  | 'year'
+  | 'month'
+  | 'department_distribution'
+  | 'showing'
+  | 'to'
+  | 'of'
+  | 'entries'
+  | 'per_page_5'
+  | 'per_page_10'
+  | 'per_page_20'
+  | 'reset';
 
 @Component({
     selector: 'app-home',
@@ -39,6 +68,7 @@ export type TranslationKeys = 'dashboard' | 'students_distribution' | 'analytics
 export class HomeComponent implements OnInit {
   Math = Math;
   isSidebarOpen = true;
+  isModalOpen = false; // Add flag to track modal state
   students: Student[] = [
     { id: 1, student: 'Samanta William', department: 'Engineering', factory: 'Factory A', batch: 'Batch 1', stage: 'School', date: new Date(2021, 2, 26), selected: false },
     { id: 2, student: 'Tony Soap', department: 'Electrical', factory: 'Factory B', batch: 'Batch 2', stage: 'Institute', date: new Date(2021, 2, 15), selected: false },
@@ -319,11 +349,38 @@ export class HomeComponent implements OnInit {
   }
 
   viewStudentDetails(student: Student) {
-    this.dialog.open(StudentDetailsModalComponent, {
+    if (this.isModalOpen) return; // Prevent opening if modal is already open
+
+    this.isModalOpen = true;
+    const dialogRef = this.dialog.open(StudentDetailsModalComponent, {
       width: '800px',
       data: { student }
     });
+
+    dialogRef.afterClosed().subscribe(() => {
+      this.isModalOpen = false; // Reset flag when modal is closed
+    });
   }
 
-  
+  isReturningStudent(student: any): boolean {
+    // Get the current year
+    const currentYear = new Date().getFullYear();
+    // Get the student's start date year
+    const studentStartYear = new Date(student.date).getFullYear();
+    // If the student started in a previous year, they are returning
+    return studentStartYear < currentYear;
+  }
+
+  getStudentStatus(student: Student): 'student_returning' | 'student_new' {
+    return this.isReturningStudent(student) ? 'student_returning' : 'student_new';
+  }
+
+  getStudentStatusText(student: Student): string {
+    if (this.isReturningStudent(student)) {
+      return 'Returning';
+    } else {
+      return 'New';
+    }
+  }
 }
+

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { EditStudentModalComponent } from '../edit-student-modal/edit-student-modal.component';
 
 interface Student {
   id: number;
@@ -61,6 +62,7 @@ export class StudentDetailsModalComponent {
   showProgress: boolean = false;
   progressValue: number = 0;
   activeTab: 'basic' | 'progress' | 'evaluation' = 'basic';
+  isEditMode: boolean = false;
 
   constructor(
     public dialogRef: MatDialogRef<StudentDetailsModalComponent>,
@@ -180,5 +182,47 @@ export class StudentDetailsModalComponent {
     if (value >= 60) return 'Good';
     if (value >= 40) return 'Average';
     return 'Needs Improvement';
+  }
+
+  Edit() {
+    this.dialogRef.close();
+    const dialogRef = this.dialog.open(EditStudentModalComponent, {
+      width: '500px',
+      data: {
+        student: {
+          ...this.student,
+          date: this.student.date,
+          birthDate: this.student.birthDate
+        },
+        isEdit: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.student = {
+          ...this.student,
+          ...result,
+          date: result.date ? new Date(result.date) : this.student.date,
+          birthDate: result.birthDate ? new Date(result.birthDate) : this.student.birthDate
+        };
+      }
+    });
+  }
+
+  toggleEditMode() {
+    if (this.isEditMode) {
+      // Save changes
+      this.snackBar.open('Changes saved successfully', 'Close', {
+        duration: 3000
+      });
+    }
+    this.isEditMode = !this.isEditMode;
+  }
+
+  Delete() {
+    if (confirm('Are you sure you want to delete this student?')) {
+      this.dialogRef.close({ action: 'delete', student: this.student });
+    }
   }
 }

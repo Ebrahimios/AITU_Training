@@ -230,7 +230,7 @@
               <th>{{ translationService.translate('department') }}</th>
               <th>{{ translationService.translate('factory') }}</th>
               <th>{{ translationService.translate('date') }}</th>
-              <th>{{ translationService.translate('actions') }}</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -246,18 +246,15 @@
                   <span>{{ student.student }}</span>
                 </div>
               </td>
+              <td>{{ student.stage }}</td>
+              <td>{{ student.batch }}</td>
               <td>{{ student.department }}</td>
               <td>{{ student.factory }}</td>
-              <td>{{ student.batch }}</td>
-              <td>{{ student.stage }}</td>
               <td>{{ student.date | date }}</td>
-              <td class="action-buttons">
-                <button (click)="editStudent(student); $event.stopPropagation()">
-                  <i class="bi bi-pencil"></i>
-                </button>
-                <button (click)="deleteStudent(student); $event.stopPropagation()">
-                  <i class="bi bi-trash"></i>
-                </button>
+              <td>
+                <span class="status-badge" [ngClass]="{'status-returning': isReturningStudent(student), 'status-new': !isReturningStudent(student)}">
+                  {{ getStudentStatusText(student) }}
+                </span>
               </td>
             </tr>
           </tbody>

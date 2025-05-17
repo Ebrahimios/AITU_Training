@@ -47,30 +47,107 @@
           <!-- Basic Info Tab -->
           <div class="tab-content" [class.active]="activeTab === 'basic'">
             <div class="info-section">
+              <div class="info-header">
+                <h3>Basic Information</h3>
+                <button type="button" class="btn btn-primary" (click)="toggleEditMode()">
+                  <i class="bi" [ngClass]="isEditMode ? 'bi-check-lg' : 'bi-pencil'"></i>
+                  {{ isEditMode ? 'Save' : 'Edit' }}
+                </button>
+              </div>
               <div class="info-grid">
                 <div class="info-item">
-                  <span class="label">Name:</span>
-                  <span class="value">{{ student.studentName }}</span>
+                  <span class="label">Student Name:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.studentName }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.studentName">
+                </div>
+                <div class="info-item">
+                  <span class="label">Student Code:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.studentCode }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.studentCode">
+                </div>
+                <div class="info-item">
+                  <span class="label">Email:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.email }}</span>
+                  <input type="email" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.email">
+                </div>
+                <div class="info-item">
+                  <span class="label">Phone Number:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.phoneNumber }}</span>
+                  <input type="tel" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.phoneNumber">
+                </div>
+                <div class="info-item">
+                  <span class="label">Birth Date:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.birthDate | date }}</span>
+                  <input type="date" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.birthDate">
+                </div>
+                <div class="info-item">
+                  <span class="label">Gender:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.gender }}</span>
+                  <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.gender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+                <div class="info-item">
+                  <span class="label">Local Address:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.localAddress }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.localAddress">
                 </div>
                 <div class="info-item">
                   <span class="label">Department:</span>
-                  <span class="value">{{ student.department }}</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.department }}</span>
+                  <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.department">
+                    <option value="IT">IT</option>
+                    <option value="Mechanics">Mechanics</option>
+                    <option value="Electrical">Electrical</option>
+                  </select>
                 </div>
                 <div class="info-item">
                   <span class="label">Factory:</span>
-                  <span class="value">{{ student.factory }}</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.factory }}</span>
+                  <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.factory">
+                    <option value="Factory A">Factory A</option>
+                    <option value="Factory B">Factory B</option>
+                    <option value="Factory C">Factory C</option>
+                  </select>
                 </div>
                 <div class="info-item">
-                  <span class="label">Batch:</span>
-                  <span class="value">{{ student.batch }}</span>
+                  <span class="label">Factory Type:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.factoryType }}</span>
+                  <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.factoryType">
+                    <option value="Type A">Type A</option>
+                    <option value="Type B">Type B</option>
+                    <option value="Type C">Type C</option>
+                  </select>
                 </div>
                 <div class="info-item">
                   <span class="label">Stage:</span>
-                  <span class="value">{{ student.stage }}</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.stage }}</span>
+                  <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.stage">
+                    <option value="School">School</option>
+                    <option value="Institute">Institute</option>
+                    <option value="Faculty">Faculty</option>
+                  </select>
+                </div>
+                <div class="info-item">
+                  <span class="label">SSN:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.ssn }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.ssn">
+                </div>
+                <div class="info-item">
+                  <span class="label">Status:</span>
+                  <span class="value" *ngIf="!isEditMode" [ngClass]="{'status-active': student.status === 'Active', 'status-inactive': student.status === 'Inactive'}">
+                    {{ student.status }}
+                  </span>
+                  <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.status">
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
                 </div>
                 <div class="info-item">
                   <span class="label">Start Date:</span>
-                  <span class="value">{{ student.date | date }}</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.date | date }}</span>
+                  <input type="date" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.date">
                 </div>
               </div>
             </div>
@@ -249,6 +326,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" (click)="close()">Close</button>
+          <button type="button" class="btn btn-primary" (click)="Delete()">Delete </button>
         </div>
       </div>
     </div>
