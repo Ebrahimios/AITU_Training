@@ -58,13 +58,23 @@ export class StudentDetailsModalComponent {
     private dialog: MatDialog,
     private authService: AuthService
   ) {
+    // ✅ تصليح معالجة التاريخ
+    const validDate = (value: any): Date | null => {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? null : date;
+    };
+
     this.student = {
       ...data.student,
-      birthDate: data.student.birthDate ? new Date(data.student.birthDate) : new Date()
+      birthDate: validDate(data.student.birthDate)
     };
+
     this.initializeForm();
     this.loadStudentProgress();
   }
+
+  // باقي الكود بدون تغيير...
+
 
   private initializeForm() {
     this.evaluationForm = this.fb.group({
@@ -171,46 +181,56 @@ export class StudentDetailsModalComponent {
   }
 
   toggleEditMode() {
-    if (this.isEditMode) {
-      // Save changes
-      this.isLoading = true;
-      // Create a new student object with all properties
-      const updatedStudent: Student = {
-        code: this.student.code,
-        name: this.student.name || '',
-        phone: this.student.phone || '',
-        state: this.student.state || '',
-        address: this.student.address || '',
-        nationalID: this.student.nationalID || '',
-        email: this.student.email,
-        birthDate: this.student.birthDate,
-        createOn: this.student.createOn,
-        gender: this.student.gender,
-        department: this.student.department,
-        birthAddress: this.student.birthAddress,
-        factory: this.student.factory,
-        grade: this.student.grade,
-        stage: this.student.stage,
-        factoryType: this.student.factoryType,
-        selected: this.student.selected
-      };
+  if (this.isEditMode) {
+    this.isLoading = true;
 
-      this.authService.updateStudent(updatedStudent).then(success => {
-        if (success) {
-          this.snackBar.open('Changes saved successfully', 'Close', {
-            duration: 3000
-          });
-          this.dialogRef.close({ action: 'update', student: updatedStudent });
-        } else {
-          this.snackBar.open('Error saving changes', 'Close', {
-            duration: 3000
-          });
-        }
-        this.isLoading = false;
-      });
+    const updatedStudent: Student = {
+      code: this.student.code || '',
+      name: this.student.name?.trim() || '',
+      phone: this.student.phone?.trim() || '',
+      state: this.student.state?.trim() || '',
+      address: this.student.address?.trim() || '',
+      nationalID: this.student.nationalID?.trim() || '',
+      email: this.student.email?.trim() || '',
+      birthDate: this.student.birthDate ? new Date(this.student.birthDate) : new Date(),
+      createOn: this.student.createOn ?? new Date(), // fallback لو مفيش تاريخ إنشاء
+      gender: this.student.gender || 'غير محدد',
+      department: this.student.department || '',
+      birthAddress: this.student.birthAddress || '',
+      factory: this.student.factory || '',
+      grade: this.student.grade || 1,
+      stage: this.student.stage || '',
+      factoryType: this.student.factoryType || true,
+      selected: this.student.selected ?? false
+    };
+
+    // تحقق إضافي قبل الإرسال
+    if (!updatedStudent.code) {
+      this.snackBar.open('Error: Missing student code!', 'Close', { duration: 3000 });
+      this.isLoading = false;
+      return;
     }
-    this.isEditMode = !this.isEditMode;
+
+    // التحديث
+    this.authService.updateStudent(updatedStudent).then(success => {
+      this.isLoading = false;
+      if (success) {
+        this.snackBar.open('Changes saved successfully', 'Close', { duration: 3000 });
+        this.dialogRef.close({ action: 'update', student: updatedStudent });
+      } else {
+        this.snackBar.open('Error saving changes', 'Close', { duration: 3000 });
+      }
+    }).catch(err => {
+      this.isLoading = false;
+      console.error('Update failed:', err);
+      this.snackBar.open('An error occurred while saving', 'Close', { duration: 3000 });
+    });
   }
+
+  // عكس وضع التعديل
+  this.isEditMode = !this.isEditMode;
+}
+
 
   Delete() {
     if (confirm('Are you sure you want to delete this student?')) {

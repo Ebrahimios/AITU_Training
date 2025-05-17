@@ -173,8 +173,6 @@ export class HomeComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         // Generate a new code for the student
-        const maxCode = Math.max(...this.students.map(s => parseInt(s.code) || 0), 0);
-        result.code = (maxCode + 1).toString();
         result.birthDate = new Date(); // Set current date for new students
 
         this.students.unshift(result);

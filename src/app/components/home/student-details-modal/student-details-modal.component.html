@@ -20,8 +20,9 @@
               <button class="btn-icon" (click)="openReport('Performance')" title="Performance Report">
                 <i class="bi bi-bar-chart"></i>
               </button>
-              <button class="btn-close" (click)="close()">
-                <i class="bi bi-x-lg"></i>
+              <button class="btn-close" (click)="close()" [disabled]="isLoading">
+                <span *ngIf="!isLoading"><i class="bi bi-x-lg"></i></span>
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               </button>
             </div>
           </div>
@@ -50,8 +51,11 @@
               <div class="info-header">
                 <h3>Basic Information</h3>
                 <button type="button" class="btn btn-primary" (click)="toggleEditMode()" [disabled]="isLoading">
-                  <i class="bi" [ngClass]="isEditMode ? 'bi-check-lg' : 'bi-pencil'"></i>
-                  {{ isEditMode ? 'Save' : 'Edit' }}
+                  <span *ngIf="!isLoading">
+                    <i class="bi" [ngClass]="isEditMode ? 'bi-check-lg' : 'bi-pencil'"></i>
+                    {{ isEditMode ? 'Save' : 'Edit' }}
+                  </span>
+                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 </button>
               </div>
               <div class="info-grid">
@@ -339,8 +343,14 @@
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-danger" (click)="Delete()">Delete</button>
-          <button type="button" class="btn btn-secondary" (click)="close()">Close</button>
+          <button type="button" class="btn btn-outline-danger" (click)="Delete()" [disabled]="isLoading">
+            <span *ngIf="!isLoading">Delete</span>
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="close()" [disabled]="isLoading">
+            <span *ngIf="!isLoading">Close</span>
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
     </div>

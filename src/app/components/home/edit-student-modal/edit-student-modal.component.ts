@@ -240,7 +240,7 @@ import { AuthService } from '../../../services/firebase.service';
 })
 export class EditStudentModalComponent {
   studentForm!: FormGroup;
-  status = ['Active', 'Inactive'];
+  status = ['New', 'Returner'];
   isEdit: boolean;
   student?: Student;
 
