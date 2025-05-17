@@ -29,6 +29,11 @@ interface Student {
         </div>
         <div class="modal-body">
           <div class="mb-3">
+            <label for="studentName" class="form-label">Student Code</label>
+            <input type="text" class="form-control" id="studentName" [(ngModel)]="editedStudent.student" placeholder="Enter student code">
+          </div>
+        <div class="modal-body">
+          <div class="mb-3">
             <label for="studentName" class="form-label">Student Name</label>
             <input type="text" class="form-control" id="studentName" [(ngModel)]="editedStudent.student" placeholder="Enter student name">
           </div>
@@ -39,15 +44,9 @@ interface Student {
               <option *ngFor="let dept of departments" [value]="dept">{{dept}}</option>
             </select>
           </div>
+        
           <div class="mb-3">
-            <label for="factory" class="form-label">Factory</label>
-            <select class="form-select" id="factory" [(ngModel)]="editedStudent.factory">
-              <option value="" disabled>Select factory</option>
-              <option *ngFor="let factory of factories" [value]="factory">{{factory}}</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label for="group" class="form-label">Group</label>
+            <label for="group" class="form-label">Student Status</label>
             <select class="form-select" id="group" [(ngModel)]="editedStudent.group">
               <option value="" disabled>Select group</option>
               <option *ngFor="let group of groups" [value]="group">{{group}}</option>

@@ -179,6 +179,11 @@
                 <div class="text-danger" *ngIf="phoneError">{{phoneError}}</div>
               </div>
               <div class="mb-3">
+                <label for="factoryContactName" class="form-label">Contact Name</label>
+                <input type="text" class="form-control" id="factoryContactName" #factoryContactName placeholder="Enter contact person name">
+                <div class="text-danger" *ngIf="contactNameError">{{contactNameError}}</div>
+              </div>
+              <div class="mb-3">
                 <label for="factoryDepartment" class="form-label">Department</label>
                 <select class="form-select" id="factoryDepartment" #factoryDepartment>
                   <option value="" disabled selected>Select department</option>
@@ -190,7 +195,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" (click)="addFactory(factoryName.value, factoryAddress.value, factoryPhone.value, factoryDepartment.value)">Save Factory</button>
+            <button type="button" class="btn btn-primary" (click)="addFactory(factoryName.value, factoryAddress.value, factoryPhone.value, factoryDepartment.value, factoryContactName.value)">Save Factory</button>
           </div>
         </div>
       </div>
@@ -217,6 +222,10 @@
               <div class="mb-3">
                 <label class="form-label"><strong>Phone:</strong></label>
                 <input type="text" class="form-control" [(ngModel)]="selectedFactory.phone" name="factoryPhone" [readonly]="!isEditing">
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><strong>Contact Name:</strong></label>
+                <input type="text" class="form-control" [(ngModel)]="selectedFactory.contactName" name="factoryContactName" [readonly]="!isEditing">
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Department:</strong></label>

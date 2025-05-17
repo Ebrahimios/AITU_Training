@@ -27,6 +27,7 @@ interface Factory {
   address?: string;
   phone?: string;
   department?: string;
+  contactName?: string;
   type: string;
 }
 
@@ -49,6 +50,7 @@ export class StudentDistributionComponent implements OnInit {
   addressError: string = '';
   phoneError: string = '';
   departmentError: string = '';
+  contactNameError: string = '';
 
   constructor(public translationService: TranslationService) {}
 
@@ -61,9 +63,9 @@ export class StudentDistributionComponent implements OnInit {
   ];
 
   factories: Factory[] = [
-    { id: 1, name: 'Factory A', capacity: 3, assignedStudents: 0, students: [], address: '123 Industrial Zone', phone: '01012345678', department: 'IT', type: 'Internal' },
-    { id: 2, name: 'Factory B', capacity: 2, assignedStudents: 0, students: [], address: '456 Business Park', phone: '01087654321', department: 'Mechanics', type: 'External' },
-    { id: 3, name: 'Factory C', capacity: 2, assignedStudents: 0, students: [], address: '789 Tech Valley', phone: '01011223344', department: 'Electrical', type: 'Internal' }
+    { id: 1, name: 'Factory A', capacity: 3, assignedStudents: 0, students: [], address: '123 Industrial Zone', phone: '01012345678', department: 'IT', contactName: 'Ahmed Ibrahim', type: 'Internal' },
+    { id: 2, name: 'Factory B', capacity: 2, assignedStudents: 0, students: [], address: '456 Business Park', phone: '01087654321', department: 'Mechanics', contactName: 'Mahmoud Ali', type: 'External' },
+    { id: 3, name: 'Factory C', capacity: 2, assignedStudents: 0, students: [], address: '789 Tech Valley', phone: '01011223344', department: 'Electrical', contactName: 'Sara Hassan', type: 'Internal' }
   ];
 
   departments: string[] = ['All', 'IT', 'Mechanics', 'Electrical'];
@@ -260,12 +262,13 @@ export class StudentDistributionComponent implements OnInit {
     });
   }
 
-  addFactory(name: string, address: string, phone: string, department: string): void {
+  addFactory(name: string, address: string, phone: string, department: string, contactName: string): void {
     // Reset error messages
     this.nameError = '';
     this.addressError = '';
     this.phoneError = '';
     this.departmentError = '';
+    this.contactNameError = '';
 
     let hasError = false;
 
@@ -294,6 +297,12 @@ export class StudentDistributionComponent implements OnInit {
       hasError = true;
     }
 
+    // Contact Name validation
+    if (!contactName || contactName.trim().length < 3) {
+      this.contactNameError = 'Contact name must be at least 3 characters long';
+      hasError = true;
+    }
+
     if (hasError) {
       return;
     }
@@ -307,6 +316,7 @@ export class StudentDistributionComponent implements OnInit {
       address: address.trim(),
       phone: phone.trim(),
       department,
+      contactName: contactName.trim(),
       type: 'Internal'
     };
     this.factories.push(newFactory);
