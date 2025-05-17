@@ -7,6 +7,7 @@ export interface Student {
     nationalID: string;
     email?: string;
     birthDate?: Date;
+    createOn?: Date;
     gender?: string;
     department?: string;
     birthAddress?:string;
@@ -14,4 +15,5 @@ export interface Student {
     grade?: number;
     stage?: string;
     factoryType?: boolean;
+    selected?: boolean;
   }

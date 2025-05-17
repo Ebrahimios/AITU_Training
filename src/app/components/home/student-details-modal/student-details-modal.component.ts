@@ -4,25 +4,11 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EditStudentModalComponent } from '../edit-student-modal/edit-student-modal.component';
+import { Student } from '../../../interfaces/student';
+import { AuthService } from '../../../services/firebase.service';
 
-interface Student {
-  id: number;
-  studentCode: string;
-  studentName: string;
-  email: string;
-  phoneNumber: string;
-  birthDate: Date;
-  gender: 'Male' | 'Female';
-  localAddress: string;
-  department: string;
-  factory: string;
-  factoryType: string;
-  stage: string;
-  batch: string;
-  ssn: string;
-  status: string;
-  date: Date;
-  selected: boolean;
+// Extended student type with performance metrics
+interface StudentWithPerformance extends Student {
   progress?: number;
   attendance?: number;
   performance?: {
@@ -55,7 +41,7 @@ interface CapacityEvaluation {
     styleUrls: ['./student-details-modal.component.css']
 })
 export class StudentDetailsModalComponent {
-  student: Student;
+  student: StudentWithPerformance;
   evaluationForm!: FormGroup;
   isSupervisor: boolean = true;
   isLoading: boolean = false;
@@ -69,12 +55,12 @@ export class StudentDetailsModalComponent {
     @Inject(MAT_DIALOG_DATA) public data: { student: Student },
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private authService: AuthService
   ) {
     this.student = {
       ...data.student,
-      birthDate: data.student.birthDate ? new Date(data.student.birthDate) : new Date(),
-      date: data.student.date ? new Date(data.student.date) : new Date()
+      birthDate: data.student.birthDate ? new Date(data.student.birthDate) : new Date()
     };
     this.initializeForm();
     this.loadStudentProgress();
@@ -184,37 +170,43 @@ export class StudentDetailsModalComponent {
     return 'Needs Improvement';
   }
 
-  Edit() {
-    this.dialogRef.close();
-    const dialogRef = this.dialog.open(EditStudentModalComponent, {
-      width: '500px',
-      data: {
-        student: {
-          ...this.student,
-          date: this.student.date,
-          birthDate: this.student.birthDate
-        },
-        isEdit: true
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.student = {
-          ...this.student,
-          ...result,
-          date: result.date ? new Date(result.date) : this.student.date,
-          birthDate: result.birthDate ? new Date(result.birthDate) : this.student.birthDate
-        };
-      }
-    });
-  }
-
   toggleEditMode() {
     if (this.isEditMode) {
       // Save changes
-      this.snackBar.open('Changes saved successfully', 'Close', {
-        duration: 3000
+      this.isLoading = true;
+      // Create a new student object with all properties
+      const updatedStudent: Student = {
+        code: this.student.code,
+        name: this.student.name || '',
+        phone: this.student.phone || '',
+        state: this.student.state || '',
+        address: this.student.address || '',
+        nationalID: this.student.nationalID || '',
+        email: this.student.email,
+        birthDate: this.student.birthDate,
+        createOn: this.student.createOn,
+        gender: this.student.gender,
+        department: this.student.department,
+        birthAddress: this.student.birthAddress,
+        factory: this.student.factory,
+        grade: this.student.grade,
+        stage: this.student.stage,
+        factoryType: this.student.factoryType,
+        selected: this.student.selected
+      };
+
+      this.authService.updateStudent(updatedStudent).then(success => {
+        if (success) {
+          this.snackBar.open('Changes saved successfully', 'Close', {
+            duration: 3000
+          });
+          this.dialogRef.close({ action: 'update', student: updatedStudent });
+        } else {
+          this.snackBar.open('Error saving changes', 'Close', {
+            duration: 3000
+          });
+        }
+        this.isLoading = false;
       });
     }
     this.isEditMode = !this.isEditMode;
@@ -222,7 +214,21 @@ export class StudentDetailsModalComponent {
 
   Delete() {
     if (confirm('Are you sure you want to delete this student?')) {
-      this.dialogRef.close({ action: 'delete', student: this.student });
+      this.isLoading = true;
+      this.authService.deleteStudent(this.student.code).then(success => {
+        if (success) {
+          this.snackBar.open('Student deleted successfully', 'Close', {
+            duration: 3000
+          });
+          this.dialogRef.close({ action: 'delete', student: this.student });
+        } else {
+          this.snackBar.open('Error deleting student', 'Close', {
+            duration: 3000
+          });
+        }
+        this.isLoading = false;
+      });
     }
+    this.dialogRef.close();
   }
 }

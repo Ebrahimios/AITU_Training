@@ -9,17 +9,9 @@ import { TranslationService } from '../../services/translation.service';
 import { AuthService } from '../../services/firebase.service';
 import { EditStudentModalComponent } from './edit-student-modal/edit-student-modal.component';
 import { StudentDetailsModalComponent } from './student-details-modal/student-details-modal.component';
+import { Student } from '../../interfaces/student';
 
-interface Student {
-  id: number;
-  student: string;
-  department: string;
-  factory: string;
-  batch: string; // Changed from group to batch
-  stage: string;
-  date: Date; // Changed from string to Date
-  selected: boolean;
-}
+
 
 export type TranslationKeys =
   | 'dashboard'
@@ -69,16 +61,9 @@ export class HomeComponent implements OnInit {
   Math = Math;
   isSidebarOpen = true;
   isModalOpen = false; // Add flag to track modal state
-  students: Student[] = [
-    { id: 1, student: 'Samanta William', department: 'Engineering', factory: 'Factory A', batch: 'Batch 1', stage: 'School', date: new Date(2021, 2, 26), selected: false },
-    { id: 2, student: 'Tony Soap', department: 'Electrical', factory: 'Factory B', batch: 'Batch 2', stage: 'Institute', date: new Date(2021, 2, 15), selected: false },
-    { id: 3, student: 'Karen Hope', department: 'Mechanics', factory: 'Factory C', batch: 'Batch 3', stage: 'Faculty', date: new Date(2021, 1, 10), selected: false },
-    { id: 4, student: 'Jordan Nico', department: 'IT', factory: 'Factory A', batch: 'Batch 1', stage: 'School', date: new Date(2021, 2, 5), selected: false },
-    { id: 5, student: 'Nadila Adja', department: 'Mechanics', factory: 'Factory B', batch: 'Batch 2', stage: 'Institute', date: new Date(2021, 1, 20), selected: false },
-    { id: 6, student: 'Johnny Ahmad', department: 'Electrical', factory: 'Factory C', batch: 'Batch 3', stage: 'Faculty', date: new Date(2021, 0, 15), selected: false }
-  ];
-
-  filteredStudents: Student[] = [...this.students];
+  students: Student[] = [];
+  filteredStudents: Student[] = [];
+  totalStudents: number = 0;
   searchTerm: string = '';
   departments: string[] = ['IT', 'Mechanics', 'Electrical'];
   factories: string[] = ['Factory A', 'Factory B', 'Factory C'];
@@ -96,7 +81,6 @@ export class HomeComponent implements OnInit {
   showSort: boolean = false;
   currentPage: number = 1;
   itemsPerPage: number = 5;
-  totalStudents: number = 0;
 
   // Date filter options
   years: string[] = ['2020', '2021', '2022', '2023'];
@@ -131,11 +115,31 @@ export class HomeComponent implements OnInit {
     private router: Router,
     private authService: AuthService
   ) {
-    this.totalStudents = this.students.length;
+    // Initialize with empty array, total will be updated after loading
+    this.students = [];
+    this.filteredStudents = [];
+    this.totalStudents = 0;
   }
 
-  ngOnInit(): void {
-    // Additional initialization logic if needed
+  async ngOnInit(): Promise<void> {
+    await this.loadStudents();
+    this.totalStudents = this.students.length;
+    this.filteredStudents = [...this.students];
+  }
+
+  async loadStudents() {
+    try {
+      this.students = [];
+      this.students = await this.authService.getAllStudents();
+      this.filteredStudents = [...this.students];
+      this.totalStudents = this.students.length;
+    } catch (error) {
+      console.error('Error loading students:', error);
+      // Initialize with empty arrays if there's an error
+      this.students = [];
+      this.filteredStudents = [];
+      this.totalStudents = 0;
+    }
   }
 
   get totalPages(): number {
@@ -150,7 +154,7 @@ export class HomeComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        const index = this.students.findIndex(s => s.id === result.id);
+        const index = this.students.findIndex(s => s.code === result.code);
         if (index !== -1) {
           this.students[index] = result;
           this.filteredStudents = [...this.students];
@@ -168,9 +172,10 @@ export class HomeComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        const maxId = Math.max(...this.students.map(s => s.id), 0);
-        result.id = maxId + 1;
-        result.date = new Date(); // Set current date for new students
+        // Generate a new code for the student
+        const maxCode = Math.max(...this.students.map(s => parseInt(s.code) || 0), 0);
+        result.code = (maxCode + 1).toString();
+        result.birthDate = new Date(); // Set current date for new students
 
         this.students.unshift(result);
         this.filteredStudents = [...this.students];
@@ -236,14 +241,14 @@ export class HomeComponent implements OnInit {
 
   applyFilters() {
     this.filteredStudents = this.students.filter(student => {
-      const matchesSearch = student.student.toLowerCase().includes(this.searchTerm.toLowerCase());
+      const matchesSearch = student.name.toLowerCase().includes(this.searchTerm.toLowerCase());
       const matchesDepartment = !this.selectedDepartment || student.department === this.selectedDepartment;
       const matchesFactory = !this.selectedFactory || student.factory === this.selectedFactory;
-      const matchesBatch = !this.selectedBatch || student.batch === this.selectedBatch;
+      const matchesBatch = !this.selectedBatch || student.grade?.toString() === this.selectedBatch;
       const matchesStage = !this.selectedStage || student.stage === this.selectedStage;
-      const matchesYear = !this.selectedYear || student.date.getFullYear().toString() === this.selectedYear;
-      const matchesMonth = !this.selectedMonth || student.date.getMonth().toString() === this.selectedMonth;
-      const matchesDay = !this.selectedDay || student.date.getDate().toString() === this.selectedDay;
+      const matchesYear = !this.selectedYear || student.birthDate?.getFullYear().toString() === this.selectedYear;
+      const matchesMonth = !this.selectedMonth || student.birthDate?.getMonth().toString() === this.selectedMonth;
+      const matchesDay = !this.selectedDay || student.birthDate?.getDate().toString() === this.selectedDay;
 
       return matchesSearch && matchesDepartment && matchesFactory && matchesBatch && matchesStage && matchesYear && matchesMonth && matchesDay;
     });
@@ -255,16 +260,16 @@ export class HomeComponent implements OnInit {
 
     switch (sortValue) {
       case 'name_asc':
-        this.filteredStudents.sort((a, b) => a.student.localeCompare(b.student));
+        this.filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'name_desc':
-        this.filteredStudents.sort((a, b) => b.student.localeCompare(a.student));
+        this.filteredStudents.sort((a, b) => b.name.localeCompare(a.name));
         break;
       case 'date_new':
-        this.filteredStudents.sort((a, b) => b.date.getTime() - a.date.getTime());
+        this.filteredStudents.sort((a, b) => (b.birthDate?.getTime() || 0) - (a.birthDate?.getTime() || 0));
         break;
       case 'date_old':
-        this.filteredStudents.sort((a, b) => a.date.getTime() - b.date.getTime());
+        this.filteredStudents.sort((a, b) => (a.birthDate?.getTime() || 0) - (b.birthDate?.getTime() || 0));
         break;
     }
   }
@@ -273,7 +278,7 @@ export class HomeComponent implements OnInit {
     if (!confirm('Are you sure you want to delete this student?')) {
       return;
     }
-    const index = this.students.findIndex(s => s.id === student.id);
+    const index = this.students.findIndex(s => s.code === student.code);
     if (index !== -1) {
       this.students.splice(index, 1);
       this.filteredStudents = [...this.students];
@@ -285,13 +290,13 @@ export class HomeComponent implements OnInit {
   exportData() {
     const headers = ['ID', 'Student', 'Department', 'Factory', 'Batch', 'Stage', 'Date'];
     const csvData = this.filteredStudents.map(student => [
-      student.id,
-      student.student,
+      student.code,
+      student.name,
       student.department,
       student.factory,
-      student.batch,
+      student.grade,
       student.stage,
-      student.date.toLocaleDateString()
+      student.birthDate?.toLocaleDateString()
     ]);
 
     const csvContent = [
@@ -347,28 +352,24 @@ export class HomeComponent implements OnInit {
   logout(): void {
     this.authService.logout();
   }
-
-  viewStudentDetails(student: Student) {
-    if (this.isModalOpen) return; // Prevent opening if modal is already open
-
-    this.isModalOpen = true;
+  openStudentDetails(student: Student) {
     const dialogRef = this.dialog.open(StudentDetailsModalComponent, {
       width: '800px',
-      data: { student }
+      data: { student: student }
     });
 
-    dialogRef.afterClosed().subscribe(() => {
-      this.isModalOpen = false; // Reset flag when modal is closed
+    dialogRef.afterClosed().subscribe(async result => {
+      await this.loadStudents();
+      if (result) {
+        // Reload students from Firebase after any change
+
+        this.applyFilters(); // Reapply any active filters
+      }
     });
   }
 
-  isReturningStudent(student: any): boolean {
-    // Get the current year
-    const currentYear = new Date().getFullYear();
-    // Get the student's start date year
-    const studentStartYear = new Date(student.date).getFullYear();
-    // If the student started in a previous year, they are returning
-    return studentStartYear < currentYear;
+  isReturningStudent(student: Student): boolean {
+    return student.state === 'Active';
   }
 
   getStudentStatus(student: Student): 'student_returning' | 'student_new' {
@@ -376,11 +377,8 @@ export class HomeComponent implements OnInit {
   }
 
   getStudentStatusText(student: Student): string {
-    if (this.isReturningStudent(student)) {
-      return 'Returning';
-    } else {
-      return 'New';
-    }
+    return student.state || 'Inactive';
   }
 }
+
 

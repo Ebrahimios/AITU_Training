@@ -235,22 +235,22 @@
           </thead>
           <tbody>
             <tr *ngFor="let student of filteredStudents | slice: (currentPage-1) * itemsPerPage : currentPage * itemsPerPage"
-                (click)="viewStudentDetails(student)"
+                (click)="openStudentDetails(student)"
                 class="student-row">
               <td>
                 <input type="checkbox" [(ngModel)]="student.selected" (click)="$event.stopPropagation()">
               </td>
               <td>
                 <div class="student-info">
-                  <div class="student-avatar">{{ student.student.charAt(0) }}</div>
-                  <span>{{ student.student }}</span>
+                  <div class="student-avatar">{{ student.name.charAt(0) }}</div>
+                  <span>{{ student.name }}</span>
                 </div>
               </td>
               <td>{{ student.stage }}</td>
-              <td>{{ student.batch }}</td>
+              <td>{{ student.grade }}</td>
               <td>{{ student.department }}</td>
               <td>{{ student.factory }}</td>
-              <td>{{ student.date | date }}</td>
+              <td>{{ student.createOn | date }}</td>
               <td>
                 <span class="status-badge" [ngClass]="{'status-returning': isReturningStudent(student), 'status-new': !isReturningStudent(student)}">
                   {{ getStudentStatusText(student) }}
