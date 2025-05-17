@@ -6,11 +6,20 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface Student {
   id: number;
-  student: string;
+  studentCode: string;
+  studentName: string;
+  email: string;
+  phoneNumber: string;
+  birthDate: Date;
+  gender: 'Male' | 'Female';
+  localAddress: string;
   department: string;
   factory: string;
-  batch: string;
+  factoryType: string;
   stage: string;
+  batch: string;
+  ssn: string;
+  status: string;
   date: Date;
   selected: boolean;
   progress?: number;
@@ -51,6 +60,7 @@ export class StudentDetailsModalComponent {
   isLoading: boolean = false;
   showProgress: boolean = false;
   progressValue: number = 0;
+  activeTab: 'basic' | 'progress' | 'evaluation' = 'basic';
 
   constructor(
     public dialogRef: MatDialogRef<StudentDetailsModalComponent>,
@@ -59,7 +69,11 @@ export class StudentDetailsModalComponent {
     private snackBar: MatSnackBar,
     private dialog: MatDialog
   ) {
-    this.student = data.student;
+    this.student = {
+      ...data.student,
+      birthDate: data.student.birthDate ? new Date(data.student.birthDate) : new Date(),
+      date: data.student.date ? new Date(data.student.date) : new Date()
+    };
     this.initializeForm();
     this.loadStudentProgress();
   }

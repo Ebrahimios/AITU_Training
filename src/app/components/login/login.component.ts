@@ -47,9 +47,9 @@ export class LoginComponent {
 
   async onSubmit() {
 
-    this.authService.sendStudentData(this.student)
     if (this.loginForm.invalid) {
       return;
+    
     }
 
     this.loading = true;

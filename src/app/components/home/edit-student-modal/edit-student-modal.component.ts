@@ -1,23 +1,23 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 interface Student {
   id: number;
-  student: string;
-  department: string;
-  factory: string;
-  statu: string;
-  stage: string;
-  date: string;
+  studentCode: string;
+  studentName: string;
+  address: string;
+  ssn: string;
+  phoneNumber: string;
+  status: string;
   selected: boolean;
 }
 
 @Component({
   selector: 'app-edit-student-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   template: `
     <div class="modal-overlay">
       <div class="modal-content">
@@ -27,43 +27,70 @@ interface Student {
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
+        <form [formGroup]="studentForm" (ngSubmit)="save()">
         <div class="modal-body">
           <div class="mb-3">
             <label for="studentCode" class="form-label">Student Code</label>
-            <input type="text" class="form-control" id="studentCode" [(ngModel)]="editedStudent.student" placeholder="Enter student code">
+              <input type="text" class="form-control" id="studentCode" formControlName="studentCode" placeholder="Enter student code">
+              <div class="text-danger" *ngIf="studentForm.get('studentCode')?.touched && studentForm.get('studentCode')?.errors?.['required']">
+                Student code is required
+              </div>
           </div>
-        
+
           <div class="mb-3">
             <label for="studentName" class="form-label">Student Name</label>
-            <input type="text" class="form-control" id="studentName" [(ngModel)]="editedStudent.student" placeholder="Enter student name">
+              <input type="text" class="form-control" id="studentName" formControlName="studentName" placeholder="Enter student name">
+              <div class="text-danger" *ngIf="studentForm.get('studentName')?.touched && studentForm.get('studentName')?.errors?.['required']">
+                Student name is required
+              </div>
           </div>
+
           <div class="mb-3">
-            <label for="department" class="form-label">Department</label>
-            <select class="form-select" id="department" [(ngModel)]="editedStudent.department">
-              <option value="" disabled>Select department</option>
-              <option *ngFor="let dept of departments" [value]="dept">{{dept}}</option>
-            </select>
+            <label for="studentAddress" class="form-label">Student Address</label>
+              <input type="text" class="form-control" id="studentAddress" formControlName="address" placeholder="Enter student address">
+              <div class="text-danger" *ngIf="studentForm.get('address')?.touched && studentForm.get('address')?.errors?.['required']">
+                Address is required
+              </div>
           </div>
-        
+
+          <div class="mb-3">
+            <label for="studentSSN" class="form-label">Student SSN</label>
+              <input type="text" class="form-control" id="studentSSN" formControlName="ssn" placeholder="Enter student SSN">
+              <div class="text-danger" *ngIf="studentForm.get('ssn')?.touched && studentForm.get('ssn')?.errors?.['required']">
+                SSN is required
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="phoneNumber" class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" id="phoneNumber" formControlName="phoneNumber" placeholder="Enter phone number">
+              <div class="text-danger" *ngIf="studentForm.get('phoneNumber')?.touched && studentForm.get('phoneNumber')?.errors?.['required']">
+                Phone number is required
+              </div>
+              <div class="text-danger" *ngIf="studentForm.get('phoneNumber')?.touched && studentForm.get('phoneNumber')?.errors?.['maxlength']">
+                Phone number cannot exceed 15 digits
+              </div>
+              <div class="text-danger" *ngIf="studentForm.get('phoneNumber')?.touched && studentForm.get('phoneNumber')?.errors?.['pattern']">
+                Please enter a valid phone number
+              </div>
+          </div>
+
           <div class="mb-3">
             <label for="Status" class="form-label">Student Status</label>
-            <select class="form-select" id="Status" [(ngModel)]="editedStudent.statu">
+              <select class="form-select" id="Status" formControlName="status">
               <option value="" disabled>Select Status</option>
               <option *ngFor="let stat of status" [value]="stat">{{stat}}</option>
             </select>
+              <div class="text-danger" *ngIf="studentForm.get('status')?.touched && studentForm.get('status')?.errors?.['required']">
+                Status is required
           </div>
-          <div class="mb-3">
-            <label for="stage" class="form-label">Stage</label>
-            <select class="form-select" id="stage" [(ngModel)]="editedStudent.stage">
-              <option value="" disabled>Select stage</option>
-              <option *ngFor="let stage of stages" [value]="stage">{{stage}}</option>
-            </select>
-          </div>
+            </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" (click)="dialogRef.close()">Cancel</button>
-          <button type="button" class="btn btn-primary" (click)="save()">{{ isEdit ? 'Save Changes' : 'Add Student' }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="!studentForm.valid">{{ isEdit ? 'Save Changes' : 'Add Student' }}</button>
         </div>
+        </form>
       </div>
     </div>
   `,
@@ -211,34 +238,59 @@ interface Student {
     .mb-3 {
       margin-bottom: 1rem;
     }
+
+    .text-danger {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
   `]
 })
 export class EditStudentModalComponent {
-  editedStudent: Student;
-  departments = ['Engineering', 'Science', 'Arts'];
-  factories = ['Factory A', 'Factory B', 'Factory C'];
+  studentForm!: FormGroup;
   status = ['Active', 'Inactive'];
-  stages = ['Stage 1', 'Stage 2', 'Stage 3'];
   isEdit: boolean;
 
   constructor(
     public dialogRef: MatDialogRef<EditStudentModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { student?: Student, isEdit: boolean }
+    @Inject(MAT_DIALOG_DATA) public data: { student?: Student, isEdit: boolean },
+    private fb: FormBuilder
   ) {
     this.isEdit = data.isEdit;
-    this.editedStudent = data.student ? { ...data.student } : {
-      id: 0,
-      student: '',
-      department: this.departments[0],
-      factory: this.factories[0],
-      statu: this.status[0],
-      stage: this.stages[0],
-      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      selected: false
-    };
+    this.initForm(data.student);
+  }
+
+  private initForm(student?: Student) {
+    this.studentForm = this.fb.group({
+      id: [student?.id || 0],
+      studentCode: [student?.studentCode || '', [Validators.required]],
+      studentName: [student?.studentName || '', [Validators.required]],
+      address: [student?.address || '', [Validators.required]],
+      ssn: [student?.ssn || '', [Validators.required]],
+      phoneNumber: [student?.phoneNumber || '', [
+        Validators.required,
+        Validators.maxLength(15),
+        Validators.pattern('^[0-9]*$')
+      ]],
+      status: [student?.status || this.status[0], [Validators.required]],
+      selected: [student?.selected || false]
+    });
   }
 
   save() {
-    this.dialogRef.close(this.editedStudent);
+    if (this.studentForm.valid) {
+      this.dialogRef.close(this.studentForm.value);
+    } else {
+      this.markFormGroupTouched(this.studentForm);
+    }
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 }
