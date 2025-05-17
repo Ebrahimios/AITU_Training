@@ -8,7 +8,7 @@ interface Student {
   student: string;
   department: string;
   factory: string;
-  group: string;
+  statu: string;
   stage: string;
   date: string;
   selected: boolean;
@@ -29,10 +29,10 @@ interface Student {
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label for="studentName" class="form-label">Student Code</label>
-            <input type="text" class="form-control" id="studentName" [(ngModel)]="editedStudent.student" placeholder="Enter student code">
+            <label for="studentCode" class="form-label">Student Code</label>
+            <input type="text" class="form-control" id="studentCode" [(ngModel)]="editedStudent.student" placeholder="Enter student code">
           </div>
-        <div class="modal-body">
+        
           <div class="mb-3">
             <label for="studentName" class="form-label">Student Name</label>
             <input type="text" class="form-control" id="studentName" [(ngModel)]="editedStudent.student" placeholder="Enter student name">
@@ -46,10 +46,10 @@ interface Student {
           </div>
         
           <div class="mb-3">
-            <label for="group" class="form-label">Student Status</label>
-            <select class="form-select" id="group" [(ngModel)]="editedStudent.group">
-              <option value="" disabled>Select group</option>
-              <option *ngFor="let group of groups" [value]="group">{{group}}</option>
+            <label for="Status" class="form-label">Student Status</label>
+            <select class="form-select" id="Status" [(ngModel)]="editedStudent.statu">
+              <option value="" disabled>Select Status</option>
+              <option *ngFor="let stat of status" [value]="stat">{{stat}}</option>
             </select>
           </div>
           <div class="mb-3">
@@ -217,7 +217,7 @@ export class EditStudentModalComponent {
   editedStudent: Student;
   departments = ['Engineering', 'Science', 'Arts'];
   factories = ['Factory A', 'Factory B', 'Factory C'];
-  groups = ['Group 1', 'Group 2', 'Group 3'];
+  status = ['Active', 'Inactive'];
   stages = ['Stage 1', 'Stage 2', 'Stage 3'];
   isEdit: boolean;
 
@@ -231,7 +231,7 @@ export class EditStudentModalComponent {
       student: '',
       department: this.departments[0],
       factory: this.factories[0],
-      group: this.groups[0],
+      statu: this.status[0],
       stage: this.stages[0],
       date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
       selected: false
