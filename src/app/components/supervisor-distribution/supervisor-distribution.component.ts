@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem, CdkDropList } from '@angular/cdk/drag-drop';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
+import { FactoryService, Factory } from '../../services/factory.service';
 import * as bootstrap from 'bootstrap';
 
 interface Student {
@@ -18,25 +19,13 @@ interface Student {
   selected: boolean;
 }
 
-interface Factory {
-  id: number;
-  name: string;
-  capacity: number;
-  assignedStudents: number;
-  students: Student[];
-  address?: string;
-  phone?: string;
-  department?: string;
-  type: string;
-}
-
 @Component({
     selector: 'app-student-distribution',
     imports: [CommonModule, FormsModule, MatDialogModule, DragDropModule, RouterModule],
-    templateUrl: './student-distribution.component.html',
-    styleUrls: ['./student-distribution.component.css']
+    templateUrl: './supervisor-distribution.component.html',
+    styleUrls: ['./supervisor-distribution.component.css']
 })
-export class StudentDistributionComponent implements OnInit {
+export class SupervisorDistributionComponent implements OnInit {
   @ViewChildren(CdkDropList) dropLists!: QueryList<CdkDropList>;
 
   factoryTypes: string[] = ['All', 'Internal', 'External'];
@@ -49,8 +38,13 @@ export class StudentDistributionComponent implements OnInit {
   addressError: string = '';
   phoneError: string = '';
   departmentError: string = '';
+  contactNameError: string = '';
+  industryError: string = '';
 
-  constructor(public translationService: TranslationService) {}
+  constructor(
+    public translationService: TranslationService,
+    private factoryService: FactoryService
+  ) {}
 
   students: Student[] = [
     { id: 1, name: 'Ahmed Mohamed', factory: null, department: 'IT', batch: 'Batch 1', stage: 'School', selected: false },
@@ -60,11 +54,8 @@ export class StudentDistributionComponent implements OnInit {
     { id: 5, name: 'Mona Khaled', factory: null, department: 'Mechanics', batch: 'Batch 2', stage: 'Institute', selected: false }
   ];
 
-  factories: Factory[] = [
-    { id: 1, name: 'Factory A', capacity: 3, assignedStudents: 0, students: [], address: '123 Industrial Zone', phone: '01012345678', department: 'IT', type: 'Internal' },
-    { id: 2, name: 'Factory B', capacity: 2, assignedStudents: 0, students: [], address: '456 Business Park', phone: '01087654321', department: 'Mechanics', type: 'External' },
-    { id: 3, name: 'Factory C', capacity: 2, assignedStudents: 0, students: [], address: '789 Tech Valley', phone: '01011223344', department: 'Electrical', type: 'Internal' }
-  ];
+  factories: Factory[] = [];
+  factoryDropLists: string[] = [];
 
   departments: string[] = ['All', 'IT', 'Mechanics', 'Electrical'];
   stages: string[] = ['All', 'School', 'Institute', 'Faculty'];
@@ -76,7 +67,18 @@ export class StudentDistributionComponent implements OnInit {
   factorySearchTerm: string = '';
   selectAll: boolean = false;
   selectedFactory: Factory | null = null;
-  factoryDropLists: string[] = [];
+
+  industries: string[] = [
+    'Manufacturing',
+    'Technology',
+    'Healthcare',
+    'Construction',
+    'Agriculture',
+    'Energy',
+    'Transportation',
+    'Retail'
+  ];
+  newIndustry: string = '';
 
   get filteredStudents(): Student[] {
     return this.students.filter(student => {
@@ -101,8 +103,11 @@ export class StudentDistributionComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.updateFactoryAssignments();
-    this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+    this.factoryService.factories$.subscribe(factories => {
+      this.factories = factories;
+      this.updateFactoryAssignments();
+      this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+    });
   }
 
   ngAfterViewInit(): void {
@@ -136,26 +141,23 @@ export class StudentDistributionComponent implements OnInit {
   saveChanges(): void {
     if (this.selectedFactory) {
       if (confirm('Are you sure you want to save these changes?')) {
-        const index = this.factories.findIndex(f => f.id === this.selectedFactory?.id);
-        if (index !== -1) {
-          this.factories[index] = { ...this.factories[index], ...this.selectedFactory };
-          this.isEditing = false;
-          // Close the modal properly
-          const modalElement = document.getElementById('factoryDetailsModal');
-          if (modalElement) {
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) {
-              modal.hide();
-              // Remove the modal backdrop
-              document.body.classList.remove('modal-open');
-              const backdrop = document.querySelector('.modal-backdrop');
-              if (backdrop) {
-                backdrop.remove();
-              }
+        this.factoryService.updateFactory(this.selectedFactory);
+        this.isEditing = false;
+
+        // Close the modal
+        const modalElement = document.getElementById('factoryDetailsModal');
+        if (modalElement) {
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) {
+            modal.hide();
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+              backdrop.remove();
             }
           }
-          alert('Changes saved successfully');
         }
+        alert('Changes saved successfully');
       }
     }
   }
@@ -197,43 +199,74 @@ export class StudentDistributionComponent implements OnInit {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
-      const student: Student = event.item.data;
+      const selectedStudents = this.selectedStudents;
 
-      if (factory) {
-        // Check if factory is full
-        if (factory.assignedStudents >= factory.capacity) {
-          alert(`Factory ${factory.name} is at full capacity (${factory.capacity})`);
-          return;
-        }
+      if (selectedStudents.length > 0) {
+        // Handle multiple students drop
+        if (factory) {
+          // Check if factory has enough capacity
+          if (factory.assignedStudents + selectedStudents.length > factory.capacity) {
+            alert(`Factory ${factory.name} doesn't have enough capacity for ${selectedStudents.length} students`);
+            return;
+          }
 
-        // Remove from previous factory if exists
-        if (student.factory) {
-          const prevFactory = this.factories.find(f => f.name === student.factory);
-          if (prevFactory) {
-            const index = prevFactory.students.indexOf(student);
+          // Remove from previous factories if exists
+          selectedStudents.forEach(student => {
+            if (student.factory) {
+              const prevFactory = this.factories.find(f => f.name === student.factory);
+              if (prevFactory) {
+                const index = prevFactory.students.indexOf(student);
+                if (index > -1) {
+                  prevFactory.students.splice(index, 1);
+                  prevFactory.assignedStudents--;
+                }
+              }
+            }
+            student.factory = factory.name;
+          });
+
+          // Add all selected students to the new factory
+          factory.students.push(...selectedStudents);
+          factory.assignedStudents = factory.students.length;
+
+          // Remove selected students from the unassigned list
+          selectedStudents.forEach(student => {
+            const index = this.students.indexOf(student);
             if (index > -1) {
-              prevFactory.students.splice(index, 1);
-              prevFactory.assignedStudents--;
+              this.students.splice(index, 1);
+            }
+          });
+        }
+      } else {
+        // Handle single student drop
+        const student: Student = event.item.data;
+        if (factory) {
+          if (factory.assignedStudents >= factory.capacity) {
+            alert(`Factory ${factory.name} is at full capacity (${factory.capacity})`);
+            return;
+          }
+          if (student.factory) {
+            const prevFactory = this.factories.find(f => f.name === student.factory);
+            if (prevFactory) {
+              const index = prevFactory.students.indexOf(student);
+              if (index > -1) {
+                prevFactory.students.splice(index, 1);
+                prevFactory.assignedStudents--;
+              }
             }
           }
+          student.factory = factory.name;
         }
-
-        // Assign to new factory
-        student.factory = factory.name;
-      }
-
-      // Transfer the student between containers
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex
-      );
-
-      // Update the factory students and count
-      if (factory) {
-        factory.students = [...event.container.data];
-        factory.assignedStudents = factory.students.length;
+        transferArrayItem(
+          event.previousContainer.data,
+          event.container.data,
+          event.previousIndex,
+          event.currentIndex
+        );
+        if (factory) {
+          factory.students = [...event.container.data];
+          factory.assignedStudents = factory.students.length;
+        }
       }
     }
   }
@@ -250,6 +283,8 @@ export class StudentDistributionComponent implements OnInit {
         factory.students.splice(index, 1);
         factory.assignedStudents--;
         student.factory = null;
+        // Return student to the original list
+        this.students.push(student);
       }
     }
   }
@@ -260,12 +295,13 @@ export class StudentDistributionComponent implements OnInit {
     });
   }
 
-  addFactory(name: string, address: string, phone: string, department: string): void {
+  addFactory(name: string, address: string, phone: string, industry: string, contactName: string): void {
     // Reset error messages
     this.nameError = '';
     this.addressError = '';
     this.phoneError = '';
-    this.departmentError = '';
+    this.industryError = '';
+    this.contactNameError = '';
 
     let hasError = false;
 
@@ -288,9 +324,15 @@ export class StudentDistributionComponent implements OnInit {
       hasError = true;
     }
 
-    // Department validation
-    if (!department || department === '') {
-      this.departmentError = 'Please select a department';
+    // Industry validation
+    if (!industry || industry === '') {
+      this.industryError = 'Please select an industry';
+      hasError = true;
+    }
+
+    // Contact Name validation
+    if (!contactName || contactName.trim().length < 3) {
+      this.contactNameError = 'Contact name must be at least 3 characters long';
       hasError = true;
     }
 
@@ -306,19 +348,19 @@ export class StudentDistributionComponent implements OnInit {
       students: [],
       address: address.trim(),
       phone: phone.trim(),
-      department,
+      industry,
+      contactName: contactName.trim(),
       type: 'Internal'
     };
-    this.factories.push(newFactory);
-    this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
 
-    // Close the modal properly
+    this.factoryService.addFactory(newFactory);
+
+    // Close the modal
     const modalElement = document.getElementById('addFactoryModal');
     if (modalElement) {
       const modal = bootstrap.Modal.getInstance(modalElement);
       if (modal) {
         modal.hide();
-        // Remove the modal backdrop
         document.body.classList.remove('modal-open');
         const backdrop = document.querySelector('.modal-backdrop');
         if (backdrop) {
@@ -328,5 +370,12 @@ export class StudentDistributionComponent implements OnInit {
     }
 
     alert('Factory added successfully');
+  }
+
+  addNewIndustry() {
+    if (this.newIndustry && !this.industries.includes(this.newIndustry)) {
+      this.industries.push(this.newIndustry);
+      this.newIndustry = '';
+    }
   }
 }

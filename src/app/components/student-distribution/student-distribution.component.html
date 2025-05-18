@@ -69,6 +69,7 @@
 
       <div class="students-container"
            cdkDropList
+           #studentList="cdkDropList"
            [cdkDropListData]="filteredStudents"
            [cdkDropListConnectedTo]="factoryDropLists"
            (cdkDropListDropped)="onDrop($event)">
@@ -112,40 +113,51 @@
         </div>
       </div>
       <div class="factories-grid">
-        <div class="factory-card" *ngFor="let factory of filteredFactories" (click)="openFactoryDetails(factory)">
+        <div class="factory-card" *ngFor="let factory of filteredFactories"
+             [class.full]="factory.assignedStudents >= factory.capacity"
+             (click)="openFactoryDetails(factory)">
           <div class="factory-header">
-            <h4>{{factory.name}}</h4>
-            <div class="capacity-badge" [class.full]="factory.assignedStudents >= factory.capacity">
-              {{factory.assignedStudents}}/{{factory.capacity}}
+            <h3>{{ factory.name }}</h3>
+            <span class="capacity">{{ factory.assignedStudents }}/{{ factory.capacity }}</span>
+          </div>
+          <div class="factory-info">
+            <p><i class="fas fa-map-marker-alt"></i> {{ factory.address }}</p>
+            <p><i class="fas fa-phone"></i> {{ factory.phone }}</p>
+            <p><i class="fas fa-building"></i> {{ factory.department }}</p>
+          </div>
+          <div class="progress-bar">
+            <div class="progress"
+                 [style.width.%]="(factory.assignedStudents / factory.capacity) * 100"
+                 [ngClass]="{
+                   'empty': factory.assignedStudents === 0,
+                   'low': factory.assignedStudents > 0 && factory.assignedStudents < factory.capacity * 0.5,
+                   'medium': factory.assignedStudents >= factory.capacity * 0.5 && factory.assignedStudents < factory.capacity * 0.8,
+                   'high': factory.assignedStudents >= factory.capacity * 0.8
+                 }">
             </div>
           </div>
-
-          <div class="factory-content">
-            <div class="progress-bar">
-              <div class="progress" [style.width.%]="(factory.assignedStudents / factory.capacity) * 100"></div>
+          <div class="factory-students"
+               cdkDropList
+               [id]="'factory-' + factory.id"
+               [cdkDropListData]="factory.students"
+               [cdkDropListConnectedTo]="[studentList]"
+               (cdkDropListDropped)="onDrop($event, factory)">
+            <div class="dropzone-content" *ngIf="factory.students.length === 0">
+              <i class="bi bi-plus-circle"></i>
+              <span *ngIf="factory.assignedStudents < factory.capacity">
+                Drag students here
+              </span>
+              <span *ngIf="factory.assignedStudents >= factory.capacity">
+                Factory is full
+              </span>
             </div>
-            <div class="factory-dropzone"
-            cdkDropList
-            [id]="'factory-' + factory.id"
-            [cdkDropListData]="factory.students"
-            (cdkDropListDropped)="onDrop($event, factory)">
-              <div class="dropzone-content" *ngIf="factory.students.length === 0">
-                <i class="bi bi-plus-circle"></i>
-                <span *ngIf="factory.assignedStudents < factory.capacity">
-                  Drag students here
-                </span>
-                <span *ngIf="factory.assignedStudents >= factory.capacity">
-                  Factory is full
-                </span>
-              </div>
 
-              <div class="assigned-students">
-                <div class="assigned-student" *ngFor="let student of factory.students">
-                  <span class="student-name">{{student.name}}</span>
-                  <button class="remove-btn" (click)="removeFromFactory(student, $event)">
-                    <i class="bi bi-x"></i>
-                  </button>
-                </div>
+            <div class="assigned-students">
+              <div class="assigned-student" *ngFor="let student of factory.students">
+                <span class="student-name">{{student.name}}</span>
+                <button class="remove-btn" (click)="removeFromFactory(student, $event)">
+                  <i class="bi bi-x"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -184,18 +196,24 @@
                 <div class="text-danger" *ngIf="contactNameError">{{contactNameError}}</div>
               </div>
               <div class="mb-3">
-                <label for="factoryDepartment" class="form-label">Department</label>
-                <select class="form-select" id="factoryDepartment" #factoryDepartment>
-                  <option value="" disabled selected>Select department</option>
-                  <option *ngFor="let dept of departments.slice(1)" [value]="dept">{{dept}}</option>
-                </select>
-                <div class="text-danger" *ngIf="departmentError">{{departmentError}}</div>
+                <label for="factoryIndustry" class="form-label">Industry</label>
+                <div class="input-group">
+                  <select class="form-select" id="factoryIndustry" #factoryIndustry>
+                    <option value="" disabled selected>Select industry</option>
+                    <option *ngFor="let industry of industries" [value]="industry">{{industry}}</option>
+                  </select>
+                  <input type="text" class="form-control" placeholder="Add new industry" [(ngModel)]="newIndustry" name="newIndustry">
+                  <button class="btn btn-outline-secondary" type="button" (click)="addNewIndustry()">
+                    <i class="bi bi-plus"></i> Add
+                  </button>
+                </div>
+                <div class="text-danger" *ngIf="industryError">{{industryError}}</div>
               </div>
             </form>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" (click)="addFactory(factoryName.value, factoryAddress.value, factoryPhone.value, factoryDepartment.value, factoryContactName.value)">Save Factory</button>
+            <button type="button" class="btn btn-primary" (click)="addFactory(factoryName.value, factoryAddress.value, factoryPhone.value, factoryIndustry.value, factoryContactName.value)">Save Factory</button>
           </div>
         </div>
       </div>
@@ -228,11 +246,17 @@
                 <input type="text" class="form-control" [(ngModel)]="selectedFactory.contactName" name="factoryContactName" [readonly]="!isEditing">
               </div>
               <div class="mb-3">
-                <label class="form-label"><strong>Department:</strong></label>
-                <select class="form-select" [(ngModel)]="selectedFactory.department" name="factoryDepartment" [disabled]="!isEditing">
-                  <option value="" disabled selected>Select department</option>
-                  <option *ngFor="let dept of departments.slice(1)" [value]="dept">{{dept}}</option>
-                </select>
+                <label class="form-label"><strong>Industry:</strong></label>
+                <div class="input-group">
+                  <select class="form-select" [(ngModel)]="selectedFactory.industry" name="factoryIndustry" [disabled]="!isEditing">
+                    <option value="" disabled selected>Select industry</option>
+                    <option *ngFor="let industry of industries" [value]="industry">{{industry}}</option>
+                  </select>
+                  <input type="text" class="form-control" placeholder="Add new industry" [(ngModel)]="newIndustry" name="newIndustry" [disabled]="!isEditing">
+                  <button class="btn btn-outline-secondary" type="button" (click)="addNewIndustry()" [disabled]="!isEditing">
+                    <i class="bi bi-plus"></i> Add
+                  </button>
+                </div>
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Capacity:</strong></label>

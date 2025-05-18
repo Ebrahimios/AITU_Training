@@ -9,6 +9,7 @@ import { TranslationService } from '../../services/translation.service';
 import { AuthService } from '../../services/firebase.service';
 import { EditStudentModalComponent } from './edit-student-modal/edit-student-modal.component';
 import { StudentDetailsModalComponent } from './student-details-modal/student-details-modal.component';
+import { FactoryService, Factory } from '../../services/factory.service';
 
 interface Student {
   id: number;
@@ -129,7 +130,8 @@ export class HomeComponent implements OnInit {
     public translationService: TranslationService,
     private dialog: MatDialog,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private factoryService: FactoryService
   ) {
     this.totalStudents = this.students.length;
   }

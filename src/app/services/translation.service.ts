@@ -15,6 +15,7 @@ const translations = {
     // Dashboard
     dashboard: 'Dashboard',
     students_distribution: 'Students Distribution',
+    Supervisor_distribution: 'Supervisor Distribution',
     analytics: 'Analytics',
     total_students: 'Total Students',
     departments: 'Departments',
@@ -77,6 +78,7 @@ const translations = {
     // Dashboard
     dashboard: 'لوحة التحكم',
     students_distribution: 'توزيع الطلاب',
+    Supervisor_distribution: 'توزيع المشرفين',
     analytics: 'التحليلات',
     total_students: 'إجمالي الطلاب',
     departments: 'الأقسام',

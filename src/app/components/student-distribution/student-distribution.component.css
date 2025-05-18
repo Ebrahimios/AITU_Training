@@ -160,7 +160,47 @@ select {
 
 .student-card.cdk-drag-preview {
   background-color: #fff;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: scale(0.4);
+  opacity: 0.9;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 20px;
+  max-width: 180px;
+  pointer-events: none;
+  position: relative;
+  z-index: 1000;
+}
+
+.student-card.cdk-drag-preview .student-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.student-card.cdk-drag-preview .student-info h4 {
+  font-size: 0.75rem;
+  margin: 0;
+  line-height: 1.2;
+  color: #1976d2;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.student-card.cdk-drag-preview .student-info p {
+  font-size: 0.65rem;
+  margin: 0;
+  line-height: 1.2;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Factories */
@@ -281,8 +321,23 @@ select {
 
 .progress {
   height: 100%;
-  background: linear-gradient(to right, #6b9bd1, #86A8E7);
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.progress.empty {
+  background-color: #e9ecef;
+}
+
+.progress.low {
+  background-color: #28a745;
+}
+
+.progress.medium {
+  background-color: #ffc107;
+}
+
+.progress.high {
+  background-color: #dc3545;
 }
 
 .factory-dropzone {
