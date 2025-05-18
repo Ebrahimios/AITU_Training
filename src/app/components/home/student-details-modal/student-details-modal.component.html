@@ -7,8 +7,8 @@
         <div class="modal-header">
           <div class="header-content">
             <div class="student-title">
-              <h2>{{student.studentName}}</h2>
-              <span class="student-code">{{student.studentCode}}</span>
+              <h2>{{student.name}}</h2>
+              <span class="student-code">{{student.code}}</span>
             </div>
             <div class="header-actions">
               <button class="btn-icon" (click)="openReport('Progress')" title="Progress Report">
@@ -20,13 +20,14 @@
               <button class="btn-icon" (click)="openReport('Performance')" title="Performance Report">
                 <i class="bi bi-bar-chart"></i>
               </button>
-              <button class="btn-close" (click)="close()">
-                <i class="bi bi-x-lg"></i>
+              <button class="btn-close" (click)="close()" [disabled]="isLoading">
+                <span *ngIf="!isLoading"><i class="bi bi-x-lg"></i></span>
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               </button>
             </div>
           </div>
-          <div class="status-badge" [ngClass]="{'status-active': student.status === 'Active', 'status-inactive': student.status === 'Inactive'}">
-            {{student.status}}
+          <div class="status-badge" [ngClass]="{'status-active': student.state === 'Active', 'status-inactive': student.state === 'Inactive'}">
+            {{student.state}}
           </div>
         </div>
 
@@ -49,21 +50,24 @@
             <div class="info-section">
               <div class="info-header">
                 <h3>Basic Information</h3>
-                <button type="button" class="btn btn-primary" (click)="toggleEditMode()">
-                  <i class="bi" [ngClass]="isEditMode ? 'bi-check-lg' : 'bi-pencil'"></i>
-                  {{ isEditMode ? 'Save' : 'Edit' }}
+                <button type="button" class="btn btn-primary" (click)="toggleEditMode()" [disabled]="isLoading">
+                  <span *ngIf="!isLoading">
+                    <i class="bi" [ngClass]="isEditMode ? 'bi-check-lg' : 'bi-pencil'"></i>
+                    {{ isEditMode ? 'Save' : 'Edit' }}
+                  </span>
+                  <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 </button>
               </div>
               <div class="info-grid">
                 <div class="info-item">
                   <span class="label">Student Name:</span>
-                  <span class="value" *ngIf="!isEditMode">{{ student.studentName }}</span>
-                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.studentName">
+                  <span class="value" *ngIf="!isEditMode">{{ student.name }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.name">
                 </div>
                 <div class="info-item">
                   <span class="label">Student Code:</span>
-                  <span class="value" *ngIf="!isEditMode">{{ student.studentCode }}</span>
-                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.studentCode">
+                  <span class="value" *ngIf="!isEditMode">{{ student.code }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.code" readonly>
                 </div>
                 <div class="info-item">
                   <span class="label">Email:</span>
@@ -72,8 +76,8 @@
                 </div>
                 <div class="info-item">
                   <span class="label">Phone Number:</span>
-                  <span class="value" *ngIf="!isEditMode">{{ student.phoneNumber }}</span>
-                  <input type="tel" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.phoneNumber">
+                  <span class="value" *ngIf="!isEditMode">{{ student.phone }}</span>
+                  <input type="tel" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.phone">
                 </div>
                 <div class="info-item">
                   <span class="label">Birth Date:</span>
@@ -89,9 +93,9 @@
                   </select>
                 </div>
                 <div class="info-item">
-                  <span class="label">Local Address:</span>
-                  <span class="value" *ngIf="!isEditMode">{{ student.localAddress }}</span>
-                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.localAddress">
+                  <span class="label">Address:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.address }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.address">
                 </div>
                 <div class="info-item">
                   <span class="label">Department:</span>
@@ -113,11 +117,10 @@
                 </div>
                 <div class="info-item">
                   <span class="label">Factory Type:</span>
-                  <span class="value" *ngIf="!isEditMode">{{ student.factoryType }}</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.factoryType ? 'Type A' : 'Type B' }}</span>
                   <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.factoryType">
-                    <option value="Type A">Type A</option>
-                    <option value="Type B">Type B</option>
-                    <option value="Type C">Type C</option>
+                    <option [ngValue]="true">Type A</option>
+                    <option [ngValue]="false">Type B</option>
                   </select>
                 </div>
                 <div class="info-item">
@@ -130,24 +133,24 @@
                   </select>
                 </div>
                 <div class="info-item">
-                  <span class="label">SSN:</span>
-                  <span class="value" *ngIf="!isEditMode">{{ student.ssn }}</span>
-                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.ssn">
+                  <span class="label">National ID:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.nationalID }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.nationalID">
                 </div>
                 <div class="info-item">
                   <span class="label">Status:</span>
-                  <span class="value" *ngIf="!isEditMode" [ngClass]="{'status-active': student.status === 'Active', 'status-inactive': student.status === 'Inactive'}">
-                    {{ student.status }}
+                  <span class="value" *ngIf="!isEditMode" [ngClass]="{'status-active': student.state === 'Active', 'status-inactive': student.state === 'Inactive'}">
+                    {{ student.state }}
                   </span>
-                  <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.status">
+                  <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.state">
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </select>
                 </div>
                 <div class="info-item">
-                  <span class="label">Start Date:</span>
-                  <span class="value" *ngIf="!isEditMode">{{ student.date | date }}</span>
-                  <input type="date" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.date">
+                  <span class="label">Grade:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.grade }}</span>
+                  <input type="number" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.grade">
                 </div>
               </div>
             </div>
@@ -267,66 +270,87 @@
                 </div>
               </div>
             </div>
+
+            <div class="loading-container" *ngIf="isLoading">
+              <div class="spinner"></div>
+              <p>Loading progress data...</p>
+            </div>
           </div>
 
           <!-- Evaluation Tab -->
-          <div class="tab-content" [class.active]="activeTab === 'evaluation'" *ngIf="isSupervisor">
+          <div class="tab-content" [class.active]="activeTab === 'evaluation'">
             <div class="evaluation-section">
               <h3>Capacity Evaluation</h3>
-              <form [formGroup]="evaluationForm" class="evaluation-form">
-                <div class="row mb-3">
-                  <div class="col-md-4 mb-3">
-                    <label for="technicalSkills" class="form-label">Technical Skills</label>
-                    <input type="number" class="form-control" id="technicalSkills" formControlName="technicalSkills" min="0" max="10">
+              <form [formGroup]="evaluationForm" (ngSubmit)="submitEvaluation()">
+                <div class="rating-grid">
+                  <div class="rating-item">
+                    <label>Technical Skills</label>
+                    <div class="rating-input">
+                      <input type="range" min="0" max="10" formControlName="technicalSkills">
+                      <span class="rating-value">{{ evaluationForm.get('technicalSkills')?.value }}</span>
+                    </div>
                   </div>
-                  <div class="col-md-4 mb-3">
-                    <label for="communication" class="form-label">Communication</label>
-                    <input type="number" class="form-control" id="communication" formControlName="communication" min="0" max="10">
+                  <div class="rating-item">
+                    <label>Communication</label>
+                    <div class="rating-input">
+                      <input type="range" min="0" max="10" formControlName="communication">
+                      <span class="rating-value">{{ evaluationForm.get('communication')?.value }}</span>
+                    </div>
                   </div>
-                  <div class="col-md-4 mb-3">
-                    <label for="teamwork" class="form-label">Teamwork</label>
-                    <input type="number" class="form-control" id="teamwork" formControlName="teamwork" min="0" max="10">
+                  <div class="rating-item">
+                    <label>Teamwork</label>
+                    <div class="rating-input">
+                      <input type="range" min="0" max="10" formControlName="teamwork">
+                      <span class="rating-value">{{ evaluationForm.get('teamwork')?.value }}</span>
+                    </div>
                   </div>
-                  <div class="col-md-4 mb-3">
-                    <label for="problemSolving" class="form-label">Problem Solving</label>
-                    <input type="number" class="form-control" id="problemSolving" formControlName="problemSolving" min="0" max="10">
+                  <div class="rating-item">
+                    <label>Problem Solving</label>
+                    <div class="rating-input">
+                      <input type="range" min="0" max="10" formControlName="problemSolving">
+                      <span class="rating-value">{{ evaluationForm.get('problemSolving')?.value }}</span>
+                    </div>
                   </div>
-                  <div class="col-md-4 mb-3">
-                    <label for="attendance" class="form-label">Attendance</label>
-                    <input type="number" class="form-control" id="attendance" formControlName="attendance" min="0" max="10">
+                  <div class="rating-item">
+                    <label>Attendance</label>
+                    <div class="rating-input">
+                      <input type="range" min="0" max="10" formControlName="attendance">
+                      <span class="rating-value">{{ evaluationForm.get('attendance')?.value }}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div class="mb-3">
-                  <button class="btn btn-primary" (click)="calculateOverallRating()">
-                    <i class="bi bi-calculator"></i> Calculate Overall Rating
-                  </button>
-                </div>
-
-                <div class="mb-3">
-                  <label class="form-label">Overall Rating</label>
-                  <div class="h4">
-                    {{ evaluationForm.get('overallRating')?.value || 0 }}/10
+                <div class="form-group">
+                  <label for="comments">Comments</label>
+                  <textarea class="form-control" id="comments" rows="3" formControlName="comments"></textarea>
+                  <div class="text-danger" *ngIf="evaluationForm.get('comments')?.touched && evaluationForm.get('comments')?.errors?.['required']">
+                    Comments are required
                   </div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="comments" class="form-label">Comments</label>
-                  <textarea class="form-control" id="comments" formControlName="comments" rows="4" placeholder="Enter your evaluation comments..."></textarea>
+                  <div class="text-danger" *ngIf="evaluationForm.get('comments')?.touched && evaluationForm.get('comments')?.errors?.['minlength']">
+                    Comments must be at least 10 characters
+                  </div>
                 </div>
 
                 <div class="form-actions">
-                  <button class="btn btn-success" (click)="submitEvaluation()" [disabled]="evaluationForm.invalid || isLoading">
-                    <i class="bi bi-check-circle"></i> Submit Evaluation
+                  <button type="submit" class="btn btn-primary" [disabled]="!evaluationForm.valid || isLoading">
+                    <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Submit Evaluation
                   </button>
                 </div>
               </form>
             </div>
           </div>
         </div>
+
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="close()">Close</button>
-          <button type="button" class="btn btn-primary" (click)="Delete()">Delete </button>
+          <button type="button" class="btn btn-outline-danger" (click)="Delete()" [disabled]="isLoading">
+            <span *ngIf="!isLoading">Delete</span>
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="close()" [disabled]="isLoading">
+            <span *ngIf="!isLoading">Close</span>
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
     </div>

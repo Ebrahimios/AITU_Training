@@ -223,8 +223,14 @@ export class StudentDistributionComponent implements OnInit {
             student.factory = factory.name;
           });
 
-          // Add all selected students to the new factory
-          factory.students.push(...selectedStudents);
+          // Add all selected students to the new factory, avoiding duplicates
+          selectedStudents.forEach(student => {
+            // Check if student with same name already exists in the factory
+            const isDuplicate = factory.students.some(existingStudent => existingStudent.name === student.name);
+            if (!isDuplicate) {
+              factory.students.push(student);
+            }
+          });
           factory.assignedStudents = factory.students.length;
 
           // Remove selected students from the unassigned list
@@ -254,16 +260,27 @@ export class StudentDistributionComponent implements OnInit {
             }
           }
           student.factory = factory.name;
-        }
-        transferArrayItem(
-          event.previousContainer.data,
-          event.container.data,
-          event.previousIndex,
-          event.currentIndex
-        );
-        if (factory) {
-          factory.students = [...event.container.data];
-          factory.assignedStudents = factory.students.length;
+          
+          // Check if student with same name already exists in the factory
+          const isDuplicate = factory.students.some(existingStudent => existingStudent.name === student.name);
+          
+          if (!isDuplicate) {
+            transferArrayItem(
+              event.previousContainer.data,
+              event.container.data,
+              event.previousIndex,
+              event.currentIndex
+            );
+            factory.students = [...event.container.data];
+            factory.assignedStudents = factory.students.length;
+          } else {
+            // If duplicate, don't transfer but update the UI to show it's assigned
+            // Remove from visible list without transferring to factory again
+            const index = event.previousContainer.data.indexOf(student);
+            if (index > -1) {
+              event.previousContainer.data.splice(index, 1);
+            }
+          }
         }
       }
     }
@@ -276,13 +293,19 @@ export class StudentDistributionComponent implements OnInit {
 
     const factory = this.factories.find(f => f.name === student.factory);
     if (factory) {
-      const index = factory.students.indexOf(student);
+      // Find the student by name and id to handle potential duplicates
+      const index = factory.students.findIndex(s => s.id === student.id && s.name === student.name);
       if (index > -1) {
         factory.students.splice(index, 1);
         factory.assignedStudents--;
         student.factory = null;
-        // Return student to the original list
-        this.students.push(student);
+        
+        // Check if student already exists in the original list to avoid duplicates
+        const existsInStudents = this.students.some(s => s.id === student.id && s.name === student.name);
+        if (!existsInStudents) {
+          // Return student to the original list
+          this.students.push(student);
+        }
       }
     }
   }

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, UserCredential } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, getDoc, DocumentData } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, DocumentData, collection, getDocs, deleteDoc, updateDoc } from '@angular/fire/firestore';
 import { Student } from '../interfaces/student';
 import { DataSource } from '@angular/cdk/collections';
 
@@ -71,10 +71,12 @@ export class AuthService {
         state: student.state,
         address: student.address,
         nationalID: student.nationalID,
+        selected: student.selected,
+        createOn: Date.now(),
         factory: "",
         department: "",
         birthAddress: "",
-        birthDate: Date.now(),
+        birthDate: "",
         email: "",
         stage: "",
         gender: "",
@@ -190,6 +192,82 @@ export class AuthService {
     } else {
       console.error('No such document in Firestore!');
       return null;
+    }
+  }
+
+  public async getAllStudents(): Promise<Student[]> {
+    try {
+      const studentsCollection = collection(this.firestore, 'StudentsTable');
+      const querySnapshot = await getDocs(studentsCollection);
+      const students: Student[] = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const student: Student = {
+          code: data['code'],
+          name: data['name'],
+          phone: data['phone'],
+          state: data['state'],
+          address: data['address'],
+          nationalID: data['nationalID'],
+          email: data['email'],
+          birthDate: data['birthDate'] ? new Date(data['birthDate']) : undefined,
+          createOn: data['createOn'] ? new Date(data['createOn']) : undefined,
+          gender: data['gender'],
+          department: data['department'],
+          birthAddress: data['birthAddress'],
+          factory: data['factory'],
+          grade: data['grade'],
+          stage: data['stage'],
+          factoryType: data['factoryType'],
+          selected: data['selected']
+        };
+        students.push(student);
+      });
+
+      return students;
+    } catch (error) {
+      console.error('Error getting students:', error);
+      return [];
+    }
+  }
+
+  public async updateStudent(student: Student): Promise<boolean> {
+    try {
+      const userDocRef = doc(this.firestore, 'StudentsTable', student.code);
+      await updateDoc(userDocRef, {
+        name: student.name,
+        phone: student.phone,
+        state: student.state,
+        address: student.address,
+        nationalID: student.nationalID,
+        email: student.email,
+        birthDate: student.birthDate,
+        createOn: Date.now(),
+        gender: student.gender,
+        department: student.department,
+        birthAddress: student.birthAddress,
+        factory: student.factory,
+        grade: student.grade,
+        stage: student.stage,
+        factoryType: student.factoryType,
+        selected: student.selected
+      });
+      return true;
+    } catch (error) {
+      console.error('Error updating student:', error);
+      return false;
+    }
+  }
+
+  public async deleteStudent(studentCode: string): Promise<boolean> {
+    try {
+      const userDocRef = doc(this.firestore, 'StudentsTable', studentCode);
+      await deleteDoc(userDocRef);
+      return true;
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      return false;
     }
   }
 }

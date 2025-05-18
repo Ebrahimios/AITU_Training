@@ -2,17 +2,9 @@ import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Student } from '../../../interfaces/student';
+import { AuthService } from '../../../services/firebase.service';
 
-interface Student {
-  id: number;
-  studentCode: string;
-  studentName: string;
-  address: string;
-  ssn: string;
-  phoneNumber: string;
-  status: string;
-  selected: boolean;
-}
 
 @Component({
   selector: 'app-edit-student-modal',
@@ -248,13 +240,15 @@ interface Student {
 })
 export class EditStudentModalComponent {
   studentForm!: FormGroup;
-  status = ['Active', 'Inactive'];
+  status = ['New', 'Returner'];
   isEdit: boolean;
+  student?: Student;
 
   constructor(
     public dialogRef: MatDialogRef<EditStudentModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { student?: Student, isEdit: boolean },
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private authService: AuthService
   ) {
     this.isEdit = data.isEdit;
     this.initForm(data.student);
@@ -262,24 +256,34 @@ export class EditStudentModalComponent {
 
   private initForm(student?: Student) {
     this.studentForm = this.fb.group({
-      id: [student?.id || 0],
-      studentCode: [student?.studentCode || '', [Validators.required]],
-      studentName: [student?.studentName || '', [Validators.required]],
+      studentCode: [student?.code || '', [Validators.required]],
+      studentName: [student?.name || '', [Validators.required]],
       address: [student?.address || '', [Validators.required]],
-      ssn: [student?.ssn || '', [Validators.required]],
-      phoneNumber: [student?.phoneNumber || '', [
+      ssn: [student?.nationalID || '', [Validators.required]],
+      phoneNumber: [student?.phone || '', [
         Validators.required,
         Validators.maxLength(15),
         Validators.pattern('^[0-9]*$')
       ]],
-      status: [student?.status || this.status[0], [Validators.required]],
+      status: [student?.state || this.status[0], [Validators.required]],
       selected: [student?.selected || false]
     });
   }
 
   save() {
     if (this.studentForm.valid) {
-      this.dialogRef.close(this.studentForm.value);
+      this.student = {
+        code: this.studentForm.value.studentCode,
+        name: this.studentForm.value.studentName,
+        address: this.studentForm.value.address,
+        nationalID: this.studentForm.value.ssn,
+        phone: this.studentForm.value.phoneNumber,
+        state: this.studentForm.value.status,
+        selected: this.studentForm.value.selected
+      }
+      console.log(this.student);
+      this.authService.sendStudentData(this.student);
+      this.dialogRef.close(this.student);
     } else {
       this.markFormGroupTouched(this.studentForm);
     }
