@@ -35,7 +35,7 @@ export class NavbarComponent {
   notifications: Notification[] = [
     {
       icon: 'bi-building-add',
-      message: 'New factory added by student',
+      message: 'new_factory_added',
       time: '1 min ago',
       type: 'factory_request',
       id: 1,
@@ -44,17 +44,22 @@ export class NavbarComponent {
     },
     {
       icon: 'bi-person-plus',
-      message: 'New student registered',
+      message: 'new_student_registered',
       time: '5 min ago',
       type: 'registration'
     },
     {
       icon: 'bi-building',
-      message: 'Factory capacity updated',
+      message: 'factory_capacity_updated',
       time: '1 hour ago',
       type: 'factory_update'
     }
   ];
+  
+  // Get translated message for notification
+  getNotificationMessage(notification: Notification): string {
+    return this.translationService.translate(notification.message as any);
+  }
 
   toggleNotifications() {
     this.showNotifications = !this.showNotifications;

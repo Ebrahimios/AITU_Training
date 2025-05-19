@@ -320,7 +320,7 @@ export class StudentDistributionComponent implements OnInit {
     });
   }
 
-  addFactory(name: string, address: string, phone: string, industry: string, contactName: string): void {
+  addFactory(name: string, address: string, phone: string, contactName: string, industry: string, capacity: string, type: string): void {
     // Reset error messages
     this.nameError = '';
     this.addressError = '';
@@ -365,17 +365,24 @@ export class StudentDistributionComponent implements OnInit {
       return;
     }
 
+    // Validate capacity
+    let capacityValue = parseInt(capacity);
+    if (isNaN(capacityValue) || capacityValue <= 0) {
+      this.industryError = this.translationService.translate('invalid_capacity');
+      return;
+    }
+
     const newFactory: Factory = {
       id: this.factories.length + 1,
       name: name.trim(),
-      capacity: 5,
+      capacity: capacityValue,
       assignedStudents: 0,
       students: [],
       address: address.trim(),
       phone: phone.trim(),
       industry,
       contactName: contactName.trim(),
-      type: 'Internal'
+      type: type || 'Internal'
     };
 
     this.factoryService.addFactory(newFactory);

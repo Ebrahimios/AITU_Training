@@ -25,24 +25,24 @@
             <div class="notification-item" *ngFor="let notification of notifications">
               <i class="bi" [class]="notification.icon"></i>
               <div class="notification-content">
-                <p class="notification-text" [class.clickable]="notification.type.includes('factory')" (click)="notification.type.includes('factory') && showFactoryDetails(notification.factoryName)">{{notification.message}}</p>
+                <p class="notification-text" [class.clickable]="notification.type.includes('factory')" (click)="notification.type.includes('factory') && showFactoryDetails(notification.factoryName)">{{getNotificationMessage(notification)}}</p>
                 <span class="notification-time">{{notification.time}}</span>
                 <div class="factory-actions" *ngIf="notification.type === 'factory_request'">
                   <div class="factory-details">
-                    <p><i class="bi bi-person-circle"></i> Student: {{notification.studentName}}</p>
-                    <p><i class="bi bi-building"></i> Factory: <a href="javascript:void(0)" (click)="showFactoryDetails(notification.factoryName)">{{notification.factoryName}}</a></p>
+                    <p><i class="bi bi-person-circle"></i> {{ translationService.translate('student') }}: {{notification.studentName}}</p>
+                    <p><i class="bi bi-building"></i> {{ translationService.translate('factory') }}: <a href="javascript:void(0)" (click)="showFactoryDetails(notification.factoryName)">{{notification.factoryName}}</a></p>
                   </div>
                   <div class="action-buttons">
                     <button class="btn-accept" (click)="notification.id && handleFactoryRequest(notification.id, 'accept')">
-                      <i class="bi bi-check-circle"></i> Accept
+                      <i class="bi bi-check-circle"></i> {{ translationService.translate('accept') }}
                     </button>
                     <button class="btn-deny" (click)="notification.id && handleFactoryRequest(notification.id, 'deny')">
-                      <i class="bi bi-x-circle"></i> Deny
+                      <i class="bi bi-x-circle"></i> {{ translationService.translate('deny') }}
                     </button>
                   </div>
                 </div>
                 <div *ngIf="notification.type === 'factory_update'">
-                  <a href="javascript:void(0)" (click)="showFactoryDetails(notification.factoryName)" class="view-details-link">View Details</a>
+                  <a href="javascript:void(0)" (click)="showFactoryDetails(notification.factoryName)" class="view-details-link">{{ translationService.translate('view_details') }}</a>
                 </div>
               </div>
             </div>
@@ -74,45 +74,45 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="factoryDetailsModalLabel">Factory Details</h5>
+        <h5 class="modal-title" id="factoryDetailsModalLabel">{{ translationService.translate('factory_details') }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" *ngIf="selectedFactory">
         <div class="factory-info">
           <div class="info-group">
-            <label>Name:</label>
+            <label>{{ translationService.translate('name') }}:</label>
             <p>{{selectedFactory.name}}</p>
           </div>
           <div class="info-group">
-            <label>Address:</label>
+            <label>{{ translationService.translate('address') }}:</label>
             <p>{{selectedFactory.address}}</p>
           </div>
           <div class="info-group">
-            <label>Phone:</label>
+            <label>{{ translationService.translate('phone') }}:</label>
             <p>{{selectedFactory.phone}}</p>
           </div>
           <div class="info-group">
-            <label>Industry:</label>
+            <label>{{ translationService.translate('industry') }}:</label>
             <p>{{selectedFactory.industry}}</p>
           </div>
           <div class="info-group">
-            <label>Contact Person:</label>
+            <label>{{ translationService.translate('contact_name') }}:</label>
             <p>{{selectedFactory.contactName}}</p>
           </div>
           <div class="info-group">
-            <label>Type:</label>
+            <label>{{ translationService.translate('type') }}:</label>
             <p>{{selectedFactory.type}}</p>
           </div>
           <div class="info-group">
-            <label>Capacity:</label>
+            <label>{{ translationService.translate('capacity') }}:</label>
             <p>{{selectedFactory.assignedStudents}} / {{selectedFactory.capacity}}</p>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-success" (click)="acceptFactory()"><i class="bi bi-check-circle"></i> Accept</button>
-        <button type="button" class="btn btn-danger" (click)="denyFactory()"><i class="bi bi-x-circle"></i> Deny</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" (click)="acceptFactory()"><i class="bi bi-check-circle"></i> {{ translationService.translate('accept') }}</button>
+        <button type="button" class="btn btn-danger" (click)="denyFactory()"><i class="bi bi-x-circle"></i> {{ translationService.translate('deny') }}</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ translationService.translate('close') }}</button>
       </div>
     </div>
   </div>

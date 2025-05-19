@@ -1,0 +1,107 @@
+<div class="analytics-container" [dir]="(translationService.currentLang$ | async) === 'ar' ? 'rtl' : 'ltr'">
+  <!-- Header -->
+  <div class="header">
+    <div class="back-button">
+      <button class="btn btn-light" routerLink="/home">
+        <i class="bi bi-arrow-left"></i>
+        {{ translationService.translate('back_to_home') }}
+      </button>
+    </div>
+    <div class="header-content">
+      <h2>{{ translationService.translate('analytics') }}</h2>
+      <div class="filters">
+        <select [(ngModel)]="selectedYear" (change)="onYearChange()" class="form-select">
+          <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-container">
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <h3>{{ translationService.translate('total_students') }}</h3>
+        <div class="kpi-value">{{ totalStudents }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <i class="bi bi-building-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <h3>{{ translationService.translate('factories') }}</h3>
+        <div class="kpi-value">{{ totalFactories }}</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <i class="bi bi-bar-chart-fill"></i>
+      </div>
+      <div class="kpi-content">
+        <h3>{{ translationService.translate('capacity') }}</h3>
+        <div class="kpi-value">{{ averageUtilization | number:'1.0-0' }}%</div>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon">
+        <i class="bi bi-graph-up-arrow"></i>
+      </div>
+      <div class="kpi-content">
+        <h3>{{ translationService.translate('growth') }}</h3>
+        <div class="kpi-value">+{{ growthRate }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-container">
+    <!-- First Row -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>{{ translationService.translate('department_distribution') }}</h3>
+        </div>
+        <div class="chart-body">
+          <canvas id="departmentChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>{{ translationService.translate('students_distribution') }}</h3>
+        </div>
+        <div class="chart-body">
+          <canvas id="factoryDistributionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second Row -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>{{ translationService.translate('year') }} {{ selectedYear }}</h3>
+        </div>
+        <div class="chart-body">
+          <canvas id="monthlyTrendsChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>{{ translationService.translate('capacity') }}</h3>
+        </div>
+        <div class="chart-body">
+          <canvas id="capacityUtilizationChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

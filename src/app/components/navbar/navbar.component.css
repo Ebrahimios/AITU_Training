@@ -2174,6 +2174,52 @@
   text-decoration: underline;
 }
 
+/* RTL Support for Navbar */
+[dir="rtl"] .nav-content {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .nav-icons {
+  flex-direction: row;
+}
+
+[dir="rtl"] .rtl-icon-order {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .notification-header,
+[dir="rtl"] .notification-content,
+[dir="rtl"] .notification-text,
+[dir="rtl"] .notification-time,
+[dir="rtl"] .factory-details {
+  text-align: right;
+}
+
+[dir="rtl"] .notification-item i {
+  margin-right: 0;
+  margin-left: 10px;
+}
+
+[dir="rtl"] .factory-actions {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+[dir="rtl"] .action-buttons {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .btn-accept i,
+[dir="rtl"] .btn-deny i {
+  margin-right: 0;
+  margin-left: 5px;
+}
+
+[dir="rtl"] .factory-details p i {
+  margin-right: 0;
+  margin-left: 5px;
+}
+
 /* Factory Details Modal Styles */
 .factory-info {
   padding: 10px;
