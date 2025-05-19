@@ -6,18 +6,11 @@ import { RouterModule } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem, CdkDropList } from '@angular/cdk/drag-drop';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
-import { FactoryService, Factory } from '../../services/factory.service';
+import { FactoryService, Factory, Supervisor } from '../../services/factory.service';
+import { DistributionService, Student } from '../../services/distribution.service';
 import * as bootstrap from 'bootstrap';
 
-interface Student {
-  id: number;
-  name: string;
-  factory: string | null;
-  department: string;
-  batch: string;
-  stage: string;
-  selected: boolean;
-}
+// Using Student interface from distribution.service
 
 @Component({
     selector: 'app-student-distribution',
@@ -28,10 +21,10 @@ interface Student {
 export class SupervisorDistributionComponent implements OnInit {
   @ViewChildren(CdkDropList) dropLists!: QueryList<CdkDropList>;
 
-  factoryTypes: string[] = ['All', 'Internal', 'External'];
-  selectedFactoryType: string = 'All';
+  supervisorTypes: string[] = ['All', 'Administrative Supervisor', 'Technical Supervisor'];
+  selectedSupervisorType: string = 'All';
   isEditing: boolean = false;
-  originalFactoryData: Factory | null = null;
+  originalSupervisorData: Supervisor | null = null;
 
   // Error messages
   nameError: string = '';
@@ -43,19 +36,14 @@ export class SupervisorDistributionComponent implements OnInit {
 
   constructor(
     public translationService: TranslationService,
-    private factoryService: FactoryService
+    private factoryService: FactoryService,
+    private distributionService: DistributionService
   ) {}
 
-  students: Student[] = [
-    { id: 1, name: 'Ahmed Mohamed', factory: null, department: 'IT', batch: 'Batch 1', stage: 'School', selected: false },
-    { id: 2, name: 'Sara Ahmed', factory: null, department: 'Mechanics', batch: 'Batch 2', stage: 'Institute', selected: false },
-    { id: 3, name: 'Omar Ali', factory: null, department: 'Electrical', batch: 'Batch 1', stage: 'Faculty', selected: false },
-    { id: 4, name: 'Nour Hassan', factory: null, department: 'IT', batch: 'Batch 3', stage: 'School', selected: false },
-    { id: 5, name: 'Mona Khaled', factory: null, department: 'Mechanics', batch: 'Batch 2', stage: 'Institute', selected: false }
-  ];
+  students: Student[] = [];
 
-  factories: Factory[] = [];
-  factoryDropLists: string[] = [];
+  supervisors: Supervisor[] = [];
+  supervisorDropLists: string[] = [];
 
   departments: string[] = ['All', 'IT', 'Mechanics', 'Electrical'];
   stages: string[] = ['All', 'School', 'Institute', 'Faculty'];
@@ -64,9 +52,9 @@ export class SupervisorDistributionComponent implements OnInit {
   selectedStage: string = 'All';
   selectedBatch: string = 'All';
   searchTerm: string = '';
-  factorySearchTerm: string = '';
+  supervisorSearchTerm: string = '';
   selectAll: boolean = false;
-  selectedFactory: Factory | null = null;
+  selectedSupervisor: Supervisor | null = null;
 
   industries: string[] = [
     'Manufacturing',
@@ -86,16 +74,16 @@ export class SupervisorDistributionComponent implements OnInit {
       const matchesStage = this.selectedStage === 'All' || student.stage === this.selectedStage;
       const matchesBatch = this.selectedBatch === 'All' || student.batch === this.selectedBatch;
       const matchesSearch = student.name.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const notAssigned = !student.factory;
+      const notAssigned = !student.supervisor;
 
       return matchesDepartment && matchesStage && matchesBatch && matchesSearch && notAssigned;
     });
   }
 
-  get filteredFactories(): Factory[] {
-    return this.factories
-      .filter(f => this.selectedFactoryType === 'All' || f.type === this.selectedFactoryType)
-      .filter(f => f.name.toLowerCase().includes(this.factorySearchTerm.toLowerCase()));
+  get filteredSupervisors(): Supervisor[] {
+    return this.supervisors
+      .filter(s => this.selectedSupervisorType === 'All' || s.type === this.selectedSupervisorType)
+      .filter(s => s.name.toLowerCase().includes(this.supervisorSearchTerm.toLowerCase()));
   }
 
   get selectedStudents(): Student[] {
@@ -103,24 +91,30 @@ export class SupervisorDistributionComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.factoryService.factories$.subscribe(factories => {
-      this.factories = factories;
-      this.updateFactoryAssignments();
-      this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+    // Subscribe to supervisors
+    this.factoryService.supervisors$.subscribe(supervisors => {
+      this.supervisors = supervisors;
+      this.updateSupervisorAssignments();
+      this.supervisorDropLists = this.supervisors.map(s => `supervisor-${s.id}`);
+    });
+    
+    // Subscribe to students
+    this.distributionService.students$.subscribe(students => {
+      this.students = students;
     });
   }
 
   ngAfterViewInit(): void {
     this.dropLists.changes.subscribe(() => {
-      this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+      this.supervisorDropLists = this.supervisors.map(s => `supervisor-${s.id}`);
     });
   }
 
-  openFactoryDetails(factory: Factory): void {
-    this.selectedFactory = factory;
+  openSupervisorDetails(supervisor: Supervisor): void {
+    this.selectedSupervisor = supervisor;
     this.isEditing = false;
-    this.originalFactoryData = { ...factory };
-    const modalElement = document.getElementById('factoryDetailsModal');
+    this.originalSupervisorData = { ...supervisor };
+    const modalElement = document.getElementById('supervisorDetailsModal');
     if (modalElement) {
       const modal = new bootstrap.Modal(modalElement);
       modal.show();
@@ -132,20 +126,20 @@ export class SupervisorDistributionComponent implements OnInit {
   }
 
   cancelEditing(): void {
-    if (this.selectedFactory && this.originalFactoryData) {
-      Object.assign(this.selectedFactory, this.originalFactoryData);
+    if (this.selectedSupervisor && this.originalSupervisorData) {
+      Object.assign(this.selectedSupervisor, this.originalSupervisorData);
     }
     this.isEditing = false;
   }
 
   saveChanges(): void {
-    if (this.selectedFactory) {
+    if (this.selectedSupervisor) {
       if (confirm('Are you sure you want to save these changes?')) {
-        this.factoryService.updateFactory(this.selectedFactory);
+        this.factoryService.updateSupervisor(this.selectedSupervisor);
         this.isEditing = false;
 
         // Close the modal
-        const modalElement = document.getElementById('factoryDetailsModal');
+        const modalElement = document.getElementById('supervisorDetailsModal');
         if (modalElement) {
           const modal = bootstrap.Modal.getInstance(modalElement);
           if (modal) {
@@ -195,7 +189,7 @@ export class SupervisorDistributionComponent implements OnInit {
     this.selectAll = filteredStudents.length > 0 && filteredStudents.every(student => student.selected);
   }
 
-  onDrop(event: CdkDragDrop<Student[]>, factory?: Factory): void {
+  onDrop(event: CdkDragDrop<Student[]>, supervisor?: Supervisor): void {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
@@ -203,59 +197,68 @@ export class SupervisorDistributionComponent implements OnInit {
 
       if (selectedStudents.length > 0) {
         // Handle multiple students drop
-        if (factory) {
-          // Check if factory has enough capacity
-          if (factory.assignedStudents + selectedStudents.length > factory.capacity) {
-            alert(`Factory ${factory.name} doesn't have enough capacity for ${selectedStudents.length} students`);
+        if (supervisor) {
+          // Check if supervisor has enough capacity
+          if (supervisor.assignedStudents + selectedStudents.length > supervisor.capacity) {
+            alert(`Supervisor ${supervisor.name} doesn't have enough capacity for ${selectedStudents.length} students`);
             return;
           }
 
-          // Remove from previous factories if exists
+          // Remove from previous supervisors if exists
           selectedStudents.forEach(student => {
-            if (student.factory) {
-              const prevFactory = this.factories.find(f => f.name === student.factory);
-              if (prevFactory) {
-                const index = prevFactory.students.indexOf(student);
+            if (student.supervisor) {
+              const prevSupervisor = this.supervisors.find(s => s.name === student.supervisor);
+              if (prevSupervisor) {
+                const index = prevSupervisor.students.indexOf(student);
                 if (index > -1) {
-                  prevFactory.students.splice(index, 1);
-                  prevFactory.assignedStudents--;
+                  prevSupervisor.students.splice(index, 1);
+                  prevSupervisor.assignedStudents--;
+                  // Update the previous supervisor
+                  this.factoryService.updateSupervisor(prevSupervisor);
                 }
               }
             }
-            student.factory = factory.name;
+            
+            // Update student in distribution service
+            this.distributionService.assignStudentToSupervisor(student, supervisor.name);
+            
+            // Update local reference
+            student.supervisor = supervisor.name;
           });
 
-          // Add all selected students to the new factory
-          factory.students.push(...selectedStudents);
-          factory.assignedStudents = factory.students.length;
-
-          // Remove selected students from the unassigned list
-          selectedStudents.forEach(student => {
-            const index = this.students.indexOf(student);
-            if (index > -1) {
-              this.students.splice(index, 1);
-            }
-          });
+          // Add all selected students to the new supervisor
+          supervisor.students.push(...selectedStudents);
+          supervisor.assignedStudents = supervisor.students.length;
+          
+          // Update the supervisor
+          this.factoryService.updateSupervisor(supervisor);
         }
       } else {
         // Handle single student drop
         const student: Student = event.item.data;
-        if (factory) {
-          if (factory.assignedStudents >= factory.capacity) {
-            alert(`Factory ${factory.name} is at full capacity (${factory.capacity})`);
+        if (supervisor) {
+          if (supervisor.assignedStudents >= supervisor.capacity) {
+            alert(`Supervisor ${supervisor.name} is at full capacity (${supervisor.capacity})`);
             return;
           }
-          if (student.factory) {
-            const prevFactory = this.factories.find(f => f.name === student.factory);
-            if (prevFactory) {
-              const index = prevFactory.students.indexOf(student);
+          if (student.supervisor) {
+            const prevSupervisor = this.supervisors.find(s => s.name === student.supervisor);
+            if (prevSupervisor) {
+              const index = prevSupervisor.students.indexOf(student);
               if (index > -1) {
-                prevFactory.students.splice(index, 1);
-                prevFactory.assignedStudents--;
+                prevSupervisor.students.splice(index, 1);
+                prevSupervisor.assignedStudents--;
+                // Update the previous supervisor
+                this.factoryService.updateSupervisor(prevSupervisor);
               }
             }
           }
-          student.factory = factory.name;
+          
+          // Update student in distribution service
+          this.distributionService.assignStudentToSupervisor(student, supervisor.name);
+          
+          // Update local reference
+          student.supervisor = supervisor.name;
         }
         transferArrayItem(
           event.previousContainer.data,
@@ -263,39 +266,44 @@ export class SupervisorDistributionComponent implements OnInit {
           event.previousIndex,
           event.currentIndex
         );
-        if (factory) {
-          factory.students = [...event.container.data];
-          factory.assignedStudents = factory.students.length;
+        if (supervisor) {
+          supervisor.students = [...event.container.data];
+          supervisor.assignedStudents = supervisor.students.length;
+          // Update the supervisor
+          this.factoryService.updateSupervisor(supervisor);
         }
       }
     }
   }
 
-  removeFromFactory(student: Student, event?: Event): void {
+  removeFromSupervisor(student: Student, event?: Event): void {
     if (event) {
       event.stopPropagation();
     }
 
-    const factory = this.factories.find(f => f.name === student.factory);
-    if (factory) {
-      const index = factory.students.indexOf(student);
+    const supervisor = this.supervisors.find(s => s.name === student.supervisor);
+    if (supervisor) {
+      const index = supervisor.students.indexOf(student);
       if (index > -1) {
-        factory.students.splice(index, 1);
-        factory.assignedStudents--;
-        student.factory = null;
-        // Return student to the original list
-        this.students.push(student);
+        supervisor.students.splice(index, 1);
+        supervisor.assignedStudents--;
+        
+        // Update the supervisor in the service
+        this.factoryService.updateSupervisor(supervisor);
+        
+        // Update the student in the distribution service
+        this.distributionService.assignStudentToSupervisor(student, null);
       }
     }
   }
 
-  private updateFactoryAssignments(): void {
-    this.factories.forEach(factory => {
-      factory.assignedStudents = factory.students.length;
+  private updateSupervisorAssignments(): void {
+    this.supervisors.forEach(supervisor => {
+      supervisor.assignedStudents = supervisor.students.length;
     });
   }
 
-  addFactory(name: string, address: string, phone: string, industry: string, contactName: string): void {
+  addSupervisor(name: string, address: string, phone: string, industry: string, contactName: string): void {
     // Reset error messages
     this.nameError = '';
     this.addressError = '';
@@ -340,8 +348,8 @@ export class SupervisorDistributionComponent implements OnInit {
       return;
     }
 
-    const newFactory: Factory = {
-      id: this.factories.length + 1,
+    const newSupervisor: Supervisor = {
+      id: this.supervisors.length + 1,
       name: name.trim(),
       capacity: 5,
       assignedStudents: 0,
@@ -350,13 +358,13 @@ export class SupervisorDistributionComponent implements OnInit {
       phone: phone.trim(),
       industry,
       contactName: contactName.trim(),
-      type: 'Internal'
+      type: 'Administrative Supervisor'
     };
 
-    this.factoryService.addFactory(newFactory);
+    this.factoryService.addSupervisor(newSupervisor);
 
     // Close the modal
-    const modalElement = document.getElementById('addFactoryModal');
+    const modalElement = document.getElementById('addSupervisorModal');
     if (modalElement) {
       const modal = bootstrap.Modal.getInstance(modalElement);
       if (modal) {

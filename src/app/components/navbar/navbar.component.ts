@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { TranslationService } from '../../services/translation.service';
 import { LanguageSwitcherComponent } from '../language-switcher/language-switcher.component';
 import { Notification } from '../../interfaces/notification';
+import { FactoryService, Factory } from '../../services/factory.service';
+import * as bootstrap from 'bootstrap';
 
 @Component({
     selector: 'app-navbar',
@@ -17,7 +19,12 @@ export class NavbarComponent {
   notificationCount = 3;
   hasNotifications = true;
 
-  constructor(public translationService: TranslationService) {}
+  selectedFactory: Factory | null = null;
+
+  constructor(
+    public translationService: TranslationService,
+    private factoryService: FactoryService
+  ) {}
 
   admin = [{
     image: 'images/user-1.png',
@@ -77,5 +84,93 @@ export class NavbarComponent {
 
   logout() {
     // Implement logout logic
+  }
+
+  showFactoryDetails(factoryName: string | undefined) {
+    if (!factoryName) return;
+    
+    // Find the factory by name
+    const factories = this.factoryService.getFactories();
+    this.selectedFactory = factories.find(f => f.name === factoryName) || null;
+    
+    if (this.selectedFactory) {
+      // Show the modal
+      const modalElement = document.getElementById('factoryDetailsModal');
+      if (modalElement) {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+      }
+    } else {
+      // If factory not found in the service, check if it's in the notifications
+      const factoryNotification = this.notifications.find(n => n.factoryName === factoryName);
+      if (factoryNotification) {
+        // Create a temporary factory object with available information
+        this.selectedFactory = {
+          id: -1, // Temporary ID
+          name: factoryName,
+          capacity: 0,
+          assignedStudents: 0,
+          students: [],
+          type: 'Pending Approval',
+          // Add any other information from the notification if available
+          contactName: factoryNotification.studentName
+        };
+        
+        // Show the modal
+        const modalElement = document.getElementById('factoryDetailsModal');
+        if (modalElement) {
+          const modal = new bootstrap.Modal(modalElement);
+          modal.show();
+        }
+      }
+    }
+  }
+
+  acceptFactory() {
+    if (!this.selectedFactory) return;
+    
+    // Find the notification related to this factory
+    const notification = this.notifications.find(n => n.factoryName === this.selectedFactory?.name && n.type === 'factory_request');
+    
+    if (notification && notification.id) {
+      // Use the existing handleFactoryRequest method
+      this.handleFactoryRequest(notification.id, 'accept');
+      
+      // Close the modal
+      const modalElement = document.getElementById('factoryDetailsModal');
+      if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+          modal.hide();
+        }
+      }
+    } else {
+      // If no matching notification found, just show a message
+      alert('Factory request accepted!');
+    }
+  }
+
+  denyFactory() {
+    if (!this.selectedFactory) return;
+    
+    // Find the notification related to this factory
+    const notification = this.notifications.find(n => n.factoryName === this.selectedFactory?.name && n.type === 'factory_request');
+    
+    if (notification && notification.id) {
+      // Use the existing handleFactoryRequest method
+      this.handleFactoryRequest(notification.id, 'deny');
+      
+      // Close the modal
+      const modalElement = document.getElementById('factoryDetailsModal');
+      if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+          modal.hide();
+        }
+      }
+    } else {
+      // If no matching notification found, just show a message
+      alert('Factory request denied!');
+    }
   }
 }

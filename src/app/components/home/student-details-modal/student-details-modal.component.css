@@ -98,6 +98,9 @@
   display: flex;
   gap: 0.85rem;
   align-items: center;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
 }
 
 .btn-icon {
@@ -135,6 +138,8 @@
   color: #475569;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
+  z-index: 10;
 }
 
 .btn-close:hover {

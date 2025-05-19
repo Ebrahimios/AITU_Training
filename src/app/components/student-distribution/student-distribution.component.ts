@@ -7,17 +7,10 @@ import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem, CdkDro
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
 import { FactoryService, Factory } from '../../services/factory.service';
+import { DistributionService, Student } from '../../services/distribution.service';
 import * as bootstrap from 'bootstrap';
 
-interface Student {
-  id: number;
-  name: string;
-  factory: string | null;
-  department: string;
-  batch: string;
-  stage: string;
-  selected: boolean;
-}
+// Using Student interface from distribution.service
 
 @Component({
     selector: 'app-student-distribution',
@@ -42,16 +35,11 @@ export class StudentDistributionComponent implements OnInit {
 
   constructor(
     public translationService: TranslationService,
-    private factoryService: FactoryService
+    private factoryService: FactoryService,
+    private distributionService: DistributionService
   ) {}
 
-  students: Student[] = [
-    { id: 1, name: 'Ahmed Mohamed', factory: null, department: 'IT', batch: 'Batch 1', stage: 'School', selected: false },
-    { id: 2, name: 'Sara Ahmed', factory: null, department: 'Mechanics', batch: 'Batch 2', stage: 'Institute', selected: false },
-    { id: 3, name: 'Omar Ali', factory: null, department: 'Electrical', batch: 'Batch 1', stage: 'Faculty', selected: false },
-    { id: 4, name: 'Nour Hassan', factory: null, department: 'IT', batch: 'Batch 3', stage: 'School', selected: false },
-    { id: 5, name: 'Mona Khaled', factory: null, department: 'Mechanics', batch: 'Batch 2', stage: 'Institute', selected: false }
-  ];
+  students: Student[] = [];
 
   factories: Factory[] = [];
   factoryDropLists: string[] = [];
@@ -101,10 +89,16 @@ export class StudentDistributionComponent implements OnInit {
     return this.students.filter(student => student.selected);
   }
   ngOnInit(): void {
+    // Subscribe to factories
     this.factoryService.factories$.subscribe(factories => {
       this.factories = factories;
       this.updateFactoryAssignments();
       this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+    });
+    
+    // Subscribe to students
+    this.distributionService.students$.subscribe(students => {
+      this.students = students;
     });
   }
 
@@ -217,9 +211,16 @@ export class StudentDistributionComponent implements OnInit {
                 if (index > -1) {
                   prevFactory.students.splice(index, 1);
                   prevFactory.assignedStudents--;
+                  // Update the previous factory
+                  this.factoryService.updateFactory(prevFactory);
                 }
               }
             }
+            
+            // Update student in distribution service
+            this.distributionService.assignStudentToFactory(student, factory.name);
+            
+            // Update local reference
             student.factory = factory.name;
           });
 
@@ -232,14 +233,9 @@ export class StudentDistributionComponent implements OnInit {
             }
           });
           factory.assignedStudents = factory.students.length;
-
-          // Remove selected students from the unassigned list
-          selectedStudents.forEach(student => {
-            const index = this.students.indexOf(student);
-            if (index > -1) {
-              this.students.splice(index, 1);
-            }
-          });
+          
+          // Update the factory
+          this.factoryService.updateFactory(factory);
         }
       } else {
         // Handle single student drop
@@ -256,9 +252,16 @@ export class StudentDistributionComponent implements OnInit {
               if (index > -1) {
                 prevFactory.students.splice(index, 1);
                 prevFactory.assignedStudents--;
+                // Update the previous factory
+                this.factoryService.updateFactory(prevFactory);
               }
             }
           }
+          
+          // Update student in distribution service
+          this.distributionService.assignStudentToFactory(student, factory.name);
+          
+          // Update local reference
           student.factory = factory.name;
           
           // Check if student with same name already exists in the factory
@@ -273,6 +276,9 @@ export class StudentDistributionComponent implements OnInit {
             );
             factory.students = [...event.container.data];
             factory.assignedStudents = factory.students.length;
+            
+            // Update the factory
+            this.factoryService.updateFactory(factory);
           } else {
             // If duplicate, don't transfer but update the UI to show it's assigned
             // Remove from visible list without transferring to factory again
@@ -298,14 +304,12 @@ export class StudentDistributionComponent implements OnInit {
       if (index > -1) {
         factory.students.splice(index, 1);
         factory.assignedStudents--;
-        student.factory = null;
         
-        // Check if student already exists in the original list to avoid duplicates
-        const existsInStudents = this.students.some(s => s.id === student.id && s.name === student.name);
-        if (!existsInStudents) {
-          // Return student to the original list
-          this.students.push(student);
-        }
+        // Update the factory in the service
+        this.factoryService.updateFactory(factory);
+        
+        // Update the student in the distribution service
+        this.distributionService.assignStudentToFactory(student, null);
       }
     }
   }

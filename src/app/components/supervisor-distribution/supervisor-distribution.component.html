@@ -18,9 +18,9 @@
             placeholder="Search students..."
           >
         </div>
-        <div class="add-factory-button">
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFactoryModal">
-            Add Factory
+        <div class="add-supervisor-button">
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupervisorModal">
+            Add Supervisor
           </button>
         </div>
         <select [(ngModel)]="selectedDepartment">
@@ -41,8 +41,8 @@
           </option>
         </select>
 
-        <select [(ngModel)]="selectedFactoryType">
-          <option *ngFor="let type of factoryTypes" [value]="type">{{type}} Factories</option>
+        <select [(ngModel)]="selectedSupervisorType">
+          <option *ngFor="let type of supervisorTypes" [value]="type">{{type}} Supervisors</option>
         </select>
       </div>
     </div>
@@ -71,7 +71,7 @@
            cdkDropList
            #studentList="cdkDropList"
            [cdkDropListData]="filteredStudents"
-           [cdkDropListConnectedTo]="factoryDropLists"
+           [cdkDropListConnectedTo]="supervisorDropLists"
            (cdkDropListDropped)="onDrop($event)">
         <div class="student-card"
              *ngFor="let student of filteredStudents"
@@ -87,10 +87,10 @@
             <h4>{{student.name}}</h4>
             <p>{{student.department}} | {{student.stage}} | {{student.batch}}</p>
           </div>
-          <div class="student-factory">
-            <span *ngIf="student.factory" class="factory-badge">
-              {{student.factory}}
-              <button class="remove-btn" (click)="removeFromFactory(student, $event)">
+          <div class="student-supervisor">
+            <span *ngIf="student.supervisor" class="supervisor-badge">
+              {{student.supervisor}}
+              <button class="remove-btn" (click)="removeFromSupervisor(student, $event)">
                 <i class="bi bi-x"></i>
               </button>
             </span>
@@ -99,58 +99,58 @@
       </div>
     </div>
 
-    <!-- Factories -->
-    <div class="factories-container">
-      <div class="factories-header">
-        <h3>Factories</h3>
-        <div class="factory-search">
+    <!-- Supervisors -->
+    <div class="supervisors-container">
+      <div class="supervisors-header">
+        <h3>Supervisors</h3>
+        <div class="supervisor-search">
           <i class="bi bi-search"></i>
           <input
             type="text"
-            [(ngModel)]="factorySearchTerm"
-            placeholder="Search factories..."
+            [(ngModel)]="supervisorSearchTerm"
+            placeholder="Search supervisors..."
           >
         </div>
       </div>
-      <div class="factories-grid">
-        <div class="factory-card" *ngFor="let factory of filteredFactories"
-             [class.full]="factory.assignedStudents >= factory.capacity"
-             (click)="openFactoryDetails(factory)">
-          <div class="factory-header">
-            <h3>{{ factory.name }}</h3>
-            <span class="capacity">{{ factory.assignedStudents }}/{{ factory.capacity }}</span>
+      <div class="supervisors-grid">
+        <div class="supervisor-card" *ngFor="let supervisor of filteredSupervisors"
+             [class.full]="supervisor.assignedStudents >= supervisor.capacity"
+             (click)="openSupervisorDetails(supervisor)">
+          <div class="supervisor-header">
+            <h3>{{ supervisor.name }}</h3>
+            <span class="capacity">{{ supervisor.assignedStudents }}/{{ supervisor.capacity }}</span>
           </div>
           <div class="progress-bar">
             <div class="progress"
-                 [style.width.%]="(factory.assignedStudents / factory.capacity) * 100"
+                 [style.width.%]="(supervisor.assignedStudents / supervisor.capacity) * 100"
                  [ngClass]="{
-                   'empty': factory.assignedStudents === 0,
-                   'low': factory.assignedStudents > 0 && factory.assignedStudents < factory.capacity * 0.5,
-                   'medium': factory.assignedStudents >= factory.capacity * 0.5 && factory.assignedStudents < factory.capacity * 0.8,
-                   'high': factory.assignedStudents >= factory.capacity * 0.8
+                   'empty': supervisor.assignedStudents === 0,
+                   'low': supervisor.assignedStudents > 0 && supervisor.assignedStudents < supervisor.capacity * 0.5,
+                   'medium': supervisor.assignedStudents >= supervisor.capacity * 0.5 && supervisor.assignedStudents < supervisor.capacity * 0.8,
+                   'high': supervisor.assignedStudents >= supervisor.capacity * 0.8
                  }">
             </div>
           </div>
-          <div class="factory-students"
+          <div class="supervisor-students"
                cdkDropList
-               [id]="'factory-' + factory.id"
-               [cdkDropListData]="factory.students"
+               [id]="'supervisor-' + supervisor.id"
+               [cdkDropListData]="supervisor.students"
                [cdkDropListConnectedTo]="[studentList]"
-               (cdkDropListDropped)="onDrop($event, factory)">
-            <div class="dropzone-content" *ngIf="factory.students.length === 0">
+               (cdkDropListDropped)="onDrop($event, supervisor)">
+            <div class="dropzone-content" *ngIf="supervisor.students.length === 0">
               <i class="bi bi-plus-circle"></i>
-              <span *ngIf="factory.assignedStudents < factory.capacity">
+              <span *ngIf="supervisor.assignedStudents < supervisor.capacity">
                 Drag students here
               </span>
-              <span *ngIf="factory.assignedStudents >= factory.capacity">
-                Factory is full
+              <span *ngIf="supervisor.assignedStudents >= supervisor.capacity">
+                Supervisor is full
               </span>
             </div>
 
             <div class="assigned-students">
-              <div class="assigned-student" *ngFor="let student of factory.students">
+              <div class="assigned-student" *ngFor="let student of supervisor.students">
                 <span class="student-name">{{student.name}}</span>
-                <button class="remove-btn" (click)="removeFromFactory(student, $event)">
+                <button class="remove-btn" (click)="removeFromSupervisor(student, $event)">
                   <i class="bi bi-x"></i>
                 </button>
               </div>
@@ -160,40 +160,40 @@
       </div>
     </div>
 
-    <!-- Add Factory Modal -->
-    <div class="modal fade" id="addFactoryModal" tabindex="-1" aria-labelledby="addFactoryModalLabel" aria-hidden="true">
+    <!-- Add Supervisor Modal -->
+    <div class="modal fade" id="addSupervisorModal" tabindex="-1" aria-labelledby="addSupervisorModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="addFactoryModalLabel">Add New Factory</h5>
+            <h5 class="modal-title" id="addSupervisorModalLabel">Add New Supervisor</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label for="factoryName" class="form-label">Factory Name</label>
-                <input type="text" class="form-control" id="factoryName" #factoryName placeholder="Enter factory name">
+                <label for="supervisorName" class="form-label">Supervisor Name</label>
+                <input type="text" class="form-control" id="supervisorName" #supervisorName placeholder="Enter supervisor name">
                 <div class="text-danger" *ngIf="nameError">{{nameError}}</div>
               </div>
               <div class="mb-3">
-                <label for="factoryAddress" class="form-label">Address</label>
-                <input type="text" class="form-control" id="factoryAddress" #factoryAddress placeholder="Enter address">
+                <label for="supervisorAddress" class="form-label">Address</label>
+                <input type="text" class="form-control" id="supervisorAddress" #supervisorAddress placeholder="Enter address">
                 <div class="text-danger" *ngIf="addressError">{{addressError}}</div>
               </div>
               <div class="mb-3">
-                <label for="factoryPhone" class="form-label">Phone Number</label>
-                <input type="text" class="form-control" id="factoryPhone" #factoryPhone placeholder="Enter phone number">
+                <label for="supervisorPhone" class="form-label">Phone Number</label>
+                <input type="text" class="form-control" id="supervisorPhone" #supervisorPhone placeholder="Enter phone number">
                 <div class="text-danger" *ngIf="phoneError">{{phoneError}}</div>
               </div>
               <div class="mb-3">
-                <label for="factoryContactName" class="form-label">Contact Name</label>
-                <input type="text" class="form-control" id="factoryContactName" #factoryContactName placeholder="Enter contact person name">
+                <label for="supervisorContactName" class="form-label">Contact Name</label>
+                <input type="text" class="form-control" id="supervisorContactName" #supervisorContactName placeholder="Enter contact person name">
                 <div class="text-danger" *ngIf="contactNameError">{{contactNameError}}</div>
               </div>
               <div class="mb-3">
-                <label for="factoryIndustry" class="form-label">Industry</label>
+                <label for="supervisorIndustry" class="form-label">Industry</label>
                 <div class="input-group">
-                  <select class="form-select" id="factoryIndustry" #factoryIndustry>
+                  <select class="form-select" id="supervisorIndustry" #supervisorIndustry>
                     <option value="" disabled selected>Select industry</option>
                     <option *ngFor="let industry of industries" [value]="industry">{{industry}}</option>
                   </select>
@@ -208,42 +208,42 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" (click)="addFactory(factoryName.value, factoryAddress.value, factoryPhone.value, factoryIndustry.value, factoryContactName.value)">Save Factory</button>
+            <button type="button" class="btn btn-primary" (click)="addSupervisor(supervisorName.value, supervisorAddress.value, supervisorPhone.value, supervisorIndustry.value, supervisorContactName.value)">Save Supervisor</button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Factory Details Modal -->
-    <div class="modal fade" id="factoryDetailsModal" tabindex="-1" aria-labelledby="factoryDetailsModalLabel" aria-hidden="true">
+    <!-- Supervisor Details Modal -->
+    <div class="modal fade" id="supervisorDetailsModal" tabindex="-1" aria-labelledby="supervisorDetailsModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="factoryDetailsModalLabel">Factory Details</h5>
+            <h5 class="modal-title" id="supervisorDetailsModalLabel">Supervisor Details</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body" *ngIf="selectedFactory">
+          <div class="modal-body" *ngIf="selectedSupervisor">
             <form>
               <div class="mb-3">
-                <label class="form-label"><strong>Factory Name:</strong></label>
-                <input type="text" class="form-control" [(ngModel)]="selectedFactory.name" name="factoryName" [readonly]="!isEditing">
+                <label class="form-label"><strong>Supervisor Name:</strong></label>
+                <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.name" name="supervisorName" [readonly]="!isEditing">
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Address:</strong></label>
-                <input type="text" class="form-control" [(ngModel)]="selectedFactory.address" name="factoryAddress" [readonly]="!isEditing">
+                <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.address" name="supervisorAddress" [readonly]="!isEditing">
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Phone:</strong></label>
-                <input type="text" class="form-control" [(ngModel)]="selectedFactory.phone" name="factoryPhone" [readonly]="!isEditing">
+                <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.phone" name="supervisorPhone" [readonly]="!isEditing">
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Contact Name:</strong></label>
-                <input type="text" class="form-control" [(ngModel)]="selectedFactory.contactName" name="factoryContactName" [readonly]="!isEditing">
+                <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.contactName" name="supervisorContactName" [readonly]="!isEditing">
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Industry:</strong></label>
                 <div class="input-group">
-                  <select class="form-select" [(ngModel)]="selectedFactory.industry" name="factoryIndustry" [disabled]="!isEditing">
+                  <select class="form-select" [(ngModel)]="selectedSupervisor.industry" name="supervisorIndustry" [disabled]="!isEditing">
                     <option value="" disabled selected>Select industry</option>
                     <option *ngFor="let industry of industries" [value]="industry">{{industry}}</option>
                   </select>
@@ -255,24 +255,24 @@
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Capacity:</strong></label>
-                <input type="number" class="form-control" [(ngModel)]="selectedFactory.capacity" name="factoryCapacity" min="1" [readonly]="!isEditing">
+                <input type="number" class="form-control" [(ngModel)]="selectedSupervisor.capacity" name="supervisorCapacity" min="1" [readonly]="!isEditing">
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Type:</strong></label>
-                <select class="form-select" [(ngModel)]="selectedFactory.type" name="factoryType" [disabled]="!isEditing">
-                  <option *ngFor="let type of factoryTypes.slice(1)" [value]="type">{{type}}</option>
+                <select class="form-select" [(ngModel)]="selectedSupervisor.type" name="supervisorType" [disabled]="!isEditing">
+                  <option *ngFor="let type of supervisorTypes.slice(1)" [value]="type">{{type}}</option>
                 </select>
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Assigned Students:</strong></label>
                 <ul class="list-group">
-                  <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let student of selectedFactory.students">
+                  <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let student of selectedSupervisor.students">
                     {{student.name}} ({{student.department}} - {{student.stage}})
-                    <button class="btn btn-sm btn-outline-danger" (click)="removeFromFactory(student, $event)">
+                    <button class="btn btn-sm btn-outline-danger" (click)="removeFromSupervisor(student, $event)">
                       <i class="bi bi-x"></i>
                     </button>
                   </li>
-                  <li class="list-group-item text-muted" *ngIf="selectedFactory.students.length === 0">
+                  <li class="list-group-item text-muted" *ngIf="selectedSupervisor.students.length === 0">
                     No students assigned
                   </li>
                 </ul>
