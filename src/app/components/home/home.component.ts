@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
@@ -9,7 +9,9 @@ import { TranslationService } from '../../services/translation.service';
 import { AuthService } from '../../services/firebase.service';
 import { EditStudentModalComponent } from './edit-student-modal/edit-student-modal.component';
 import { StudentDetailsModalComponent } from './student-details-modal/student-details-modal.component';
-import { FactoryService, Factory } from '../../services/factory.service';
+import { FactoryService, Factory, Supervisor } from '../../services/factory.service';
+import { DataUpdateService } from '../../services/data-update.service';
+import { Subscription } from 'rxjs';
 
 import { Student } from '../../interfaces/student';
 
@@ -59,7 +61,7 @@ export type TranslationKeys =
     templateUrl: './home.component.html',
     styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   Math = Math;
   isSidebarOpen = true;
   isModalOpen = false; // Add flag to track modal state
@@ -69,11 +71,13 @@ export class HomeComponent implements OnInit {
   searchTerm: string = '';
   departments: string[] = ['IT', 'Mechanics', 'Electrical'];
   factories: string[] = ['Factory A', 'Factory B', 'Factory C'];
+  supervisors: string[] = ['Supervisor A', 'Supervisor B', 'Supervisor C'];
   allBatches: string[] = ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
   batches: string[] = this.allBatches;
   stages: string[] = ['School', 'Institute', 'Faculty'];
   selectedDepartment: string = '';
   selectedFactory: string = '';
+  selectedSupervisor: string = '';
   selectedBatch: string = ''; // Changed from selectedGroup
   selectedStage: string = '';
   selectedYear: string = '';
@@ -111,23 +115,47 @@ export class HomeComponent implements OnInit {
   ];
   selectedSort: string = '';
 
+  // Subscription to handle data update notifications
+  private dataUpdateSubscription: Subscription | null = null;
+
   constructor(
     public translationService: TranslationService,
     private dialog: MatDialog,
     private router: Router,
     private authService: AuthService,
-    private factoryService: FactoryService
+    private factoryService: FactoryService,
+    private dataUpdateService: DataUpdateService
   ) {
     // Initialize with empty array, total will be updated after loading
     this.students = [];
     this.filteredStudents = [];
     this.totalStudents = 0;
+    
+    // Get supervisors from factory service
+    this.factoryService.supervisors$.subscribe(supervisors => {
+      this.supervisors = supervisors.map(s => s.name);
+    });
   }
 
   async ngOnInit(): Promise<void> {
     await this.loadStudents();
     this.totalStudents = this.students.length;
     this.filteredStudents = [...this.students];
+    
+    // Subscribe to student data updates
+    this.dataUpdateSubscription = this.dataUpdateService.studentDataUpdated$.subscribe(async () => {
+      console.log('Student data updated, refreshing dashboard...');
+      await this.loadStudents();
+      this.applyFilters(); // Apply any active filters after reloading
+    });
+  }
+  
+  ngOnDestroy(): void {
+    // Clean up subscription when component is destroyed
+    if (this.dataUpdateSubscription) {
+      this.dataUpdateSubscription.unsubscribe();
+      this.dataUpdateSubscription = null;
+    }
   }
 
   async loadStudents() {
@@ -214,6 +242,11 @@ export class HomeComponent implements OnInit {
     this.applyFilters();
   }
 
+  filterBySupervisor(supervisor: string) {
+    this.selectedSupervisor = supervisor;
+    this.applyFilters();
+  }
+
   filterByBatch(batch: string) { // Changed from filterByGroup
     this.selectedBatch = batch;
     this.applyFilters();
@@ -245,13 +278,14 @@ export class HomeComponent implements OnInit {
       const matchesSearch = student.name.toLowerCase().includes(this.searchTerm.toLowerCase());
       const matchesDepartment = !this.selectedDepartment || student.department === this.selectedDepartment;
       const matchesFactory = !this.selectedFactory || student.factory === this.selectedFactory;
+      const matchesSupervisor = !this.selectedSupervisor || student.supervisor === this.selectedSupervisor;
       const matchesBatch = !this.selectedBatch || student.grade?.toString() === this.selectedBatch;
       const matchesStage = !this.selectedStage || student.stage === this.selectedStage;
       const matchesYear = !this.selectedYear || student.birthDate?.getFullYear().toString() === this.selectedYear;
       const matchesMonth = !this.selectedMonth || student.birthDate?.getMonth().toString() === this.selectedMonth;
       const matchesDay = !this.selectedDay || student.birthDate?.getDate().toString() === this.selectedDay;
 
-      return matchesSearch && matchesDepartment && matchesFactory && matchesBatch && matchesStage && matchesYear && matchesMonth && matchesDay;
+      return matchesSearch && matchesDepartment && matchesFactory && matchesSupervisor && matchesBatch && matchesStage && matchesYear && matchesMonth && matchesDay;
     });
     this.currentPage = 1;
   }

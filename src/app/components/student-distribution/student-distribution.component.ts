@@ -6,11 +6,25 @@ import { RouterModule } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem, CdkDropList } from '@angular/cdk/drag-drop';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
-import { FactoryService, Factory } from '../../services/factory.service';
-import { DistributionService, Student } from '../../services/distribution.service';
+import { FactoryService } from '../../services/factory.service';
+import { AuthService } from '../../services/firebase.service';
+import { DataUpdateService } from '../../services/data-update.service';
+import { Student } from '../../interfaces/student';
 import * as bootstrap from 'bootstrap';
 
-// Using Student interface from distribution.service
+// Define Factory interface locally to work with Student from interfaces directory
+interface Factory {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+  contactName?: string;
+  industry?: string;
+  capacity: number;
+  type: string;
+  students: Student[];
+  assignedStudents: number;
+}
 
 @Component({
     selector: 'app-student-distribution',
@@ -36,7 +50,8 @@ export class StudentDistributionComponent implements OnInit {
   constructor(
     public translationService: TranslationService,
     private factoryService: FactoryService,
-    private distributionService: DistributionService
+    private authService: AuthService,
+    private dataUpdateService: DataUpdateService
   ) {}
 
   students: Student[] = [];
@@ -73,7 +88,7 @@ export class StudentDistributionComponent implements OnInit {
       const matchesStage = this.selectedStage === 'All' || student.stage === this.selectedStage;
       const matchesBatch = this.selectedBatch === 'All' || student.batch === this.selectedBatch;
       const matchesSearch = student.name.toLowerCase().includes(this.searchTerm.toLowerCase());
-      const notAssigned = !student.factory;
+      const notAssigned = !student.factory || student.factory === '';
 
       return matchesDepartment && matchesStage && matchesBatch && matchesSearch && notAssigned;
     });
@@ -88,24 +103,68 @@ export class StudentDistributionComponent implements OnInit {
   get selectedStudents(): Student[] {
     return this.students.filter(student => student.selected);
   }
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Subscribe to factories
     this.factoryService.factories$.subscribe(factories => {
-      this.factories = factories;
-      this.updateFactoryAssignments();
+      // Convert factory service factories to our local Factory interface
+      this.factories = factories.map(f => ({
+        id: f.id.toString(),
+        name: f.name,
+        address: f.address,
+        phone: f.phone,
+        contactName: f.contactName,
+        industry: f.industry,
+        capacity: f.capacity,
+        type: f.type,
+        students: [],
+        assignedStudents: f.assignedStudents
+      }));
       this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+      
+      // Load students after factories are loaded
+      this.loadStudentsFromFirebase();
     });
-    
-    // Subscribe to students
-    this.distributionService.students$.subscribe(students => {
-      this.students = students;
-    });
+  }
+  
+  async loadStudentsFromFirebase(): Promise<void> {
+    try {
+      // Get students from Firebase
+      const firebaseStudents = await this.authService.getAllStudents();
+      
+      // Store all students
+      this.students = firebaseStudents;
+      
+      // Update factory assignments for students that already have factories
+      this.students.forEach(student => {
+        if (student.factory) {
+          const factory = this.factories.find(f => f.name === student.factory);
+          if (factory && !factory.students.some(s => s.code === student.code)) {
+            factory.students.push(student);
+            factory.assignedStudents = factory.students.length;
+          }
+        }
+      });
+      
+      this.updateFactoryAssignments();
+    } catch (error) {
+      console.error('Error loading students from Firebase:', error);
+      this.students = [];
+    }
   }
 
   ngAfterViewInit(): void {
     this.dropLists.changes.subscribe(() => {
       this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
     });
+  }
+  
+  // Add missing resetFormErrors method
+  private resetFormErrors(): void {
+    this.nameError = '';
+    this.addressError = '';
+    this.phoneError = '';
+    this.contactNameError = '';
+    this.industryError = '';
   }
 
   openFactoryDetails(factory: Factory): void {
@@ -133,7 +192,12 @@ export class StudentDistributionComponent implements OnInit {
   saveChanges(): void {
     if (this.selectedFactory) {
       if (confirm('Are you sure you want to save these changes?')) {
-        this.factoryService.updateFactory(this.selectedFactory);
+        // Convert our local Factory to the service Factory type
+        const serviceFactory = {
+          ...this.selectedFactory,
+          id: Number(this.selectedFactory.id)
+        };
+        this.factoryService.updateFactory(serviceFactory);
         this.isEditing = false;
 
         // Close the modal
@@ -207,187 +271,187 @@ export class StudentDistributionComponent implements OnInit {
             if (student.factory) {
               const prevFactory = this.factories.find(f => f.name === student.factory);
               if (prevFactory) {
-                const index = prevFactory.students.indexOf(student);
+                const index = prevFactory.students.findIndex(s => s.code === student.code);
                 if (index > -1) {
                   prevFactory.students.splice(index, 1);
                   prevFactory.assignedStudents--;
-                  // Update the previous factory
-                  this.factoryService.updateFactory(prevFactory);
                 }
               }
             }
             
-            // Update student in distribution service
-            this.distributionService.assignStudentToFactory(student, factory.name);
-            
-            // Update local reference
-            student.factory = factory.name;
+            // Assign student to factory
+            this.assignToFactory(student, factory);
           });
-
-          // Add all selected students to the new factory, avoiding duplicates
-          selectedStudents.forEach(student => {
-            // Check if student with same name already exists in the factory
-            const isDuplicate = factory.students.some(existingStudent => existingStudent.name === student.name);
-            if (!isDuplicate) {
-              factory.students.push(student);
-            }
-          });
-          factory.assignedStudents = factory.students.length;
-          
-          // Update the factory
-          this.factoryService.updateFactory(factory);
         }
       } else {
         // Handle single student drop
-        const student: Student = event.item.data;
+        const student = event.item.data as Student;
+        
         if (factory) {
+          // Check if factory has enough capacity
           if (factory.assignedStudents >= factory.capacity) {
-            alert(`Factory ${factory.name} is at full capacity (${factory.capacity})`);
+            alert(`Factory ${factory.name} is already at full capacity`);
             return;
           }
+
+          // Remove from previous factory if exists
           if (student.factory) {
             const prevFactory = this.factories.find(f => f.name === student.factory);
             if (prevFactory) {
-              const index = prevFactory.students.indexOf(student);
+              const index = prevFactory.students.findIndex(s => s.code === student.code);
               if (index > -1) {
                 prevFactory.students.splice(index, 1);
                 prevFactory.assignedStudents--;
-                // Update the previous factory
-                this.factoryService.updateFactory(prevFactory);
               }
             }
           }
-          
-          // Update student in distribution service
-          this.distributionService.assignStudentToFactory(student, factory.name);
-          
-          // Update local reference
-          student.factory = factory.name;
-          
-          // Check if student with same name already exists in the factory
-          const isDuplicate = factory.students.some(existingStudent => existingStudent.name === student.name);
-          
-          if (!isDuplicate) {
-            transferArrayItem(
-              event.previousContainer.data,
-              event.container.data,
-              event.previousIndex,
-              event.currentIndex
-            );
-            factory.students = [...event.container.data];
-            factory.assignedStudents = factory.students.length;
-            
-            // Update the factory
-            this.factoryService.updateFactory(factory);
-          } else {
-            // If duplicate, don't transfer but update the UI to show it's assigned
-            // Remove from visible list without transferring to factory again
-            const index = event.previousContainer.data.indexOf(student);
-            if (index > -1) {
-              event.previousContainer.data.splice(index, 1);
-            }
-          }
+
+          this.assignToFactory(student, factory);
         }
       }
     }
   }
 
-  removeFromFactory(student: Student, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
+  assignToFactory(student: Student, factory: Factory): void {
+    // Update student's factory assignment
+    const index = this.students.findIndex(s => s.code === student.code);
+    if (index !== -1) {
+      // Update in local array
+      this.students[index].factory = factory.name;
+      student.factory = factory.name;
+      student.selected = false;
 
+      // Update in service (Firebase)
+      this.updateStudentFactory(student, factory.name);
+
+      // Update factory students list
+      if (!factory.students.some(s => s.code === student.code)) {
+        factory.students.push(student);
+        factory.assignedStudents = factory.students.length;
+      }
+    }
+  }
+  
+  private async updateStudentFactory(student: Student, factoryName: string | null): Promise<void> {
+    try {
+      // Create a copy of the student with the factory updated
+      const updatedStudent = {
+        ...student,
+        factory: factoryName
+      };
+      
+      // Update the student in Firebase
+      await this.authService.updateStudent(updatedStudent);
+      console.log(`Student ${student.name} assigned to factory ${factoryName || 'None'}`);
+      
+      // Notify that student data has been updated
+      this.dataUpdateService.notifyStudentDataUpdated();
+    } catch (error) {
+      console.error('Error updating student factory:', error);
+    }
+  }
+
+  removeFromFactory(student: Student, event: MouseEvent): void {
+    event.stopPropagation();
+
+    // Find the factory this student is assigned to
     const factory = this.factories.find(f => f.name === student.factory);
     if (factory) {
-      // Find the student by name and id to handle potential duplicates
-      const index = factory.students.findIndex(s => s.id === student.id && s.name === student.name);
-      if (index > -1) {
-        factory.students.splice(index, 1);
-        factory.assignedStudents--;
-        
-        // Update the factory in the service
-        this.factoryService.updateFactory(factory);
-        
-        // Update the student in the distribution service
-        this.distributionService.assignStudentToFactory(student, null);
+      // Remove from factory's student list
+      const factoryStudentIndex = factory.students.findIndex(s => s.code === student.code);
+      if (factoryStudentIndex !== -1) {
+        factory.students.splice(factoryStudentIndex, 1);
+        factory.assignedStudents = factory.students.length;
       }
+    }
+
+    // Update student's factory assignment
+    const index = this.students.findIndex(s => s.code === student.code);
+    if (index !== -1) {
+      // Update in local array
+      this.students[index].factory = null;
+
+      // Update in service (Firebase)
+      this.updateStudentFactory(student, null);
     }
   }
 
   private updateFactoryAssignments(): void {
+    // Clear factory students first
     this.factories.forEach(factory => {
-      factory.assignedStudents = factory.students.length;
+      factory.students = [];
+      factory.assignedStudents = 0;
     });
+
+    // Get all students and assign them to factories
+    if (this.students && this.students.length > 0) {
+      this.students.forEach(student => {
+        if (student.factory) {
+          const factory = this.factories.find(f => f.name === student.factory);
+          if (factory) {
+            factory.students.push(student);
+            factory.assignedStudents = factory.students.length;
+          }
+        }
+      });
+    }
+
+    console.log('Factory assignments updated:', this.factories.map(f => ({ 
+      name: f.name, 
+      count: f.assignedStudents,
+      students: f.students.length > 0 ? f.students.map(s => s.name) : []
+    })));
   }
 
-  addFactory(name: string, address: string, phone: string, contactName: string, industry: string, capacity: string, type: string): void {
-    // Reset error messages
-    this.nameError = '';
-    this.addressError = '';
-    this.phoneError = '';
-    this.industryError = '';
-    this.contactNameError = '';
-
-    let hasError = false;
-
-    // Name validation
-    if (!name || name.trim().length < 3) {
-      this.nameError = 'Factory name must be at least 3 characters long';
-      hasError = true;
-    }
-
-    // Address validation
-    if (!address || address.trim().length < 5) {
-      this.addressError = 'Address must be at least 5 characters long';
-      hasError = true;
-    }
-
-    // Phone validation
-    const phoneRegex = /^[0-9]{10,15}$/;
-    if (!phone || !phoneRegex.test(phone)) {
-      this.phoneError = 'Phone number must contain only numbers (10-15 digits)';
-      hasError = true;
-    }
-
-    // Industry validation
-    if (!industry || industry === '') {
-      this.industryError = 'Please select an industry';
-      hasError = true;
-    }
-
-    // Contact Name validation
-    if (!contactName || contactName.trim().length < 3) {
-      this.contactNameError = 'Contact name must be at least 3 characters long';
-      hasError = true;
-    }
-
-    if (hasError) {
+  addFactory(name: string, address: string, phone: string, contactName: string, industry: string, capacity: number, type: string): void {
+    if (!name) {
+      this.nameError = 'Factory name is required';
       return;
     }
 
-    // Validate capacity
-    let capacityValue = parseInt(capacity);
-    if (isNaN(capacityValue) || capacityValue <= 0) {
-      this.industryError = this.translationService.translate('invalid_capacity');
+    if (!address) {
+      this.addressError = 'Address is required';
+      return;
+    }
+
+    if (!phone) {
+      this.phoneError = 'Phone is required';
+      return;
+    }
+
+    if (!contactName) {
+      this.contactNameError = 'Contact name is required';
       return;
     }
 
     const newFactory: Factory = {
-      id: this.factories.length + 1,
-      name: name.trim(),
-      capacity: capacityValue,
-      assignedStudents: 0,
-      students: [],
-      address: address.trim(),
-      phone: phone.trim(),
+      id: Date.now().toString(),
+      name,
+      address,
+      phone,
+      contactName,
       industry,
-      contactName: contactName.trim(),
-      type: type || 'Internal'
+      capacity,
+      type,
+      students: [],
+      assignedStudents: 0
     };
 
-    this.factoryService.addFactory(newFactory);
+    // Convert our local Factory to the service Factory type
+    const serviceFactory = {
+      ...newFactory,
+      id: Number(newFactory.id)
+    };
+    
+    this.factoryService.addFactory(serviceFactory);
 
-    // Close the modal
+    // Add new industry to list if it's not already there
+    if (this.newIndustry && !this.industries.includes(this.newIndustry)) {
+      this.industries.push(this.newIndustry);
+      this.newIndustry = '';
+    }
+
+    // Close modal
     const modalElement = document.getElementById('addFactoryModal');
     if (modalElement) {
       const modal = bootstrap.Modal.getInstance(modalElement);
@@ -401,7 +465,8 @@ export class StudentDistributionComponent implements OnInit {
       }
     }
 
-    alert('Factory added successfully');
+    // Reset form errors
+    this.resetFormErrors();
   }
 
   addNewIndustry() {

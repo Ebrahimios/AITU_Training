@@ -7,7 +7,9 @@ import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem, CdkDro
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
 import { FactoryService, Factory, Supervisor } from '../../services/factory.service';
-import { DistributionService, Student } from '../../services/distribution.service';
+import { DistributionService } from '../../services/distribution.service';
+import { AuthService } from '../../services/firebase.service';
+import { Student } from '../../interfaces/student';
 import * as bootstrap from 'bootstrap';
 
 // Using Student interface from distribution.service
@@ -37,7 +39,8 @@ export class SupervisorDistributionComponent implements OnInit {
   constructor(
     public translationService: TranslationService,
     private factoryService: FactoryService,
-    private distributionService: DistributionService
+    private distributionService: DistributionService,
+    private authService: AuthService
   ) {}
 
   students: Student[] = [];
@@ -90,7 +93,7 @@ export class SupervisorDistributionComponent implements OnInit {
     return this.students.filter(student => student.selected);
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Subscribe to supervisors
     this.factoryService.supervisors$.subscribe(supervisors => {
       this.supervisors = supervisors;
@@ -98,10 +101,38 @@ export class SupervisorDistributionComponent implements OnInit {
       this.supervisorDropLists = this.supervisors.map(s => `supervisor-${s.id}`);
     });
     
-    // Subscribe to students
-    this.distributionService.students$.subscribe(students => {
-      this.students = students;
-    });
+    // Load students from Firebase
+    await this.loadStudentsFromFirebase();
+  }
+
+  async loadStudentsFromFirebase(): Promise<void> {
+    try {
+      // Get students from Firebase
+      const firebaseStudents = await this.authService.getAllStudents();
+      
+      // Map Firebase students to the format expected by the distribution component
+      this.students = firebaseStudents.map(student => ({
+        ...student,
+        id: parseInt(student.code) || Math.floor(Math.random() * 10000), // Generate an ID if code can't be parsed
+        batch: student.batch || student.grade?.toString() || '',
+        selected: false
+      }));
+      
+      // Update supervisor assignments for students that already have supervisors
+      this.students.forEach(student => {
+        if (student.supervisor) {
+          const supervisor = this.supervisors.find(s => s.name === student.supervisor);
+          if (supervisor && !supervisor.students.some(s => s.code === student.code)) {
+            supervisor.students.push(student);
+            supervisor.assignedStudents = supervisor.students.length;
+          }
+        }
+      });
+      
+      this.updateSupervisorAssignments();
+    } catch (error) {
+      console.error('Error loading students from Firebase:', error);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -219,8 +250,8 @@ export class SupervisorDistributionComponent implements OnInit {
               }
             }
             
-            // Update student in distribution service
-            this.distributionService.assignStudentToSupervisor(student, supervisor.name);
+            // Update student in Firebase
+            this.updateStudentSupervisor(student, supervisor.name);
             
             // Update local reference
             student.supervisor = supervisor.name;
@@ -254,8 +285,8 @@ export class SupervisorDistributionComponent implements OnInit {
             }
           }
           
-          // Update student in distribution service
-          this.distributionService.assignStudentToSupervisor(student, supervisor.name);
+          // Update student in Firebase
+          this.updateStudentSupervisor(student, supervisor.name);
           
           // Update local reference
           student.supervisor = supervisor.name;
@@ -291,8 +322,8 @@ export class SupervisorDistributionComponent implements OnInit {
         // Update the supervisor in the service
         this.factoryService.updateSupervisor(supervisor);
         
-        // Update the student in the distribution service
-        this.distributionService.assignStudentToSupervisor(student, null);
+        // Update the student in Firebase
+        this.updateStudentSupervisor(student, null);
       }
     }
   }
@@ -301,6 +332,22 @@ export class SupervisorDistributionComponent implements OnInit {
     this.supervisors.forEach(supervisor => {
       supervisor.assignedStudents = supervisor.students.length;
     });
+  }
+
+  private async updateStudentSupervisor(student: Student, supervisorName: string | null): Promise<void> {
+    try {
+      // Create a copy of the student with the supervisor updated
+      const updatedStudent = {
+        ...student,
+        supervisor: supervisorName
+      };
+      
+      // Update the student in Firebase
+      await this.authService.updateStudent(updatedStudent);
+      console.log(`Student ${student.name} assigned to supervisor ${supervisorName || 'None'}`);
+    } catch (error) {
+      console.error('Error updating student supervisor:', error);
+    }
   }
 
   addSupervisor(name: string, address: string, phone: string, industry: string, contactName: string): void {

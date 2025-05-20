@@ -29,6 +29,7 @@ const translations = {
     group: 'Group',
     stage: 'Stage',
     date: 'Date',
+    supervisor: 'Supervisor',
     actions: 'Actions',
 
     // Filters and Sorting
@@ -136,6 +137,7 @@ const translations = {
     group: 'المجموعة',
     stage: 'المرحلة',
     date: 'التاريخ',
+    supervisor: 'المشرف',
     actions: 'الإجراءات',
 
     // Filters and Sorting

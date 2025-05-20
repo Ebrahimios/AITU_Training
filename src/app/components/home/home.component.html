@@ -166,6 +166,13 @@
             </select>
           </div>
 
+          <div class="filter-section">
+            <h5>{{ translationService.translate('supervisor') }}</h5>
+            <select class="form-select" [(ngModel)]="selectedSupervisor" (change)="filterBySupervisor(selectedSupervisor)">
+              <option value="">{{ translationService.translate('all') }}</option>
+              <option *ngFor="let supervisor of supervisors" [value]="supervisor">{{supervisor}}</option>
+            </select>
+          </div>
 
          </div>
           <!-- Date Filters -->
@@ -234,7 +241,7 @@
               <th>{{ translationService.translate('department') }}</th>
               <th>{{ translationService.translate('factory') }}</th>
               <th>{{ translationService.translate('date') }}</th>
-              <th>Status</th>
+              <th>{{ translationService.translate('supervisor') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -255,11 +262,8 @@
               <td>{{ student.department }}</td>
               <td>{{ student.factory }}</td>
               <td>{{ student.createOn | date }}</td>
-              <td>
-                <span class="status-badge" [ngClass]="{'status-returning': isReturningStudent(student), 'status-new': !isReturningStudent(student)}">
-                  {{ getStudentStatusText(student) }}
-                </span>
-              </td>
+              <td>{{ student.supervisor || '-' }}</td>
+            
             </tr>
           </tbody>
         </table>

@@ -17,4 +17,5 @@ export interface Student {
     factoryType?: boolean;
     selected?: boolean;
     batch?: string;
+    supervisor?: string | null;
   }

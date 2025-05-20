@@ -81,7 +81,8 @@ export class AuthService {
         stage: "",
         gender: "",
         factoryType: true,
-        grade: 0
+        grade: 0,
+        supervisor: student.supervisor || null // Add supervisor field with default null
       });
     }
     catch (error) {
@@ -109,7 +110,8 @@ export class AuthService {
         email: data.email,
         gender: data.gender,
         stage: data.stage,
-        factoryType: data.factoryType
+        factoryType: data.factoryType,
+        supervisor: data.supervisor // Add supervisor field
       };
     } else {
       console.error('No such document in Firestore!');
@@ -220,7 +222,8 @@ export class AuthService {
           grade: data['grade'],
           stage: data['stage'],
           factoryType: data['factoryType'],
-          selected: data['selected']
+          selected: data['selected'],
+          supervisor: data['supervisor'] // Add supervisor field
         };
         students.push(student);
       });
@@ -251,7 +254,8 @@ export class AuthService {
         grade: student.grade,
         stage: student.stage,
         factoryType: student.factoryType,
-        selected: student.selected
+        selected: student.selected,
+        supervisor: student.supervisor // Add supervisor field to update
       });
       return true;
     } catch (error) {

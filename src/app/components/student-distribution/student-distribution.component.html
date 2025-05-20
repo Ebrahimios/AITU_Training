@@ -120,7 +120,6 @@
             <h3>{{ factory.name }}</h3>
             <span class="capacity">{{ factory.assignedStudents }}/{{ factory.capacity }}</span>
           </div>
-
           <div class="progress-bar">
             <div class="progress"
                  [style.width.%]="(factory.assignedStudents / factory.capacity) * 100"
@@ -220,7 +219,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ translationService.translate('cancel') }}</button>
-            <button type="button" class="btn btn-primary" (click)="addFactory(factoryName.value, factoryAddress.value, factoryPhone.value, factoryContactName.value, factoryIndustry.value, factoryCapacity.value, factoryType.value)" data-bs-dismiss="modal">{{ translationService.translate('save') }}</button>
+            <button type="button" class="btn btn-primary" (click)="addFactory(factoryName.value, factoryAddress.value, factoryPhone.value, factoryContactName.value, factoryIndustry.value, +factoryCapacity.value, factoryType.value)" data-bs-dismiss="modal">{{ translationService.translate('save') }}</button>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { EditStudentModalComponent } from '../edit-student-modal/edit-student-modal.component';
 import { Student } from '../../../interfaces/student';
 import { AuthService } from '../../../services/firebase.service';
+import { FactoryService, Supervisor } from '../../../services/factory.service';
 
 // Extended student type with performance metrics
 interface StudentWithPerformance extends Student {
@@ -19,12 +20,24 @@ interface StudentWithPerformance extends Student {
 }
 
 interface CapacityEvaluation {
-  technicalSkills: number;
-  communication: number;
-  teamwork: number;
-  problemSolving: number;
-  attendance: number;
-  overallRating: number;
+  // Personal and Ethical Aspects
+  neatAppearance: number; // 3 points
+  responsivePersonality: number; // 3 points
+  confidentRelations: number; // 3 points
+  
+  // Practical and Professional Aspects
+  attendance: number; // 15 points
+  understandingInstructions: number; // 3 points
+  taskCompletion: number; // 3 points
+  effectiveInteraction: number; // 3 points
+  followUpWithSupervisor: number; // 3 points
+  adherenceToInstructions: number; // 3 points
+  reportWriting: number; // 10 points
+  informationGathering: number; // 3 points
+  adaptToWorkEnvironment: number; // 5 points
+  maintenanceSkills: number; // 3 points
+  
+  overallRating: number; // Total out of 60
   comments: string;
   lastUpdated?: Date;
 }
@@ -40,8 +53,8 @@ interface CapacityEvaluation {
     templateUrl: './student-details-modal.component.html',
     styleUrls: ['./student-details-modal.component.css']
 })
-export class StudentDetailsModalComponent {
-  student: StudentWithPerformance;
+export class StudentDetailsModalComponent implements OnInit {
+  student!: StudentWithPerformance;
   evaluationForm!: FormGroup;
   isSupervisor: boolean = true;
   isLoading: boolean = false;
@@ -49,6 +62,8 @@ export class StudentDetailsModalComponent {
   progressValue: number = 0;
   activeTab: 'basic' | 'progress' | 'evaluation' = 'basic';
   isEditMode: boolean = false;
+  supervisors: Supervisor[] = [];
+  supervisorNames: string[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<StudentDetailsModalComponent>,
@@ -56,17 +71,26 @@ export class StudentDetailsModalComponent {
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private authService: AuthService
+    private authService: AuthService,
+    private factoryService: FactoryService
   ) {
     // ✅ تصليح معالجة التاريخ
+  }
+  
+  ngOnInit(): void {
+    // Load supervisors from factory service
+    this.factoryService.supervisors$.subscribe(supervisors => {
+      this.supervisors = supervisors;
+      this.supervisorNames = supervisors.map(s => s.name);
+    });
     const validDate = (value: any): Date | null => {
       const date = new Date(value);
       return isNaN(date.getTime()) ? null : date;
     };
 
     this.student = {
-      ...data.student,
-      birthDate: validDate(data.student.birthDate)
+      ...this.data.student,
+      birthDate: validDate(this.data.student.birthDate)
     };
 
     this.initializeForm();
@@ -78,11 +102,24 @@ export class StudentDetailsModalComponent {
 
   private initializeForm() {
     this.evaluationForm = this.fb.group({
-      technicalSkills: [0, [Validators.required, Validators.min(0), Validators.max(10)]],
-      communication: [0, [Validators.required, Validators.min(0), Validators.max(10)]],
-      teamwork: [0, [Validators.required, Validators.min(0), Validators.max(10)]],
-      problemSolving: [0, [Validators.required, Validators.min(0), Validators.max(10)]],
-      attendance: [0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      // Personal and Ethical Aspects (9 points total)
+      neatAppearance: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      responsivePersonality: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      confidentRelations: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      
+      // Practical and Professional Aspects (51 points total)
+      attendance: [0, [Validators.required, Validators.min(0), Validators.max(15)]],
+      understandingInstructions: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      taskCompletion: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      effectiveInteraction: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      followUpWithSupervisor: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      adherenceToInstructions: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      reportWriting: [0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      informationGathering: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      adaptToWorkEnvironment: [0, [Validators.required, Validators.min(0), Validators.max(5)]],
+      maintenanceSkills: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      
+      overallRating: [0],
       comments: ['', [Validators.required, Validators.minLength(10)]]
     });
 
@@ -92,40 +129,78 @@ export class StudentDetailsModalComponent {
   }
 
   private calculateAverageRating(values: any) {
-    const ratings = [
-      values.technicalSkills,
-      values.communication,
-      values.teamwork,
-      values.problemSolving,
-      values.attendance
+    // Personal and Ethical Aspects (9 points total)
+    const personalEthicalRatings = [
+      values.neatAppearance || 0,
+      values.responsivePersonality || 0,
+      values.confidentRelations || 0
     ];
-    const average = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-    this.evaluationForm.patchValue({ overallRating: average }, { emitEvent: false });
+    
+    // Practical and Professional Aspects (51 points total)
+    const practicalProfessionalRatings = [
+      values.attendance || 0,
+      values.understandingInstructions || 0,
+      values.taskCompletion || 0,
+      values.effectiveInteraction || 0,
+      values.followUpWithSupervisor || 0,
+      values.adherenceToInstructions || 0,
+      values.reportWriting || 0,
+      values.informationGathering || 0,
+      values.adaptToWorkEnvironment || 0,
+      values.maintenanceSkills || 0
+    ];
+    
+    // Calculate total points (out of 60)
+    const totalPoints = [...personalEthicalRatings, ...practicalProfessionalRatings].reduce((a, b) => a + b, 0);
+    
+    this.evaluationForm.patchValue({ overallRating: totalPoints }, { emitEvent: false });
   }
 
   calculateOverallRating() {
     const values = this.evaluationForm.value;
-    const ratings = [
-      values.technicalSkills || 0,
-      values.communication || 0,
-      values.teamwork || 0,
-      values.problemSolving || 0,
-      values.attendance || 0
+    
+    // Personal and Ethical Aspects (9 points total)
+    const personalEthicalRatings = [
+      values.neatAppearance || 0,
+      values.responsivePersonality || 0,
+      values.confidentRelations || 0
     ];
-    const average = ratings.reduce((a, b) => a + b, 0) / ratings.length;
-    this.evaluationForm.patchValue({ overallRating: average });
+    
+    // Practical and Professional Aspects (51 points total)
+    const practicalProfessionalRatings = [
+      values.attendance || 0,
+      values.understandingInstructions || 0,
+      values.taskCompletion || 0,
+      values.effectiveInteraction || 0,
+      values.followUpWithSupervisor || 0,
+      values.adherenceToInstructions || 0,
+      values.reportWriting || 0,
+      values.informationGathering || 0,
+      values.adaptToWorkEnvironment || 0,
+      values.maintenanceSkills || 0
+    ];
+    
+    // Calculate total points (out of 60)
+    const totalPoints = [...personalEthicalRatings, ...practicalProfessionalRatings].reduce((a, b) => a + b, 0);
+    
+    this.evaluationForm.patchValue({ overallRating: totalPoints });
+    return totalPoints;
   }
 
   private loadStudentProgress() {
     this.isLoading = true;
     // Simulate API call
     setTimeout(() => {
-      this.student.progress = Math.floor(Math.random() * 100);
-      this.student.attendance = Math.floor(Math.random() * 100);
-      this.student.performance = {
-        technical: Math.floor(Math.random() * 100),
-        communication: Math.floor(Math.random() * 100),
-        teamwork: Math.floor(Math.random() * 100)
+      this.student = {
+        ...this.data.student,
+        // Initialize with random progress data for demo
+        progress: Math.floor(Math.random() * 100),
+        attendance: Math.floor(Math.random() * 100),
+        performance: {
+          technical: Math.floor(Math.random() * 100),
+          communication: Math.floor(Math.random() * 100),
+          teamwork: Math.floor(Math.random() * 100)
+        }
       };
       this.isLoading = false;
     }, 1000);
