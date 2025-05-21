@@ -2633,34 +2633,6 @@
   display: block;
 }
 
-.info-group p {
-  margin: 0;
-  color: #333;
-}
-
-.view-details-link {
-  display: inline-block;
-  margin-top: 5px;
-  color: #007bff;
-  text-decoration: none;
-  font-size: 0.9em;
-}
-
-.view-details-link:hover {
-  text-decoration: underline;
-  color: #0056b3;
-}
-
-.notification-content a {
-  color: #007bff;
-  text-decoration: none;
-}
-
-.notification-content a:hover {
-  text-decoration: underline;
-  color: #0056b3;
-}
-
 .avatar {
   width: 100%;
   height: 100%;
@@ -3773,4 +3745,70 @@
 .notification-content a:hover {
   text-decoration: underline;
   color: #0056b3;
+}
+
+/* Factory Details Modal Styles */
+.factory-info {
+  padding: 10px;
+}
+
+.info-group {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.info-group:last-child {
+  border-bottom: none;
+}
+
+.info-group label {
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.info-group p {
+  margin: 0;
+  color: #333;
+}
+
+.view-details-link {
+  display: inline-block;
+  margin-top: 5px;
+  color: #007bff;
+  text-decoration: none;
+  font-size: 0.9em;
+}
+
+.view-details-link:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
+
+.notification-content a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.notification-content a:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
+
+/* Clickable elements in user profile */
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-name.clickable:hover,
+.user-role.clickable:hover {
+  color: #3182ce;
+}
+
+.avatar-container.clickable:hover {
+  transform: scale(1.05);
+  border-color: #3182ce;
 }

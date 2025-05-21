@@ -7,7 +7,7 @@ import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem, CdkDro
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
 import { FactoryService } from '../../services/factory.service';
-import { AuthService } from '../../services/firebase.service';
+import { AuthService, FirebaseFactory } from '../../services/firebase.service';
 import { DataUpdateService } from '../../services/data-update.service';
 import { Student } from '../../interfaces/student';
 import * as bootstrap from 'bootstrap';
@@ -59,7 +59,7 @@ export class StudentDistributionComponent implements OnInit {
   factories: Factory[] = [];
   factoryDropLists: string[] = [];
 
-  departments: string[] = ['All', 'IT', 'Mechanics', 'Electrical'];
+  departments: string[] = ['All', 'Information Technology', 'Mechanics', 'Electrical'];
   stages: string[] = ['All', 'School', 'Institute', 'Faculty'];
   batches: string[] = ['All', 'Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
   selectedDepartment: string = 'All';
@@ -403,7 +403,7 @@ export class StudentDistributionComponent implements OnInit {
     })));
   }
 
-  addFactory(name: string, address: string, phone: string, contactName: string, industry: string, capacity: number, type: string): void {
+  async addFactory(name: string, address: string, phone: string, contactName: string, industry: string, capacity: number, type: string): Promise<void> {
     if (!name) {
       this.nameError = 'Factory name is required';
       return;
@@ -424,49 +424,93 @@ export class StudentDistributionComponent implements OnInit {
       return;
     }
 
-    const newFactory: Factory = {
-      id: Date.now().toString(),
-      name,
-      address,
-      phone,
-      contactName,
-      industry,
-      capacity,
-      type,
-      students: [],
-      assignedStudents: 0
-    };
+    try {
+      // Create a unique ID for the factory
+      const factoryId = `factory_${Date.now()}`;
+      
+      // Create the factory object for Firebase
+      const firebaseFactory: FirebaseFactory = {
+        id: factoryId,
+        name,
+        address,
+        phone,
+        contactName,
+        industry,
+        capacity,
+        type,
+        students: [],
+        assignedStudents: 0,
+        isApproved: true, // Set to true to make it immediately available
+        studentName: this.authService.currentUserValue?.firstName || 'Unknown',
+        createdAt: Date.now()
+      };
+      
+      console.log('Submitting factory to Firebase:', firebaseFactory);
+      
+      // Save to Firebase directly
+      const success = await this.authService.submitFactoryRequest(firebaseFactory);
+      
+      if (success) {
+        console.log('Factory saved to Firebase successfully');
+        
+        // Also add to the local factory service for immediate display
+        const newFactory: Factory = {
+          id: factoryId,
+          name,
+          address,
+          phone,
+          contactName,
+          industry,
+          capacity,
+          type,
+          students: [],
+          assignedStudents: 0
+        };
 
-    // Convert our local Factory to the service Factory type
-    const serviceFactory = {
-      ...newFactory,
-      id: Number(newFactory.id)
-    };
-    
-    this.factoryService.addFactory(serviceFactory);
+        // Convert our local Factory to the service Factory type
+        const serviceFactory = {
+          ...newFactory,
+          id: Number(factoryId.replace('factory_', ''))
+        };
+        
+        this.factoryService.addFactory(serviceFactory);
+        
+        // Reload factory requests to ensure the UI is updated
+        await this.authService.loadFactoryRequests();
+        
+        // Show success message
+        alert('Factory added successfully and is now available for student assignments.');
+      } else {
+        console.error('Failed to save factory to Firebase');
+        alert('Failed to add factory. Please try again.');
+      }
 
-    // Add new industry to list if it's not already there
-    if (this.newIndustry && !this.industries.includes(this.newIndustry)) {
-      this.industries.push(this.newIndustry);
-      this.newIndustry = '';
-    }
+      // Add new industry to list if it's not already there
+      if (this.newIndustry && !this.industries.includes(this.newIndustry)) {
+        this.industries.push(this.newIndustry);
+        this.newIndustry = '';
+      }
 
-    // Close modal
-    const modalElement = document.getElementById('addFactoryModal');
-    if (modalElement) {
-      const modal = bootstrap.Modal.getInstance(modalElement);
-      if (modal) {
-        modal.hide();
-        document.body.classList.remove('modal-open');
-        const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) {
-          backdrop.remove();
+      // Close modal
+      const modalElement = document.getElementById('addFactoryModal');
+      if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+          modal.hide();
+          document.body.classList.remove('modal-open');
+          const backdrop = document.querySelector('.modal-backdrop');
+          if (backdrop) {
+            backdrop.remove();
+          }
         }
       }
-    }
 
-    // Reset form errors
-    this.resetFormErrors();
+      // Reset form errors
+      this.resetFormErrors();
+    } catch (error) {
+      console.error('Error adding factory:', error);
+      alert('An error occurred while adding the factory. Please try again.');
+    }
   }
 
   addNewIndustry() {

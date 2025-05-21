@@ -57,11 +57,12 @@
 
       <!-- User Profile -->
       <div class="user-profile" *ngFor="let adm of admin">
+        <!-- Each element is individually clickable to open the modal -->
         <div class="user-info">
-          <div class="user-name">{{adm.name}}</div>
-          <div class="user-role">{{adm.types[0]}}</div>
+          <div class="user-name clickable" (click)="openUserProfileModal()">{{adm.name}}</div>
+          <div class="user-role clickable" (click)="openUserProfileModal()">{{adm.types[0]}}</div>
         </div>
-        <div class="avatar-container">
+        <div class="avatar-container clickable" (click)="openUserProfileModal()">
           <img [src]="adm.image" alt="User Avatar" class="avatar">
         </div>
       </div>

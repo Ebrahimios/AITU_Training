@@ -6,8 +6,8 @@ export interface Student {
     address?: string;
     nationalID?: string;
     email?: string;
-    birthDate?: Date | null;
-    createOn?: Date;
+    birthDate?: number | null;
+    createOn?: number;
     gender?: string;
     department?: string;
     birthAddress?:string;

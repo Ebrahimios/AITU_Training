@@ -1,0 +1,302 @@
+import { Component, Inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { AuthService } from '../../../services/firebase.service';
+import { Student } from '../../../interfaces/student';
+import { FactoryService, Supervisor } from '../../../services/factory.service';
+
+// Interface for student with performance data
+interface StudentWithPerformance extends Student {
+  attendance?: number;
+  punctuality?: number;
+  teamwork?: number;
+  communication?: number;
+  problemSolving?: number;
+  technicalSkills?: number;
+  adaptability?: number;
+  initiative?: number;
+  workQuality?: number;
+  overallProgress?: number;
+  
+  // Performance metrics
+  performanceMetrics?: {
+    attendance: number;
+    punctuality: number;
+    teamwork: number;
+    communication: number;
+    problemSolving: number;
+    technicalSkills: number;
+    adaptability: number;
+    initiative: number;
+    workQuality: number;
+  };
+  
+  // Evaluation data
+  evaluationData?: {
+    rating: number;
+    strengths: string;
+    weaknesses: string;
+    recommendations: string;
+  };
+  
+  overallRating: number; // Total out of 60
+  comments: string;
+  lastUpdated?: number;
+  birthDateString?: string; // For date input field
+}
+
+@Component({
+    selector: 'app-student-details-modal',
+    imports: [
+        CommonModule,
+        FormsModule,
+        ReactiveFormsModule,
+        MatDialogModule
+    ],
+    templateUrl: './student-details-modal.component.html',
+    styleUrls: ['./student-details-modal.component.css']
+})
+export class StudentDetailsModalComponent implements OnInit {
+  student!: StudentWithPerformance;
+  evaluationForm!: FormGroup;
+  isSupervisor: boolean = true;
+  isLoading: boolean = false;
+  showProgress: boolean = false;
+  progressValue: number = 0;
+  activeTab: 'basic' | 'progress' | 'evaluation' = 'basic';
+  isEditMode: boolean = false;
+  supervisors: Supervisor[] = [];
+  birthDateString: string = ''; // For date input field
+  supervisorNames: string[] = [];
+
+  constructor(
+    public dialogRef: MatDialogRef<StudentDetailsModalComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { student: Student },
+    private formBuilder: FormBuilder,
+    private authService: AuthService,
+    private factoryService: FactoryService
+  ) {}
+
+  ngOnInit(): void {
+    this.factoryService.getSupervisors().then(supervisors => {
+      this.supervisors = supervisors;
+      this.supervisorNames = supervisors.map(s => s.name);
+    });
+    
+    const validDate = (value: any): number | null => {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? null : date.getTime();
+    };
+
+    this.student = {
+      ...this.data.student,
+      birthDate: validDate(this.data.student.birthDate)
+    };
+    
+    // Convert timestamp to date string for the date input field
+    this.updateBirthDateString();
+
+    this.initializeForm();
+    this.loadStudentProgress();
+  }
+
+  // Convert timestamp to date string format (YYYY-MM-DD) for date input
+  updateBirthDateString(): void {
+    if (this.student && this.student.birthDate) {
+      const date = new Date(this.student.birthDate);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      this.birthDateString = `${year}-${month}-${day}`;
+    } else {
+      this.birthDateString = '';
+    }
+  }
+
+  // Convert date string from input to timestamp
+  updateBirthDateTimestamp(): void {
+    if (this.birthDateString) {
+      const date = new Date(this.birthDateString);
+      if (!isNaN(date.getTime())) {
+        this.student.birthDate = date.getTime();
+      }
+    } else {
+      this.student.birthDate = null;
+    }
+  }
+
+  initializeForm(): void {
+    this.evaluationForm = this.formBuilder.group({
+      attendance: [this.student.performanceMetrics?.attendance || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      punctuality: [this.student.performanceMetrics?.punctuality || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      teamwork: [this.student.performanceMetrics?.teamwork || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      communication: [this.student.performanceMetrics?.communication || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      problemSolving: [this.student.performanceMetrics?.problemSolving || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      technicalSkills: [this.student.performanceMetrics?.technicalSkills || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      adaptability: [this.student.performanceMetrics?.adaptability || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      initiative: [this.student.performanceMetrics?.initiative || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      workQuality: [this.student.performanceMetrics?.workQuality || 0, [Validators.required, Validators.min(0), Validators.max(10)]],
+      strengths: [this.student.evaluationData?.strengths || ''],
+      weaknesses: [this.student.evaluationData?.weaknesses || ''],
+      recommendations: [this.student.evaluationData?.recommendations || ''],
+      comments: [this.student.comments || '']
+    });
+  }
+
+  loadStudentProgress(): void {
+    setTimeout(() => {
+      this.showProgress = true;
+      this.progressValue = this.student.overallProgress || 0;
+    }, 500);
+  }
+
+  closeDialog(): void {
+    this.dialogRef.close();
+  }
+
+  saveEvaluation(): void {
+    if (this.evaluationForm.valid) {
+      const formValues = this.evaluationForm.value;
+      
+      // Calculate overall rating
+      const metrics = [
+        formValues.attendance,
+        formValues.punctuality,
+        formValues.teamwork,
+        formValues.communication,
+        formValues.problemSolving,
+        formValues.technicalSkills,
+        formValues.adaptability,
+        formValues.initiative,
+        formValues.workQuality
+      ];
+      
+      const totalRating = metrics.reduce((sum, value) => sum + value, 0);
+      const overallRating = Math.round((totalRating / 90) * 100); // 90 is max possible (9 metrics * 10)
+      
+      // Update student with evaluation data
+      this.student = {
+        ...this.student,
+        performanceMetrics: {
+          attendance: formValues.attendance,
+          punctuality: formValues.punctuality,
+          teamwork: formValues.teamwork,
+          communication: formValues.communication,
+          problemSolving: formValues.problemSolving,
+          technicalSkills: formValues.technicalSkills,
+          adaptability: formValues.adaptability,
+          initiative: formValues.initiative,
+          workQuality: formValues.workQuality
+        },
+        evaluationData: {
+          rating: overallRating,
+          strengths: formValues.strengths,
+          weaknesses: formValues.weaknesses,
+          recommendations: formValues.recommendations
+        },
+        overallRating: totalRating,
+        overallProgress: overallRating,
+        comments: formValues.comments,
+        lastUpdated: Date.now()
+      };
+      
+      // Save to database
+      this.authService.updateStudent(this.student).then(() => {
+        this.dialogRef.close({ action: 'update', student: this.student });
+      }).catch(error => {
+        console.error('Error saving evaluation:', error);
+      });
+    }
+  }
+
+  setActiveTab(tab: 'basic' | 'progress' | 'evaluation'): void {
+    this.activeTab = tab;
+  }
+
+  getProgressColor(value: number | undefined): string {
+    if (!value) return '#E0E0E0';
+    if (value >= 80) return '#4CAF50';
+    if (value >= 60) return '#FFC107';
+    return '#F44336';
+  }
+
+  getPerformanceStatus(value: number | undefined): string {
+    if (!value) return 'Not Available';
+    if (value >= 80) return 'Excellent';
+    if (value >= 60) return 'Good';
+    if (value >= 40) return 'Average';
+    return 'Needs Improvement';
+  }
+
+  toggleEditMode(): void {
+    this.isEditMode = !this.isEditMode;
+    
+    if (this.isEditMode) {
+      // Update date string when entering edit mode
+      this.updateBirthDateString();
+    } else if (!this.isEditMode && this.birthDateString) {
+      // Update timestamp when exiting edit mode
+      this.updateBirthDateTimestamp();
+    }
+
+    if (this.isEditMode) {
+      this.isLoading = true;
+
+      const updatedStudent: Student = {
+        code: this.student.code || '',
+        name: this.student.name?.trim() || '',
+        phone: this.student.phone?.trim() || '',
+        state: this.student.state?.trim() || '',
+        address: this.student.address?.trim() || '',
+        nationalID: this.student.nationalID?.trim() || '',
+        email: this.student.email?.trim() || '',
+        birthDate: this.student.birthDate ? this.student.birthDate : Date.now(),
+        createOn: this.student.createOn ?? Date.now(), // fallback لو مفيش تاريخ إنشاء
+        gender: this.student.gender || 'غير محدد',
+        department: this.student.department || '',
+        birthAddress: this.student.birthAddress || '',
+        factory: this.student.factory || '',
+        grade: this.student.grade || 1,
+        stage: this.student.stage || '',
+        factoryType: this.student.factoryType || true,
+        selected: this.student.selected ?? false
+      };
+
+      // Generate a code if needed
+      if (!updatedStudent.code) {
+        updatedStudent.code = `STU-${Math.floor(Math.random() * 10000)}`;
+      }
+
+      this.authService.updateStudent(updatedStudent).then(success => {
+        this.isLoading = false;
+        if (success) {
+          this.isEditMode = false;
+          this.dialogRef.close({ action: 'update', student: updatedStudent });
+        } else {
+          console.error('Update failed');
+        }
+      }).catch(err => {
+        console.error('Update failed:', err);
+        this.isLoading = false;
+      });
+    }
+  }
+
+  deleteStudent(): void {
+    if (confirm('Are you sure you want to delete this student?')) {
+      this.isLoading = true;
+      this.authService.deleteStudent(this.student.code || '').then(success => {
+        this.isLoading = false;
+        if (success) {
+          this.dialogRef.close({ action: 'delete', student: this.student });
+        } else {
+          console.error('Delete failed');
+        }
+      }).catch(error => {
+        console.error('Delete failed:', error);
+        this.isLoading = false;
+      });
+    }
+  }
+}

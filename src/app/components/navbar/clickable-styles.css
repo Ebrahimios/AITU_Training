@@ -1,0 +1,15 @@
+/* Clickable elements in user profile */
+.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-name.clickable:hover,
+.user-role.clickable:hover {
+  color: #3182ce;
+}
+
+.avatar-container.clickable:hover {
+  transform: scale(1.05);
+  border-color: #3182ce;
+}

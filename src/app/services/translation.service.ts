@@ -19,6 +19,7 @@ const translations = {
     analytics: 'Analytics',
     total_students: 'Total Students',
     departments: 'Departments',
+    supervisors: 'Supervisors',
     active: 'Active',
     growth: 'Growth',
 
@@ -72,6 +73,9 @@ const translations = {
     factory_name: 'Factory Name',
     address: 'Address',
     phone: 'Phone Number',
+    email: 'Email',
+    role: 'Role',
+    lastUpdated: 'Last Updated',
     contact_name: 'Contact Name',
     industry: 'Industry',
     capacity: 'Capacity',
@@ -127,6 +131,7 @@ const translations = {
     analytics: 'التحليلات',
     total_students: 'إجمالي الطلاب',
     departments: 'الأقسام',
+    supervisors: 'المشرفين',
     active: 'نشط',
     growth: 'النمو',
 
@@ -180,6 +185,9 @@ const translations = {
     factory_name: 'اسم المصنع',
     address: 'العنوان',
     phone: 'رقم الهاتف',
+    email: 'البريد الإلكتروني',
+    role: 'الدور',
+    lastUpdated: 'آخر تحديث',
     contact_name: 'اسم جهة الاتصال',
     industry: 'الصناعة',
     capacity: 'السعة',
@@ -222,6 +230,9 @@ const translations = {
 
 // Create a type that represents all possible translation keys
 type TranslationKeys = keyof typeof translations.en;
+
+// Export the type for use in components
+export type { TranslationKeys };
 
 @Injectable({
   providedIn: 'root'

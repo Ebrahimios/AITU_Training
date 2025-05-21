@@ -6,18 +6,52 @@ html, body {
 
 /* Dialog Styles */
 .centered-dialog {
-  position: relative;
-  margin: auto;
+  position: absolute;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
 }
 
-.dialog-backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
+/* Semi-transparent backdrop */
+.cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  opacity: 1 !important;
+  backdrop-filter: blur(3px);
 }
 
 .mat-mdc-dialog-container {
   --mdc-dialog-container-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Center dialog in the page */
+.cdk-overlay-pane {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Profile modal specific styles */
+.profile-modal {
+  z-index: 1050 !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Profile backdrop */
+.profile-backdrop {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  opacity: 1 !important;
+  backdrop-filter: blur(4px);
+  z-index: 1040 !important;
+}
+
+/* Ensure dialog is centered on mobile */
+@media (max-width: 768px) {
+  .centered-dialog {
+    margin: 0 auto !important;
+  }
 }
 
 .mat-mdc-dialog-surface {

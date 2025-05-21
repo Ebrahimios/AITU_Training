@@ -1,0 +1,54 @@
+<div class="user-profile-modal">
+  <div class="modal-header">
+    <h2>{{ translationService.translate('profile') }}</h2>
+    <button class="close-btn" (click)="closeDialog()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+  
+  <div class="modal-body">
+    <div class="profile-image-container">
+      <div class="profile-image">
+        <img [src]="previewUrl || data.user.image || 'images/user-1.png'" alt="User Profile" class="profile-pic">
+        <div class="image-overlay">
+          <label for="profile-image-upload" class="upload-btn">
+            <i class="bi bi-camera"></i>
+          </label>
+          <input type="file" id="profile-image-upload" accept="image/*" (change)="onFileSelected($event)" hidden>
+        </div>
+      </div>
+    </div>
+    
+    <div class="user-info-container">
+      <div class="info-row">
+        <label>{{ translationService.translate('name') }}:</label>
+        <span>{{ data.user.firstName }} {{ data.user.lastName }}</span>
+      </div>
+      <div class="info-row">
+        <label>{{ translationService.translate('email') }}:</label>
+        <span>{{ data.user.email }}</span>
+      </div>
+      <div class="info-row">
+        <label>{{ translationService.translate('phone') }}:</label>
+        <span>{{ data.user.phone }}</span>
+      </div>
+      <div class="info-row">
+        <label>{{ translationService.translate('role') }}:</label>
+        <span>{{ data.user.role }}</span>
+      </div>
+      <div class="info-row" *ngIf="data.user.timestamp">
+        <label>{{ translationService.translate('lastUpdated') }}:</label>
+        <span>{{ data.user.timestamp | date:'medium' }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal-footer">
+    <button class="btn-cancel" (click)="closeDialog()">
+      {{ translationService.translate('cancel') }}
+    </button>
+    <button class="btn-save" [disabled]="!selectedFile" (click)="uploadImage()">
+      {{ translationService.translate('save') }}
+    </button>
+  </div>
+</div>

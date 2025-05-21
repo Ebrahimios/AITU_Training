@@ -5,7 +5,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
-import { TranslationService } from '../../services/translation.service';
+import { TranslationService, TranslationKeys } from '../../services/translation.service';
 import { AuthService } from '../../services/firebase.service';
 import { EditStudentModalComponent } from './edit-student-modal/edit-student-modal.component';
 import { StudentDetailsModalComponent } from './student-details-modal/student-details-modal.component';
@@ -17,36 +17,7 @@ import { Student } from '../../interfaces/student';
 
 
 
-export type TranslationKeys =
-  | 'dashboard'
-  | 'students_distribution'
-  | 'analytics'
-  | 'settings'
-  | 'student'
-  | 'filters'
-  | 'sort'
-  | 'export'
-  | 'add_student'
-  | 'total_students'
-  | 'departments'
-  | 'active'
-  | 'growth'
-  | 'sort_by'
-  | 'department'
-  | 'factory'
-  | 'batch'
-  | 'stage'
-  | 'year'
-  | 'month'
-  | 'department_distribution'
-  | 'showing'
-  | 'to'
-  | 'of'
-  | 'entries'
-  | 'per_page_5'
-  | 'per_page_10'
-  | 'per_page_20'
-  | 'reset';
+// Using imported TranslationKeys from translation service
 
 @Component({
     selector: 'app-home',
@@ -69,7 +40,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   filteredStudents: Student[] = [];
   totalStudents: number = 0;
   searchTerm: string = '';
-  departments: string[] = ['IT', 'Mechanics', 'Electrical'];
+  departments: string[] = ['Information Technology', 'Mechanics', 'Electrical'];
   factories: string[] = ['Factory A', 'Factory B', 'Factory C'];
   supervisors: string[] = ['Supervisor A', 'Supervisor B', 'Supervisor C'];
   allBatches: string[] = ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
@@ -89,7 +60,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   itemsPerPage: number = 5;
 
   // Date filter options
-  years: string[] = ['2020', '2021', '2022', '2023'];
+  // Dynamically generate years array from 2017 to current year + 1
+  years: string[] = this.generateYearsArray(2017, new Date().getFullYear() + 1);
   months = [
     { value: '0', name: 'January' },
     { value: '1', name: 'February' },
@@ -158,10 +130,57 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Helper method to generate years array from startYear to endYear (inclusive)
+  private generateYearsArray(startYear: number, endYear: number): string[] {
+    const years: string[] = [];
+    for (let year = startYear; year <= endYear; year++) {
+      years.push(year.toString());
+    }
+    return years;
+  }
+
+  // Helper method to get Unix timestamp (seconds since epoch)
+  getTimestamp(date: Date | string | number | undefined): string {
+    if (!date) return '';
+    
+    let timestamp: number;
+    
+    if (date instanceof Date) {
+      timestamp = date.getTime();
+    } else if (typeof date === 'string') {
+      // Convert string to Date then to timestamp
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) return '';
+      timestamp = parsedDate.getTime();
+    } else if (typeof date === 'number') {
+      // Already a timestamp
+      timestamp = date;
+    } else {
+      return '';
+    }
+    
+    // Convert to Unix timestamp (seconds since epoch)
+    const unixTimestamp = Math.floor(timestamp / 1000);
+    return unixTimestamp.toString();
+  }
+
   async loadStudents() {
     try {
       this.students = [];
-      this.students = await this.authService.getAllStudents();
+      const studentsData = await this.authService.getAllStudents();
+      
+      // Process each student to ensure dates are handled correctly
+      this.students = studentsData.map(student => {
+        // Make a copy of the student object
+        const processedStudent = {...student};
+        
+        // Convert all date strings to timestamps
+        processedStudent.createOn = this.convertToTimestamp(processedStudent.createOn);
+        processedStudent.birthDate = this.convertToTimestamp(processedStudent.birthDate);
+        
+        return processedStudent;
+      });
+      
       this.filteredStudents = [...this.students];
       this.totalStudents = this.students.length;
     } catch (error) {
@@ -171,6 +190,29 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.filteredStudents = [];
       this.totalStudents = 0;
     }
+  }
+  
+  // Helper method to convert any date value to timestamp
+  private convertToTimestamp(dateValue: any): number | undefined {
+    if (!dateValue) return undefined;
+    
+    // If already a number, return it
+    if (typeof dateValue === 'number') return dateValue;
+    
+    // If string, convert to timestamp
+    if (typeof dateValue === 'string') {
+      const date = new Date(dateValue);
+      if (!isNaN(date.getTime())) {
+        return date.getTime(); // Convert to timestamp (milliseconds)
+      }
+    }
+    
+    // If Date object, convert to timestamp
+    if (dateValue instanceof Date) {
+      return dateValue.getTime();
+    }
+    
+    return undefined;
   }
 
   get totalPages(): number {
@@ -275,18 +317,49 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   applyFilters() {
     this.filteredStudents = this.students.filter(student => {
-      const matchesSearch = student.name.toLowerCase().includes(this.searchTerm.toLowerCase());
+      // Basic info filtering
+      const matchesSearch = this.searchTerm ? student.name?.toLowerCase().includes(this.searchTerm.toLowerCase()) : true;
       const matchesDepartment = !this.selectedDepartment || student.department === this.selectedDepartment;
       const matchesFactory = !this.selectedFactory || student.factory === this.selectedFactory;
       const matchesSupervisor = !this.selectedSupervisor || student.supervisor === this.selectedSupervisor;
-      const matchesBatch = !this.selectedBatch || student.grade?.toString() === this.selectedBatch;
+      
+      // Batch filtering - check if student.batch matches selectedBatch
+      // If student uses grade instead of batch, convert it
+      const matchesBatch = !this.selectedBatch || 
+                          student.batch === this.selectedBatch || 
+                          student.grade?.toString() === this.selectedBatch;
+      
       const matchesStage = !this.selectedStage || student.stage === this.selectedStage;
-      const matchesYear = !this.selectedYear || student.birthDate?.getFullYear().toString() === this.selectedYear;
-      const matchesMonth = !this.selectedMonth || student.birthDate?.getMonth().toString() === this.selectedMonth;
-      const matchesDay = !this.selectedDay || student.birthDate?.getDate().toString() === this.selectedDay;
+      
+      // Date filtering using createOn timestamp
+      let matchesYear = true;
+      let matchesMonth = true;
+      let matchesDay = true;
+      
+      if (this.selectedYear && student.createOn) {
+        // Convert timestamp to Date to get year
+        const date = new Date(student.createOn);
+        matchesYear = date.getFullYear().toString() === this.selectedYear;
+      }
+      
+      if (this.selectedMonth && student.createOn) {
+        // Convert timestamp to Date to get month
+        const date = new Date(student.createOn);
+        matchesMonth = date.getMonth().toString() === this.selectedMonth;
+      }
+      
+      if (this.selectedDay && student.createOn) {
+        // Convert timestamp to Date to get day
+        const date = new Date(student.createOn);
+        matchesDay = date.getDate().toString() === this.selectedDay;
+      }
 
-      return matchesSearch && matchesDepartment && matchesFactory && matchesSupervisor && matchesBatch && matchesStage && matchesYear && matchesMonth && matchesDay;
+      return matchesSearch && matchesDepartment && matchesFactory && 
+             matchesSupervisor && matchesBatch && matchesStage && 
+             matchesYear && matchesMonth && matchesDay;
     });
+    
+    // Reset to first page when filters change
     this.currentPage = 1;
   }
 
@@ -295,16 +368,26 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     switch (sortValue) {
       case 'name_asc':
-        this.filteredStudents.sort((a, b) => a.name.localeCompare(b.name));
+        this.filteredStudents.sort((a, b) => a.name?.localeCompare(b.name || '') || 0);
         break;
       case 'name_desc':
-        this.filteredStudents.sort((a, b) => b.name.localeCompare(a.name));
+        this.filteredStudents.sort((a, b) => b.name?.localeCompare(a.name || '') || 0);
         break;
       case 'date_new':
-        this.filteredStudents.sort((a, b) => (b.birthDate?.getTime() || 0) - (a.birthDate?.getTime() || 0));
+        // Sort by createOn timestamp (newest first)
+        this.filteredStudents.sort((a, b) => {
+          const dateA = a.createOn || 0;
+          const dateB = b.createOn || 0;
+          return dateB - dateA;
+        });
         break;
       case 'date_old':
-        this.filteredStudents.sort((a, b) => (a.birthDate?.getTime() || 0) - (b.birthDate?.getTime() || 0));
+        // Sort by createOn timestamp (oldest first)
+        this.filteredStudents.sort((a, b) => {
+          const dateA = a.createOn || 0;
+          const dateB = b.createOn || 0;
+          return dateA - dateB;
+        });
         break;
     }
   }
@@ -323,15 +406,16 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   exportData() {
-    const headers = ['ID', 'Student', 'Department', 'Factory', 'Batch', 'Stage', 'Date'];
+    const headers = ['ID', 'Student', 'Department', 'Factory', 'Batch', 'Stage', 'Date', 'Supervisor'];
     const csvData = this.filteredStudents.map(student => [
-      student.code,
-      student.name,
-      student.department,
-      student.factory,
-      student.grade,
-      student.stage,
-      student.birthDate?.toLocaleDateString()
+      student.code || '',
+      student.name || '',
+      student.department || '',
+      student.factory || '',
+      student.batch || student.grade || '',
+      student.stage || '',
+      student.createOn ? new Date(student.createOn).toLocaleDateString() : '',
+      student.supervisor || ''
     ]);
 
     const csvContent = [

@@ -73,7 +73,7 @@
                 <div class="info-item">
                   <span class="label">Birth Date:</span>
                   <span class="value" *ngIf="!isEditMode">{{ student.birthDate | date }}</span>
-                  <input type="date" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.birthDate">
+                  <input type="date" class="form-control" *ngIf="isEditMode" [(ngModel)]="birthDateString">
                 </div>
                 <div class="info-item">
                   <span class="label">Gender:</span>
@@ -92,7 +92,7 @@
                   <span class="label">Department:</span>
                   <span class="value" *ngIf="!isEditMode">{{ student.department }}</span>
                   <select class="form-select" *ngIf="isEditMode" [(ngModel)]="student.department">
-                    <option value="IT">IT</option>
+                    <option value="Information Technology">Information Technology</option>
                     <option value="Mechanics">Mechanics</option>
                     <option value="Electrical">Electrical</option>
                   </select>

@@ -80,11 +80,11 @@
 
         <div class="stat-card">
           <div class="stat-icon">
-            <i class="bi bi-building"></i>
+            <i class="bi bi-people"></i>
           </div>
           <div class="stat-info">
-            <h4>{{ translationService.translate('departments') }}</h4>
-            <h2>{{departments.length}}</h2>
+            <h4>{{ translationService.translate('supervisor') }}</h4>
+            <h2>{{supervisors.length}}</h2>
           </div>
         </div>
 
@@ -261,8 +261,8 @@
               <td>{{ student.grade }}</td>
               <td>{{ student.department }}</td>
               <td>{{ student.factory }}</td>
-              <td>{{ student.createOn | date }}</td>
-              <td>{{ student.supervisor || '-' }}</td>
+              <td>{{ student.createOn | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+              <td>{{ student.supervisor }}</td>
             
             </tr>
           </tbody>

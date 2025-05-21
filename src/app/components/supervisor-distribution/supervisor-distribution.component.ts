@@ -48,7 +48,7 @@ export class SupervisorDistributionComponent implements OnInit {
   supervisors: Supervisor[] = [];
   supervisorDropLists: string[] = [];
 
-  departments: string[] = ['All', 'IT', 'Mechanics', 'Electrical'];
+  departments: string[] = ['All', 'Information Technology', 'Mechanics', 'Electrical'];
   stages: string[] = ['All', 'School', 'Institute', 'Faculty'];
   batches: string[] = ['All', 'Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
   selectedDepartment: string = 'All';
