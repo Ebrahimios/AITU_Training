@@ -104,26 +104,34 @@ export class StudentDistributionComponent implements OnInit {
     return this.students.filter(student => student.selected);
   }
   async ngOnInit(): Promise<void> {
-    // Subscribe to factories
-    this.factoryService.factories$.subscribe(factories => {
-      // Convert factory service factories to our local Factory interface
-      this.factories = factories.map(f => ({
-        id: f.id.toString(),
-        name: f.name,
-        address: f.address,
-        phone: f.phone,
-        contactName: f.contactName,
-        industry: f.industry,
-        capacity: f.capacity,
-        type: f.type,
-        students: [],
-        assignedStudents: f.assignedStudents
-      }));
-      this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+    try {
+      console.log('Initializing student-distribution component');
       
-      // Load students after factories are loaded
-      this.loadStudentsFromFirebase();
-    });
+      // Subscribe to factories
+      this.factoryService.factories$.subscribe(factories => {
+        console.log('Received factories from service:', factories);
+        
+        // Convert factory service factories to our local Factory interface
+        this.factories = factories.map(f => ({
+          id: f.id.toString(),
+          name: f.name,
+          address: f.address,
+          phone: f.phone,
+          contactName: f.contactName,
+          industry: f.industry,
+          capacity: f.capacity,
+          type: f.type,
+          students: [],
+          assignedStudents: f.assignedStudents
+        }));
+        this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+        
+        // Load students after factories are loaded
+        this.loadStudentsFromFirebase();
+      });
+    } catch (error) {
+      console.error('Error in ngOnInit:', error);
+    }
   }
   
   async loadStudentsFromFirebase(): Promise<void> {
@@ -404,29 +412,42 @@ export class StudentDistributionComponent implements OnInit {
   }
 
   async addFactory(name: string, address: string, phone: string, contactName: string, industry: string, capacity: number, type: string): Promise<void> {
-    if (!name) {
-      this.nameError = 'Factory name is required';
-      return;
+    // Reset error messages
+    this.resetFormErrors();
+    
+    // Validate inputs
+    let hasError = false;
+    
+    if (!name || name.trim().length < 3) {
+      this.nameError = 'Factory name must be at least 3 characters long';
+      hasError = true;
     }
 
-    if (!address) {
-      this.addressError = 'Address is required';
-      return;
+    if (!address || address.trim().length < 5) {
+      this.addressError = 'Address must be at least 5 characters long';
+      hasError = true;
     }
 
-    if (!phone) {
-      this.phoneError = 'Phone is required';
-      return;
+    // Phone validation
+    const phoneRegex = /^[0-9]{10,15}$/;
+    if (!phone || !phoneRegex.test(phone)) {
+      this.phoneError = 'Phone number must contain only numbers (10-15 digits)';
+      hasError = true;
     }
 
-    if (!contactName) {
-      this.contactNameError = 'Contact name is required';
+    if (!contactName || contactName.trim().length < 3) {
+      this.contactNameError = 'Contact name must be at least 3 characters long';
+      hasError = true;
+    }
+    
+    if (hasError) {
       return;
     }
 
     try {
-      // Create a unique ID for the factory
-      const factoryId = `factory_${Date.now()}`;
+      // Create a unique ID for the factory - use timestamp as numeric ID for consistency
+      const timestamp = Date.now();
+      const factoryId = timestamp.toString();
       
       // Create the factory object for Firebase
       const firebaseFactory: FirebaseFactory = {
@@ -451,15 +472,15 @@ export class StudentDistributionComponent implements OnInit {
       const success = await this.authService.submitFactoryRequest(firebaseFactory);
       
       if (success) {
-        console.log('Factory saved to Firebase successfully');
+        console.log('Factory saved to Firebase successfully with ID:', factoryId);
         
         // Also add to the local factory service for immediate display
         const newFactory: Factory = {
           id: factoryId,
-          name,
-          address,
-          phone,
-          contactName,
+          name: name.trim(),
+          address: address.trim(),
+          phone: phone.trim(),
+          contactName: contactName.trim(),
           industry,
           capacity,
           type,
@@ -470,16 +491,21 @@ export class StudentDistributionComponent implements OnInit {
         // Convert our local Factory to the service Factory type
         const serviceFactory = {
           ...newFactory,
-          id: Number(factoryId.replace('factory_', ''))
+          id: timestamp // Use the same numeric timestamp as ID
         };
         
-        this.factoryService.addFactory(serviceFactory);
+        // Add to factory service to ensure it persists
+        await this.factoryService.addFactory(serviceFactory);
+        console.log('Factory added to FactoryService successfully');
         
         // Reload factory requests to ensure the UI is updated
         await this.authService.loadFactoryRequests();
         
+        // Refresh factories from Firebase to ensure consistency
+        await this.factoryService.loadFactoriesFromFirebase();
+        
         // Show success message
-        alert('Factory added successfully and is now available for student assignments.');
+        alert('Factory added successfully and will persist after page reload.');
       } else {
         console.error('Failed to save factory to Firebase');
         alert('Failed to add factory. Please try again.');

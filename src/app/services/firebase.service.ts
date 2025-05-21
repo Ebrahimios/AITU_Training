@@ -36,6 +36,22 @@ export interface FirebaseFactory {
   createdAt: number;
 }
 
+export interface FirebaseSupervisor {
+  id?: string;
+  name: string;
+  capacity: number;
+  assignedStudents: number;
+  students: any[];
+  address?: string;
+  phone?: string;
+  department?: string;
+  contactName?: string;
+  type: string;
+  industry?: string;
+  isApproved: boolean;
+  createdAt: number;
+}
+
 export interface student {
 
 }
@@ -47,24 +63,49 @@ export class AuthService {
   // Factory request notifications
   private factoryRequestsSubject = new BehaviorSubject<any[]>([]);
   public factoryRequests$ = this.factoryRequestsSubject.asObservable();
-  // Helper method to convert any date value to timestamp
+  // Helper method to convert any date value to a timestamp
   private convertToTimestamp(dateValue: any): number | undefined {
     if (!dateValue) return undefined;
     
-    // If already a number, return it
+    // If already a number (timestamp), return it
     if (typeof dateValue === 'number') return dateValue;
     
-    // If string, convert to timestamp
+    // If it's a string, convert to timestamp
     if (typeof dateValue === 'string') {
       const date = new Date(dateValue);
-      if (!isNaN(date.getTime())) {
-        return date.getTime(); // Convert to timestamp (milliseconds)
-      }
+      return isNaN(date.getTime()) ? undefined : date.getTime();
     }
     
-    // If Date object, convert to timestamp
-    if (dateValue instanceof Date) {
-      return dateValue.getTime();
+    // If it's a Firestore timestamp, convert to milliseconds
+    if (dateValue && typeof dateValue === 'object' && 'toMillis' in dateValue) {
+      return dateValue.toMillis();
+    }
+    
+    return undefined;
+  }
+  
+  // Helper method to convert any date value to a string in YYYY-MM-DD format
+  private formatBirthDateToString(dateValue: any): string | undefined {
+    if (!dateValue) return undefined;
+    
+    // If already a string, validate and return it or convert to standard format
+    if (typeof dateValue === 'string') {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return undefined;
+      return date.toISOString().split('T')[0]; // Ensure YYYY-MM-DD format
+    }
+    
+    // If it's a number (timestamp), convert to string
+    if (typeof dateValue === 'number') {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return undefined;
+      return date.toISOString().split('T')[0];
+    }
+    
+    // If it's a Firestore timestamp, convert to string
+    if (dateValue && typeof dateValue === 'object' && 'toMillis' in dateValue) {
+      const date = new Date(dateValue.toMillis());
+      return date.toISOString().split('T')[0];
     }
     
     return undefined;
@@ -159,9 +200,9 @@ export class AuthService {
         nationalID: data.nationalID,
         factory: data.factory,
         department: data.department,
-        grade: data.grade,
+        batch: data.batch,
         birthAddress: data.birthAddress,
-        birthDate: data['birthDate'] ? this.convertToTimestamp(data['birthDate']) : undefined, // Ensure birthDate is a timestamp
+        birthDate: data['birthDate'] ? this.formatBirthDateToString(data['birthDate']) : undefined, // Ensure birthDate is a string
         email: data.email,
         gender: data.gender,
         stage: data.stage,
@@ -272,13 +313,13 @@ export class AuthService {
           address: data['address'],
           nationalID: data['nationalID'],
           email: data['email'],
-          birthDate: this.convertToTimestamp(data['birthDate']), // Ensure birthDate is a timestamp
-          createOn: this.convertToTimestamp(data['createOn']), // Ensure createOn is a timestamp
+          birthDate: data['birthDate'] ? this.formatBirthDateToString(data['birthDate']) : undefined, // Ensure birthDate is a string
+          createOn: data['createOn'] ? this.formatBirthDateToString(data['createOn']) : undefined, // Ensure createOn is a string
           gender: data['gender'],
           department: data['department'],
           birthAddress: data['birthAddress'],
           factory: data['factory'],
-          grade: data['grade'],
+          batch: data['batch'],
           stage: data['stage'],
           factoryType: data['factoryType'],
           selected: data['selected'],
@@ -313,7 +354,7 @@ export class AuthService {
         department: student.department,
         birthAddress: student.birthAddress,
         factory: student.factory,
-        grade: student.grade,
+        batch: student.batch,
         stage: student.stage,
         factoryType: student.factoryType,
         selected: student.selected,
@@ -337,6 +378,140 @@ export class AuthService {
     }
   }
 
+  // Factory methods
+  public async getAllFactories(): Promise<FirebaseFactory[]> {
+    try {
+      const factoriesCollection = collection(this.firestore, 'Factories');
+      const factoriesSnapshot = await getDocs(factoriesCollection);
+      const factories: FirebaseFactory[] = [];
+      
+      factoriesSnapshot.forEach((doc) => {
+        const data = doc.data();
+        factories.push({
+          id: doc.id,
+          name: data['name'],
+          capacity: data['capacity'],
+          assignedStudents: data['assignedStudents'] || 0,
+          students: data['students'] || [],
+          address: data['address'],
+          phone: data['phone'],
+          department: data['department'],
+          contactName: data['contactName'],
+          type: data['type'],
+          industry: data['industry'],
+          isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
+          createdAt: data['createdAt'] || Date.now()
+        });
+      });
+      
+      return factories;
+    } catch (error) {
+      console.error('Error getting factories:', error);
+      return [];
+    }
+  }
+  
+  public async updateFactory(factory: FirebaseFactory): Promise<boolean> {
+    try {
+      const factoryId = factory.id || `factory_${Date.now()}`;
+      const factoryRef = doc(this.firestore, 'Factories', factoryId);
+      
+      // Remove undefined values to prevent Firestore errors
+      const cleanedData = Object.entries(factory).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      await setDoc(factoryRef, cleanedData, { merge: true });
+      console.log('Factory updated successfully in Firebase with ID:', factoryId);
+      return true;
+    } catch (error) {
+      console.error('Error updating factory in Firebase:', error);
+      return false;
+    }
+  }
+  
+  public async deleteFactory(factoryId: string): Promise<boolean> {
+    try {
+      const factoryRef = doc(this.firestore, 'Factories', factoryId);
+      await deleteDoc(factoryRef);
+      console.log('Factory deleted successfully from Firebase with ID:', factoryId);
+      return true;
+    } catch (error) {
+      console.error('Error deleting factory from Firebase:', error);
+      return false;
+    }
+  }
+  
+  // Supervisor methods
+  public async getAllSupervisors(): Promise<FirebaseSupervisor[]> {
+    try {
+      const supervisorsCollection = collection(this.firestore, 'Supervisors');
+      const supervisorsSnapshot = await getDocs(supervisorsCollection);
+      const supervisors: FirebaseSupervisor[] = [];
+      
+      supervisorsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        supervisors.push({
+          id: doc.id,
+          name: data['name'],
+          capacity: data['capacity'],
+          assignedStudents: data['assignedStudents'] || 0,
+          students: data['students'] || [],
+          address: data['address'],
+          phone: data['phone'],
+          department: data['department'],
+          contactName: data['contactName'],
+          type: data['type'],
+          industry: data['industry'],
+          isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
+          createdAt: data['createdAt'] || Date.now()
+        });
+      });
+      
+      return supervisors;
+    } catch (error) {
+      console.error('Error getting supervisors:', error);
+      return [];
+    }
+  }
+  
+  public async updateSupervisor(supervisor: FirebaseSupervisor): Promise<boolean> {
+    try {
+      const supervisorId = supervisor.id || `supervisor_${Date.now()}`;
+      const supervisorRef = doc(this.firestore, 'Supervisors', supervisorId);
+      
+      // Remove undefined values to prevent Firestore errors
+      const cleanedData = Object.entries(supervisor).reduce((acc, [key, value]) => {
+        if (value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      await setDoc(supervisorRef, cleanedData, { merge: true });
+      console.log('Supervisor updated successfully in Firebase with ID:', supervisorId);
+      return true;
+    } catch (error) {
+      console.error('Error updating supervisor in Firebase:', error);
+      return false;
+    }
+  }
+  
+  public async deleteSupervisor(supervisorId: string): Promise<boolean> {
+    try {
+      const supervisorRef = doc(this.firestore, 'Supervisors', supervisorId);
+      await deleteDoc(supervisorRef);
+      console.log('Supervisor deleted successfully from Firebase with ID:', supervisorId);
+      return true;
+    } catch (error) {
+      console.error('Error deleting supervisor from Firebase:', error);
+      return false;
+    }
+  }
+  
   // Factory request methods
   public async submitFactoryRequest(factoryData: FirebaseFactory): Promise<boolean> {
     try {

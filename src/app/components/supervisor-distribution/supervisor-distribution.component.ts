@@ -114,7 +114,7 @@ export class SupervisorDistributionComponent implements OnInit {
       this.students = firebaseStudents.map(student => ({
         ...student,
         id: parseInt(student.code) || Math.floor(Math.random() * 10000), // Generate an ID if code can't be parsed
-        batch: student.batch || student.grade?.toString() || '',
+        batch:  student.batch  ?.toString() || '',
         selected: false
       }));
       
@@ -163,26 +163,40 @@ export class SupervisorDistributionComponent implements OnInit {
     this.isEditing = false;
   }
 
-  saveChanges(): void {
+  async saveChanges(): Promise<void> {
     if (this.selectedSupervisor) {
       if (confirm('Are you sure you want to save these changes?')) {
-        this.factoryService.updateSupervisor(this.selectedSupervisor);
-        this.isEditing = false;
-
-        // Close the modal
-        const modalElement = document.getElementById('supervisorDetailsModal');
-        if (modalElement) {
-          const modal = bootstrap.Modal.getInstance(modalElement);
-          if (modal) {
-            modal.hide();
-            document.body.classList.remove('modal-open');
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-              backdrop.remove();
+        // Convert our local Supervisor to the service Supervisor type
+        const serviceSupervisor = {
+          ...this.selectedSupervisor,
+          id: Number(this.selectedSupervisor.id)
+        };
+        
+        try {
+          // Save to Firebase through the factory service
+          await this.factoryService.updateSupervisor(serviceSupervisor);
+          console.log('Supervisor updated successfully and will persist after page reload');
+          this.isEditing = false;
+          
+          // Close the modal
+          const modalElement = document.getElementById('supervisorDetailsModal');
+          if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+              modal.hide();
+              document.body.classList.remove('modal-open');
+              const backdrop = document.querySelector('.modal-backdrop');
+              if (backdrop) {
+                backdrop.remove();
+              }
             }
           }
+          
+          alert('Changes saved successfully');
+        } catch (error) {
+          console.error('Error updating supervisor:', error);
+          alert('Error saving changes. Please try again.');
         }
-        alert('Changes saved successfully');
       }
     }
   }
@@ -350,7 +364,7 @@ export class SupervisorDistributionComponent implements OnInit {
     }
   }
 
-  addSupervisor(name: string, address: string, phone: string, industry: string, contactName: string): void {
+  async addSupervisor(name: string, address: string, phone: string, industry: string, contactName: string): Promise<void> {
     // Reset error messages
     this.nameError = '';
     this.addressError = '';
@@ -395,8 +409,11 @@ export class SupervisorDistributionComponent implements OnInit {
       return;
     }
 
+    // Generate a unique ID for the supervisor
+    const supervisorId = Date.now();
+    
     const newSupervisor: Supervisor = {
-      id: this.supervisors.length + 1,
+      id: supervisorId,
       name: name.trim(),
       capacity: 5,
       assignedStudents: 0,
@@ -405,10 +422,17 @@ export class SupervisorDistributionComponent implements OnInit {
       phone: phone.trim(),
       industry,
       contactName: contactName.trim(),
-      type: 'Administrative Supervisor'
+      type: 'Administrative Supervisor',
+      department: ''
     };
 
-    this.factoryService.addSupervisor(newSupervisor);
+    try {
+      // Save to Firebase through the factory service
+      await this.factoryService.addSupervisor(newSupervisor);
+      console.log('Supervisor added successfully and will persist after page reload');
+    } catch (error) {
+      console.error('Error adding supervisor:', error);
+    }
 
     // Close the modal
     const modalElement = document.getElementById('addSupervisorModal');
@@ -425,6 +449,33 @@ export class SupervisorDistributionComponent implements OnInit {
     }
 
     alert('Factory added successfully');
+  }
+
+  async deleteSupervisor(supervisor: Supervisor): Promise<void> {
+    if (confirm(`Are you sure you want to delete ${supervisor.name}?`)) {
+      try {
+        // Delete from Firebase through the factory service
+        await this.factoryService.deleteSupervisor(supervisor.id);
+        console.log('Supervisor deleted successfully');
+        
+        // Close the modal if it's open
+        const modalElement = document.getElementById('supervisorDetailsModal');
+        if (modalElement) {
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) {
+            modal.hide();
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+              backdrop.remove();
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting supervisor:', error);
+        alert('Error deleting supervisor. Please try again.');
+      }
+    }
   }
 
   addNewIndustry() {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,9 @@ import { TranslationService } from '../../services/translation.service';
 import { FactoryService, Factory } from '../../services/factory.service';
 import { DistributionService, Student } from '../../services/distribution.service';
 import { NavbarComponent } from '../navbar/navbar.component';
+import { AuthService, FirebaseFactory, FirebaseSupervisor } from '../../services/firebase.service';
+import { Student as FirebaseStudent } from '../../interfaces/student';
+import { Subscription } from 'rxjs';
 import Chart from 'chart.js/auto';
 
 @Component({
@@ -14,7 +17,7 @@ import Chart from 'chart.js/auto';
   styleUrls: ['./analytics.component.css'],
   imports: [CommonModule, RouterModule, FormsModule]
 })
-export class AnalyticsComponent implements OnInit {
+export class AnalyticsComponent implements OnInit, OnDestroy {
   // Charts
   departmentChart: any;
   factoryDistributionChart: any;
@@ -23,14 +26,26 @@ export class AnalyticsComponent implements OnInit {
 
   // Data
   students: Student[] = [];
+  firebaseStudents: FirebaseStudent[] = [];
   factories: Factory[] = [];
+  firebaseFactories: FirebaseFactory[] = [];
+  supervisors: FirebaseSupervisor[] = [];
   departments: string[] = [];
   departmentCounts: number[] = [];
   factoryNames: string[] = [];
   factoryStudentCounts: number[] = [];
   factoryCapacities: number[] = [];
-  monthlyData: number[] = [12, 19, 15, 25, 22, 30, 28, 32, 35, 40, 38, 42];
+  supervisorNames: string[] = [];
+  supervisorStudentCounts: number[] = [];
+  stageData: { name: string, count: number }[] = [];
+  batchData: { name: string, count: number }[] = [];
+  
+  // Monthly data
+  monthlyData: number[] = [];
   months: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  // Subscriptions
+  private subscriptions: Subscription[] = [];
   
   // Filters
   selectedYear: string = '2025';
@@ -39,40 +54,91 @@ export class AnalyticsComponent implements OnInit {
   // KPIs
   totalStudents: number = 0;
   totalFactories: number = 0;
+  totalSupervisors: number = 0;
   averageUtilization: number = 0;
   growthRate: number = 12.5; // Example value
 
   constructor(
     public translationService: TranslationService,
     private factoryService: FactoryService,
-    private distributionService: DistributionService
+    private distributionService: DistributionService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    // Subscribe to data services
-    this.factoryService.factories$.subscribe(factories => {
-      this.factories = factories;
-      this.totalFactories = factories.length;
-      this.calculateKPIs();
-      this.prepareChartData();
-      this.initCharts();
-    });
+    // Load all data from Firebase
+    this.loadAllData();
     
-    this.distributionService.students$.subscribe(students => {
-      this.students = students;
-      this.totalStudents = students.length;
-      this.calculateKPIs();
-      this.prepareChartData();
-      if (this.departmentChart) {
-        this.updateCharts();
-      }
-    });
+    // Also subscribe to service observables for real-time updates
+    this.subscriptions.push(
+      this.factoryService.factories$.subscribe(factories => {
+        this.factories = factories;
+        this.totalFactories = factories.length;
+        this.calculateKPIs();
+        this.prepareChartData();
+        if (this.departmentChart) {
+          this.updateCharts();
+        } else {
+          this.initCharts();
+        }
+      })
+    );
+    
+    this.subscriptions.push(
+      this.factoryService.supervisors$.subscribe(supervisors => {
+        this.totalSupervisors = supervisors.length;
+      })
+    );
+    
+    this.subscriptions.push(
+      this.distributionService.students$.subscribe(students => {
+        this.students = students;
+      })
+    );
   }
 
+  /**
+   * Load all data from Firebase for analytics
+   */
+  async loadAllData(): Promise<void> {
+    try {
+      // Load students from Firebase
+      this.firebaseStudents = await this.authService.getAllStudents();
+      this.totalStudents = this.firebaseStudents.length;
+      
+      // Load factories from Firebase
+      this.firebaseFactories = await this.authService.getAllFactories();
+      this.totalFactories = this.firebaseFactories.length;
+      
+      // Load supervisors from Firebase
+      this.supervisors = await this.authService.getAllSupervisors();
+      this.totalSupervisors = this.supervisors.length;
+      
+      // Calculate KPIs and prepare chart data
+      this.calculateKPIs();
+      this.prepareChartData();
+      this.calculateMonthlyData();
+      this.initCharts();
+    } catch (error) {
+      console.error('Error loading data for analytics:', error);
+    }
+  }
+  
+  /**
+   * Clean up subscriptions when component is destroyed
+   */
+  ngOnDestroy(): void {
+    // Unsubscribe from all subscriptions
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  /**
+   * Prepare data for charts
+   */
   prepareChartData(): void {
-    // Prepare department data
+    // Prepare department data from Firebase students
     const departmentMap = new Map<string, number>();
-    this.students.forEach(student => {
+    this.firebaseStudents.forEach(student => {
       if (student.department) {
         departmentMap.set(student.department, (departmentMap.get(student.department) || 0) + 1);
       }
@@ -81,19 +147,107 @@ export class AnalyticsComponent implements OnInit {
     this.departments = Array.from(departmentMap.keys());
     this.departmentCounts = Array.from(departmentMap.values());
     
-    // Prepare factory data
-    this.factoryNames = this.factories.map(f => f.name);
-    this.factoryStudentCounts = this.factories.map(f => f.assignedStudents);
-    this.factoryCapacities = this.factories.map(f => f.capacity);
+    // Prepare factory data from Firebase factories
+    this.factoryNames = this.firebaseFactories.map(f => f.name);
+    this.factoryStudentCounts = this.firebaseFactories.map(f => f.assignedStudents);
+    this.factoryCapacities = this.firebaseFactories.map(f => f.capacity);
+    
+    // Prepare supervisor data
+    this.supervisorNames = this.supervisors.map(s => s.name);
+    this.supervisorStudentCounts = this.supervisors.map(s => s.assignedStudents);
+    
+    // Prepare stage data
+    const stageMap = new Map<string, number>();
+    this.firebaseStudents.forEach(student => {
+      if (student.stage) {
+        stageMap.set(student.stage, (stageMap.get(student.stage) || 0) + 1);
+      }
+    });
+    this.stageData = Array.from(stageMap.entries()).map(([name, count]) => ({ name, count }));
+    
+    // Prepare batch data
+    const batchMap = new Map<string, number>();
+    this.firebaseStudents.forEach(student => {
+      if (student.batch) {
+        batchMap.set(student.batch, (batchMap.get(student.batch) || 0) + 1);
+      }
+    });
+    this.batchData = Array.from(batchMap.entries()).map(([name, count]) => ({ name, count }));
   }
 
+  /**
+   * Calculate KPIs from Firebase data
+   */
   calculateKPIs(): void {
-    // Calculate average utilization
-    if (this.factories.length > 0) {
-      const totalCapacity = this.factories.reduce((sum, factory) => sum + factory.capacity, 0);
-      const totalAssigned = this.factories.reduce((sum, factory) => sum + factory.assignedStudents, 0);
+    // Calculate average utilization from Firebase factories
+    if (this.firebaseFactories.length > 0) {
+      const totalCapacity = this.firebaseFactories.reduce((sum, factory) => sum + factory.capacity, 0);
+      const totalAssigned = this.firebaseFactories.reduce((sum, factory) => sum + factory.assignedStudents, 0);
       this.averageUtilization = totalCapacity > 0 ? (totalAssigned / totalCapacity) * 100 : 0;
     }
+    
+    // Calculate growth rate based on student creation dates
+    this.calculateGrowthRate();
+  }
+  
+  /**
+   * Calculate growth rate based on student creation dates
+   */
+  calculateGrowthRate(): void {
+    // Get current month and previous month
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    
+    // Count students created in current month and previous month
+    let currentMonthCount = 0;
+    let previousMonthCount = 0;
+    
+    this.firebaseStudents.forEach(student => {
+      if (student.createOn) {
+        const createDate = new Date(student.createOn);
+        const createMonth = createDate.getMonth();
+        
+        if (createMonth === currentMonth) {
+          currentMonthCount++;
+        } else if (createMonth === previousMonth) {
+          previousMonthCount++;
+        }
+      }
+    });
+    
+    // Calculate growth rate
+    if (previousMonthCount > 0) {
+      this.growthRate = ((currentMonthCount - previousMonthCount) / previousMonthCount) * 100;
+    } else {
+      this.growthRate = currentMonthCount > 0 ? 100 : 0;
+    }
+    
+    // Ensure growth rate is not negative for display purposes
+    this.growthRate = Math.max(0, this.growthRate);
+  }
+  
+  /**
+   * Calculate monthly data for trends chart
+   */
+  calculateMonthlyData(): void {
+    // Initialize monthly data array with zeros
+    this.monthlyData = Array(12).fill(0);
+    
+    // Count students created in each month of the selected year
+    const selectedYearNum = parseInt(this.selectedYear);
+    
+    this.firebaseStudents.forEach(student => {
+      if (student.createOn) {
+        const createDate = new Date(student.createOn);
+        const createYear = createDate.getFullYear();
+        const createMonth = createDate.getMonth();
+        
+        if (createYear === selectedYearNum) {
+          this.monthlyData[createMonth]++;
+        }
+      }
+    });
   }
 
   initCharts(): void {
@@ -288,8 +442,12 @@ export class AnalyticsComponent implements OnInit {
   }
 
   onYearChange(): void {
-    // Update monthly trends chart title
+    // Recalculate monthly data based on selected year
+    this.calculateMonthlyData();
+    
+    // Update monthly trends chart
     if (this.monthlyTrendsChart) {
+      this.monthlyTrendsChart.data.datasets[0].data = this.monthlyData;
       this.monthlyTrendsChart.options.plugins.title.text = this.translationService.translate('year') + ' ' + this.selectedYear;
       this.monthlyTrendsChart.update();
     }

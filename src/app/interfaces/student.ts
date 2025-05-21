@@ -1,3 +1,14 @@
+export interface StudentReport {
+  id?: string;
+  name: string;
+  date: number;
+  url: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  feedback?: string;
+  type?: 'weekly' | 'monthly' | 'final';
+  description?: string;
+}
+
 export interface Student {
     code: string;
     name: string;
@@ -6,16 +17,16 @@ export interface Student {
     address?: string;
     nationalID?: string;
     email?: string;
-    birthDate?: number | null;
-    createOn?: number;
+    birthDate?: string | null;
+    createOn?: string;
     gender?: string;
     department?: string;
     birthAddress?:string;
     factory?: string | null;
-    grade?: number;
     stage?: string;
     factoryType?: boolean;
     selected?: boolean;
     batch?: string;
     supervisor?: string | null;
+    report?: StudentReport;
   }

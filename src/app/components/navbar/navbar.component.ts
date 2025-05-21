@@ -148,11 +148,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         disableClose: false,
         autoFocus: true,
         hasBackdrop: true,
-        backdropClass: 'profile-backdrop',
-        position: {
-          top: '50%',
-          left: '50%'
-        }
+        backdropClass: 'profile-backdrop'
+        // Using CSS classes for centering instead of explicit positioning
       });
       
       dialogRef.afterClosed().subscribe(result => {

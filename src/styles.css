@@ -33,10 +33,17 @@ html, body {
   align-items: center !important;
 }
 
+/* Ensure Material Dialog is centered */
+.mat-mdc-dialog-container .mdc-dialog__container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+
 /* Profile modal specific styles */
 .profile-modal {
   z-index: 1050 !important;
-  transform: translate(-50%, -50%) !important;
 }
 
 /* Profile backdrop */
@@ -45,6 +52,16 @@ html, body {
   opacity: 1 !important;
   backdrop-filter: blur(4px);
   z-index: 1040 !important;
+}
+
+/* Additional centering for the dialog overlay */
+.cdk-global-overlay-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  overflow: auto !important;
 }
 
 /* Ensure dialog is centered on mobile */

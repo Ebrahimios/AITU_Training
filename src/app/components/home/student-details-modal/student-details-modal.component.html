@@ -33,6 +33,9 @@
           <button class="tab-button" [class.active]="activeTab === 'evaluation'" (click)="activeTab = 'evaluation'" *ngIf="isSupervisor">
             <i class="bi bi-clipboard-check"></i> Evaluation
           </button>
+          <button class="tab-button" [class.active]="activeTab === 'report'" (click)="activeTab = 'report'">
+            <i class="bi bi-file-earmark-text"></i> Reports
+          </button>
         </div>
 
         <div class="modal-body">
@@ -147,9 +150,9 @@
                   </select>
                 </div>
                 <div class="info-item">
-                  <span class="label">Grade:</span>
-                  <span class="value" *ngIf="!isEditMode">{{ student.grade }}</span>
-                  <input type="number" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.grade">
+                  <span class="label">Batch:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.batch }}</span>
+                  <input type="text" class="form-control" *ngIf="isEditMode" [(ngModel)]="student.batch">
                 </div>
               </div>
             </div>
@@ -204,66 +207,295 @@
                 </div>
               </div>
 
+              <!-- Personal and Ethical Aspects Section -->
+              <h4 class="evaluation-category-title">Personal and Ethical Aspects</h4>
               <div class="performance-grid" *ngIf="student.performance">
+                <!-- Neat Appearance -->
                 <div class="progress-item">
                   <div class="progress-header">
-                    <span class="label">Technical Skills</span>
-                    <span class="percentage">{{ student.performance.technical }}%</span>
+                    <span class="label">Neat Appearance and Ethical Standards</span>
+                    <span class="percentage">{{ student.performance.neatAppearance }}/3</span>
                   </div>
                   <div class="progress">
                     <div class="progress-bar"
                          [ngClass]="{
-                           'bg-success': student.performance.technical >= 80,
-                           'bg-warning': student.performance.technical >= 60 && student.performance.technical < 80,
-                           'bg-danger': student.performance.technical < 60
+                           'bg-success': (student.performance.neatAppearance / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.neatAppearance / 3) * 100 >= 60 && (student.performance.neatAppearance / 3) * 100 < 80,
+                           'bg-danger': (student.performance.neatAppearance / 3) * 100 < 60
                          }"
                          role="progressbar"
-                         [style.width.%]="student.performance.technical"
-                         [attr.aria-valuenow]="student.performance.technical"
+                         [style.width.%]="(student.performance.neatAppearance / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.neatAppearance"
                          aria-valuemin="0"
-                         aria-valuemax="100">
+                         aria-valuemax="3">
                     </div>
                   </div>
                 </div>
 
+                <!-- Responsive Personality -->
                 <div class="progress-item">
                   <div class="progress-header">
-                    <span class="label">Communication</span>
-                    <span class="percentage">{{ student.performance.communication }}%</span>
+                    <span class="label">Responsive and Reliable Personality</span>
+                    <span class="percentage">{{ student.performance.responsivePersonality }}/3</span>
                   </div>
                   <div class="progress">
                     <div class="progress-bar"
                          [ngClass]="{
-                           'bg-success': student.performance.communication >= 80,
-                           'bg-warning': student.performance.communication >= 60 && student.performance.communication < 80,
-                           'bg-danger': student.performance.communication < 60
+                           'bg-success': (student.performance.responsivePersonality / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.responsivePersonality / 3) * 100 >= 60 && (student.performance.responsivePersonality / 3) * 100 < 80,
+                           'bg-danger': (student.performance.responsivePersonality / 3) * 100 < 60
                          }"
                          role="progressbar"
-                         [style.width.%]="student.performance.communication"
-                         [attr.aria-valuenow]="student.performance.communication"
+                         [style.width.%]="(student.performance.responsivePersonality / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.responsivePersonality"
                          aria-valuemin="0"
-                         aria-valuemax="100">
+                         aria-valuemax="3">
                     </div>
                   </div>
                 </div>
 
+                <!-- Confident Relations -->
                 <div class="progress-item">
                   <div class="progress-header">
-                    <span class="label">Teamwork</span>
-                    <span class="percentage">{{ student.performance.teamwork }}%</span>
+                    <span class="label">Confidence and Relations with Others</span>
+                    <span class="percentage">{{ student.performance.confidentRelations }}/3</span>
                   </div>
                   <div class="progress">
                     <div class="progress-bar"
                          [ngClass]="{
-                           'bg-success': student.performance.teamwork >= 80,
-                           'bg-warning': student.performance.teamwork >= 60 && student.performance.teamwork < 80,
-                           'bg-danger': student.performance.teamwork < 60
+                           'bg-success': (student.performance.confidentRelations / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.confidentRelations / 3) * 100 >= 60 && (student.performance.confidentRelations / 3) * 100 < 80,
+                           'bg-danger': (student.performance.confidentRelations / 3) * 100 < 60
                          }"
                          role="progressbar"
-                         [style.width.%]="student.performance.teamwork"
-                         [attr.aria-valuenow]="student.performance.teamwork"
+                         [style.width.%]="(student.performance.confidentRelations / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.confidentRelations"
                          aria-valuemin="0"
-                         aria-valuemax="100">
+                         aria-valuemax="3">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Practical and Professional Aspects Section -->
+              <h4 class="evaluation-category-title">Practical and Professional Aspects</h4>
+              <div class="performance-grid" *ngIf="student.performance">
+                <!-- Attendance Detailed -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Attendance and Punctuality</span>
+                    <span class="percentage">{{ student.performance.attendance }}/15</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.attendance / 15) * 100 >= 80,
+                           'bg-warning': (student.performance.attendance / 15) * 100 >= 60 && (student.performance.attendance / 15) * 100 < 80,
+                           'bg-danger': (student.performance.attendance / 15) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.attendance / 15) * 100"
+                         [attr.aria-valuenow]="student.performance.attendance"
+                         aria-valuemin="0"
+                         aria-valuemax="15">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Understanding Instructions -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Understanding and Executing Instructions</span>
+                    <span class="percentage">{{ student.performance.understandingInstructions }}/3</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.understandingInstructions / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.understandingInstructions / 3) * 100 >= 60 && (student.performance.understandingInstructions / 3) * 100 < 80,
+                           'bg-danger': (student.performance.understandingInstructions / 3) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.understandingInstructions / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.understandingInstructions"
+                         aria-valuemin="0"
+                         aria-valuemax="3">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Task Completion -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Task Completion Level</span>
+                    <span class="percentage">{{ student.performance.taskCompletion }}/3</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.taskCompletion / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.taskCompletion / 3) * 100 >= 60 && (student.performance.taskCompletion / 3) * 100 < 80,
+                           'bg-danger': (student.performance.taskCompletion / 3) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.taskCompletion / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.taskCompletion"
+                         aria-valuemin="0"
+                         aria-valuemax="3">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Effective Interaction -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Effectiveness with Colleagues and Supervisors</span>
+                    <span class="percentage">{{ student.performance.effectiveInteraction }}/3</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.effectiveInteraction / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.effectiveInteraction / 3) * 100 >= 60 && (student.performance.effectiveInteraction / 3) * 100 < 80,
+                           'bg-danger': (student.performance.effectiveInteraction / 3) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.effectiveInteraction / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.effectiveInteraction"
+                         aria-valuemin="0"
+                         aria-valuemax="3">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Follow Up With Supervisor -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Follow-up with Supervisor</span>
+                    <span class="percentage">{{ student.performance.followUpWithSupervisor }}/3</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.followUpWithSupervisor / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.followUpWithSupervisor / 3) * 100 >= 60 && (student.performance.followUpWithSupervisor / 3) * 100 < 80,
+                           'bg-danger': (student.performance.followUpWithSupervisor / 3) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.followUpWithSupervisor / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.followUpWithSupervisor"
+                         aria-valuemin="0"
+                         aria-valuemax="3">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Adherence To Instructions -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Commitment to Instructions</span>
+                    <span class="percentage">{{ student.performance.adherenceToInstructions }}/3</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.adherenceToInstructions / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.adherenceToInstructions / 3) * 100 >= 60 && (student.performance.adherenceToInstructions / 3) * 100 < 80,
+                           'bg-danger': (student.performance.adherenceToInstructions / 3) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.adherenceToInstructions / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.adherenceToInstructions"
+                         aria-valuemin="0"
+                         aria-valuemax="3">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Report Writing -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Report Writing Effectiveness</span>
+                    <span class="percentage">{{ student.performance.reportWriting }}/10</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.reportWriting / 10) * 100 >= 80,
+                           'bg-warning': (student.performance.reportWriting / 10) * 100 >= 60 && (student.performance.reportWriting / 10) * 100 < 80,
+                           'bg-danger': (student.performance.reportWriting / 10) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.reportWriting / 10) * 100"
+                         [attr.aria-valuenow]="student.performance.reportWriting"
+                         aria-valuemin="0"
+                         aria-valuemax="10">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Information Gathering -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Information Gathering Ability</span>
+                    <span class="percentage">{{ student.performance.informationGathering }}/3</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.informationGathering / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.informationGathering / 3) * 100 >= 60 && (student.performance.informationGathering / 3) * 100 < 80,
+                           'bg-danger': (student.performance.informationGathering / 3) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.informationGathering / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.informationGathering"
+                         aria-valuemin="0"
+                         aria-valuemax="3">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Adapt To Work Environment -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Adaptation to Work Environment</span>
+                    <span class="percentage">{{ student.performance.adaptToWorkEnvironment }}/5</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.adaptToWorkEnvironment / 5) * 100 >= 80,
+                           'bg-warning': (student.performance.adaptToWorkEnvironment / 5) * 100 >= 60 && (student.performance.adaptToWorkEnvironment / 5) * 100 < 80,
+                           'bg-danger': (student.performance.adaptToWorkEnvironment / 5) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.adaptToWorkEnvironment / 5) * 100"
+                         [attr.aria-valuenow]="student.performance.adaptToWorkEnvironment"
+                         aria-valuemin="0"
+                         aria-valuemax="5">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Maintenance Skills -->
+                <div class="progress-item">
+                  <div class="progress-header">
+                    <span class="label">Maintenance Skills Proficiency</span>
+                    <span class="percentage">{{ student.performance.maintenanceSkills }}/3</span>
+                  </div>
+                  <div class="progress">
+                    <div class="progress-bar"
+                         [ngClass]="{
+                           'bg-success': (student.performance.maintenanceSkills / 3) * 100 >= 80,
+                           'bg-warning': (student.performance.maintenanceSkills / 3) * 100 >= 60 && (student.performance.maintenanceSkills / 3) * 100 < 80,
+                           'bg-danger': (student.performance.maintenanceSkills / 3) * 100 < 60
+                         }"
+                         role="progressbar"
+                         [style.width.%]="(student.performance.maintenanceSkills / 3) * 100"
+                         [attr.aria-valuenow]="student.performance.maintenanceSkills"
+                         aria-valuemin="0"
+                         aria-valuemax="3">
                     </div>
                   </div>
                 </div>
@@ -296,7 +528,7 @@
                     <label>Has a neat appearance and high ethical standards</label>
                     <span class="rating-value">{{ evaluationForm.get('neatAppearance')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'neatAppearance', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="neatAppearance">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('neatAppearance')?.value / 3) * 100"></div>
@@ -310,7 +542,7 @@
                     <label>Has a responsive and reliable personality</label>
                     <span class="rating-value">{{ evaluationForm.get('responsivePersonality')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'responsivePersonality', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="responsivePersonality">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('responsivePersonality')?.value / 3) * 100"></div>
@@ -324,7 +556,7 @@
                     <label>Confident and maintains good relations with others</label>
                     <span class="rating-value">{{ evaluationForm.get('confidentRelations')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'confidentRelations', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="confidentRelations">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('confidentRelations')?.value / 3) * 100"></div>
@@ -342,7 +574,7 @@
                     <label>Regular attendance and punctuality during training</label>
                     <span class="rating-value">{{ evaluationForm.get('attendance')?.value || 0 }}/15</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'attendance', 15)">
                     <input type="range" class="modern-range" min="0" max="15" step="1" formControlName="attendance">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('attendance')?.value / 15) * 100"></div>
@@ -356,7 +588,7 @@
                     <label>Understanding and executing instructions within the training scope</label>
                     <span class="rating-value">{{ evaluationForm.get('understandingInstructions')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'understandingInstructions', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="understandingInstructions">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('understandingInstructions')?.value / 3) * 100"></div>
@@ -370,7 +602,7 @@
                     <label>Level of completion of tasks assigned during training</label>
                     <span class="rating-value">{{ evaluationForm.get('taskCompletion')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'taskCompletion', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="taskCompletion">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('taskCompletion')?.value / 3) * 100"></div>
@@ -384,7 +616,7 @@
                     <label>Effectiveness in dealing with colleagues and supervisors during training</label>
                     <span class="rating-value">{{ evaluationForm.get('effectiveInteraction')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'effectiveInteraction', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="effectiveInteraction">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('effectiveInteraction')?.value / 3) * 100"></div>
@@ -398,7 +630,7 @@
                     <label>Student's follow-up with the supervisor and seeking clarifications related to training</label>
                     <span class="rating-value">{{ evaluationForm.get('followUpWithSupervisor')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'followUpWithSupervisor', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="followUpWithSupervisor">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('followUpWithSupervisor')?.value / 3) * 100"></div>
@@ -412,7 +644,7 @@
                     <label>Student's commitment to applying the warnings and instructions given by the supervisor</label>
                     <span class="rating-value">{{ evaluationForm.get('adherenceToInstructions')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'adherenceToInstructions', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="adherenceToInstructions">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('adherenceToInstructions')?.value / 3) * 100"></div>
@@ -426,7 +658,7 @@
                     <label>Effectiveness in writing reports and the final report</label>
                     <span class="rating-value">{{ evaluationForm.get('reportWriting')?.value || 0 }}/10</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'reportWriting', 10)">
                     <input type="range" class="modern-range" min="0" max="10" step="1" formControlName="reportWriting">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('reportWriting')?.value / 10) * 100"></div>
@@ -440,7 +672,7 @@
                     <label>Ability to obtain information from various sources</label>
                     <span class="rating-value">{{ evaluationForm.get('informationGathering')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'informationGathering', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="informationGathering">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('informationGathering')?.value / 3) * 100"></div>
@@ -454,7 +686,7 @@
                     <label>Ability to understand and adapt to the work environment and provide ideas and suggestions</label>
                     <span class="rating-value">{{ evaluationForm.get('adaptToWorkEnvironment')?.value || 0 }}/5</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'adaptToWorkEnvironment', 5)">
                     <input type="range" class="modern-range" min="0" max="5" step="1" formControlName="adaptToWorkEnvironment">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('adaptToWorkEnvironment')?.value / 5) * 100"></div>
@@ -468,7 +700,7 @@
                     <label>Proficient in maintenance skills</label>
                     <span class="rating-value">{{ evaluationForm.get('maintenanceSkills')?.value || 0 }}/3</span>
                   </div>
-                  <div class="rating-slider">
+                  <div class="rating-slider" (click)="adjustRating($event, 'maintenanceSkills', 3)">
                     <input type="range" class="modern-range" min="0" max="3" step="1" formControlName="maintenanceSkills">
                     <div class="rating-track">
                       <div class="rating-fill" [style.width.%]="(evaluationForm.get('maintenanceSkills')?.value / 3) * 100"></div>
@@ -492,6 +724,52 @@
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+
+          <!-- Report Tab -->
+          <div class="tab-content" [class.active]="activeTab === 'report'">
+            <div class="report-section">
+              <div class="report-header">
+                <h3>Student Reports</h3>
+              </div>
+
+              <!-- Loading State -->
+              <div class="loading-container" *ngIf="isLoadingReports">
+                <div class="spinner"></div>
+                <p>Loading student reports...</p>
+              </div>
+
+              <!-- Reports List -->
+              <div class="reports-list" *ngIf="studentReports.length > 0 && !isLoadingReports">
+                <div class="report-item" *ngFor="let report of studentReports">
+                  <div class="report-item-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                  </div>
+                  <div class="report-item-details">
+                    <div class="report-item-name">{{ report.name }}</div>
+                    <div class="report-item-date">{{ report.date | date:'medium' }}</div>
+                    <div class="report-item-status" *ngIf="report.status">Status: {{ report.status }}</div>
+                    <div class="report-item-feedback" *ngIf="report.feedback">Feedback: {{ report.feedback }}</div>
+                  </div>
+                  <div class="report-item-actions">
+                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="viewReport(report)" title="View Report">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="downloadReport(report)" title="Download Report">
+                      <i class="bi bi-download"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div class="empty-reports" *ngIf="studentReports.length === 0 && !isLoadingReports">
+                <div class="empty-reports-icon">
+                  <i class="bi bi-file-earmark-x"></i>
+                </div>
+                <div class="empty-reports-message">No reports available for this student</div>
+              </div>
             </div>
           </div>
         </div>

@@ -90,11 +90,11 @@
 
         <div class="stat-card">
           <div class="stat-icon">
-            <i class="bi bi-check-circle"></i>
+            <i class="bi bi-building"></i>
           </div>
           <div class="stat-info">
-            <h4>{{ translationService.translate('active') }}</h4>
-            <h2>{{totalStudents}}</h2>
+            <h4>{{ translationService.translate('factory') }}</h4>
+            <h2>{{totalFactories}}</h2>
           </div>
         </div>
 
@@ -258,7 +258,7 @@
                 </div>
               </td>
               <td>{{ student.stage }}</td>
-              <td>{{ student.grade }}</td>
+              <td>{{ student.batch }}</td>
               <td>{{ student.department }}</td>
               <td>{{ student.factory }}</td>
               <td>{{ student.createOn | date:'yyyy-MM-dd HH:mm:ss' }}</td>

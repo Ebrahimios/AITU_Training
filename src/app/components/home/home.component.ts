@@ -39,6 +39,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   students: Student[] = [];
   filteredStudents: Student[] = [];
   totalStudents: number = 0;
+  totalFactories: number = 0;
   searchTerm: string = '';
   departments: string[] = ['Information Technology', 'Mechanics', 'Electrical'];
   factories: string[] = ['Factory A', 'Factory B', 'Factory C'];
@@ -102,10 +103,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.students = [];
     this.filteredStudents = [];
     this.totalStudents = 0;
+    this.totalFactories = 0;
     
     // Get supervisors from factory service
     this.factoryService.supervisors$.subscribe(supervisors => {
       this.supervisors = supervisors.map(s => s.name);
+    });
+    
+    // Get factories count
+    this.factoryService.factories$.subscribe(factories => {
+      this.totalFactories = factories.length;
     });
   }
 
@@ -113,6 +120,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     await this.loadStudents();
     this.totalStudents = this.students.length;
     this.filteredStudents = [...this.students];
+    
+    // Get the total number of factories from factory service
+    this.factoryService.factories$.subscribe(factories => {
+      this.totalFactories = factories.length;
+    });
     
     // Subscribe to student data updates
     this.dataUpdateSubscription = this.dataUpdateService.studentDataUpdated$.subscribe(async () => {
@@ -174,9 +186,25 @@ export class HomeComponent implements OnInit, OnDestroy {
         // Make a copy of the student object
         const processedStudent = {...student};
         
-        // Convert all date strings to timestamps
-        processedStudent.createOn = this.convertToTimestamp(processedStudent.createOn);
-        processedStudent.birthDate = this.convertToTimestamp(processedStudent.birthDate);
+        // Format both birthDate and createOn as strings
+        if (processedStudent.createOn) {
+          // If createOn is a number (timestamp), convert to string in ISO format
+          if (typeof processedStudent.createOn === 'string') {
+            const date = new Date(processedStudent.createOn);
+            processedStudent.createOn = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+          }
+          // If it's already a string, leave it as is
+        }
+        
+        // For birthDate, ensure it's a string
+        if (processedStudent.birthDate) {
+          // If it's a number (timestamp), convert to string in ISO format
+          if (typeof processedStudent.birthDate === 'string') {
+            const date = new Date(processedStudent.birthDate);
+            processedStudent.birthDate = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+          }
+          // If it's already a string, leave it as is
+        }
         
         return processedStudent;
       });
@@ -324,10 +352,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       const matchesSupervisor = !this.selectedSupervisor || student.supervisor === this.selectedSupervisor;
       
       // Batch filtering - check if student.batch matches selectedBatch
-      // If student uses grade instead of batch, convert it
-      const matchesBatch = !this.selectedBatch || 
-                          student.batch === this.selectedBatch || 
-                          student.grade?.toString() === this.selectedBatch;
+      const matchesBatch = !this.selectedBatch || student.batch === this.selectedBatch;
       
       const matchesStage = !this.selectedStage || student.stage === this.selectedStage;
       
@@ -376,16 +401,18 @@ export class HomeComponent implements OnInit, OnDestroy {
       case 'date_new':
         // Sort by createOn timestamp (newest first)
         this.filteredStudents.sort((a, b) => {
-          const dateA = a.createOn || 0;
-          const dateB = b.createOn || 0;
+          // Convert date strings to timestamps for comparison
+          const dateA = a.createOn ? new Date(a.createOn).getTime() : 0;
+          const dateB = b.createOn ? new Date(b.createOn).getTime() : 0;
           return dateB - dateA;
         });
         break;
       case 'date_old':
         // Sort by createOn timestamp (oldest first)
         this.filteredStudents.sort((a, b) => {
-          const dateA = a.createOn || 0;
-          const dateB = b.createOn || 0;
+          // Convert date strings to timestamps for comparison
+          const dateA = a.createOn ? new Date(a.createOn).getTime() : 0;
+          const dateB = b.createOn ? new Date(b.createOn).getTime() : 0;
           return dateA - dateB;
         });
         break;
@@ -412,7 +439,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       student.name || '',
       student.department || '',
       student.factory || '',
-      student.batch || student.grade || '',
+      student.batch || '',
       student.stage || '',
       student.createOn ? new Date(student.createOn).toLocaleDateString() : '',
       student.supervisor || ''
