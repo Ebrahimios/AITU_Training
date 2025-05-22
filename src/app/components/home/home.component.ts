@@ -35,60 +35,39 @@ import { Student } from '../../interfaces/student';
 export class HomeComponent implements OnInit, OnDestroy {
   Math = Math;
   isSidebarOpen = true;
-  isModalOpen = false; // Add flag to track modal state
+  isModalOpen = false;
   students: Student[] = [];
   filteredStudents: Student[] = [];
   totalStudents: number = 0;
   searchTerm: string = '';
-  departments: string[] = ['Information Technology', 'Mechanics', 'Electrical'];
-  factories: string[] = ['Factory A', 'Factory B', 'Factory C'];
-  supervisors: string[] = ['Supervisor A', 'Supervisor B', 'Supervisor C'];
-  allBatches: string[] = ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
-  batches: string[] = this.allBatches;
-  stages: string[] = ['School', 'Institute', 'Faculty'];
+  departments: string[] = [];
+  factories: string[] = [];
+  supervisors: string[] = [];
+  allBatches: string[] = [];
+  batches: string[] = [];
+  stages: string[] = [];
   selectedDepartment: string = '';
   selectedFactory: string = '';
   selectedSupervisor: string = '';
-  selectedBatch: string = ''; // Changed from selectedGroup
+  selectedBatch: string = '';
   selectedStage: string = '';
   selectedYear: string = '';
   selectedMonth: string = '';
-  selectedDay: string = ''; // New property for day filter
+  selectedDay: string = '';
   showFilters: boolean = false;
   showSort: boolean = false;
   currentPage: number = 1;
   itemsPerPage: number = 5;
 
   // Date filter options
-  // Dynamically generate years array from 2017 to current year + 1
   years: string[] = this.generateYearsArray(2017, new Date().getFullYear() + 1);
-  months = [
-    { value: '0', name: 'January' },
-    { value: '1', name: 'February' },
-    { value: '2', name: 'March' },
-    { value: '3', name: 'April' },
-    { value: '4', name: 'May' },
-    { value: '5', name: 'June' },
-    { value: '6', name: 'July' },
-    { value: '7', name: 'August' },
-    { value: '8', name: 'September' },
-    { value: '9', name: 'October' },
-    { value: '10', name: 'November' },
-    { value: '11', name: 'December' }
-  ];
-
+  months: { value: string; name: string }[] = [];
   days = Array.from({ length: 30 }, (_, i) => ({ value: (i + 1).toString(), name: (i + 1).toString() }));
-
-  sortOptions = [
-    { value: 'name_asc', label: 'Name (A-Z)' },
-    { value: 'name_desc', label: 'Name (Z-A)' },
-    { value: 'date_new', label: 'Newest First' },
-    { value: 'date_old', label: 'Oldest First' }
-  ];
+  sortOptions: { value: string; label: string }[] = [];
   selectedSort: string = '';
 
-  // Subscription to handle data update notifications
   private dataUpdateSubscription: Subscription | null = null;
+  private languageSubscription: Subscription | null = null;
 
   constructor(
     public translationService: TranslationService,
@@ -103,10 +82,81 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.filteredStudents = [];
     this.totalStudents = 0;
     
+    // Initialize all translated content
+    this.initializeTranslatedContent();
+    
+    // Subscribe to language changes
+    this.languageSubscription = this.translationService.currentLang$.subscribe(() => {
+      this.initializeTranslatedContent();
+    });
+    
     // Get supervisors from factory service
     this.factoryService.supervisors$.subscribe(supervisors => {
       this.supervisors = supervisors.map(s => s.name);
     });
+  }
+
+  private initializeTranslatedContent() {
+    // Initialize departments
+    this.departments = [
+      this.translationService.translate('information_technology'),
+      this.translationService.translate('mechanics'),
+      this.translationService.translate('electrical')
+    ];
+
+    // Initialize factories
+    this.factories = [
+      this.translationService.translate('factory_a'),
+      this.translationService.translate('factory_b'),
+      this.translationService.translate('factory_c')
+    ];
+
+    // Initialize supervisors
+    this.supervisors = [
+      this.translationService.translate('supervisor_a'),
+      this.translationService.translate('supervisor_b'),
+      this.translationService.translate('supervisor_c')
+    ];
+
+    // Initialize batches
+    this.allBatches = [
+      this.translationService.translate('batch_1'),
+      this.translationService.translate('batch_2'),
+      this.translationService.translate('batch_3'),
+      this.translationService.translate('batch_4')
+    ];
+    this.batches = this.allBatches;
+
+    // Initialize stages
+    this.stages = [
+      this.translationService.translate('school'),
+      this.translationService.translate('institute'),
+      this.translationService.translate('faculty')
+    ];
+
+    // Initialize months
+    this.months = [
+      { value: '0', name: this.translationService.translate('january') },
+      { value: '1', name: this.translationService.translate('february') },
+      { value: '2', name: this.translationService.translate('march') },
+      { value: '3', name: this.translationService.translate('april') },
+      { value: '4', name: this.translationService.translate('may') },
+      { value: '5', name: this.translationService.translate('june') },
+      { value: '6', name: this.translationService.translate('july') },
+      { value: '7', name: this.translationService.translate('august') },
+      { value: '8', name: this.translationService.translate('september') },
+      { value: '9', name: this.translationService.translate('october') },
+      { value: '10', name: this.translationService.translate('november') },
+      { value: '11', name: this.translationService.translate('december') }
+    ];
+
+    // Initialize sort options
+    this.sortOptions = [
+      { value: 'name_asc', label: this.translationService.translate('name_asc') },
+      { value: 'name_desc', label: this.translationService.translate('name_desc') },
+      { value: 'date_new', label: this.translationService.translate('date_new') },
+      { value: 'date_old', label: this.translationService.translate('date_old') }
+    ];
   }
 
   async ngOnInit(): Promise<void> {
@@ -127,6 +177,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (this.dataUpdateSubscription) {
       this.dataUpdateSubscription.unsubscribe();
       this.dataUpdateSubscription = null;
+    }
+    if (this.languageSubscription) {
+      this.languageSubscription.unsubscribe();
     }
   }
 
