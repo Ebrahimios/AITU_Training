@@ -135,24 +135,31 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (this.showNotifications) this.showNotifications = false;
   }
   
+  // Track if the modal is currently open to prevent multiple instances
+  private isUserProfileModalOpen = false;
+
   openUserProfileModal() {
-    if (this.currentUser) {
+    if (this.currentUser && !this.isUserProfileModalOpen) {
       // Close the user menu if it's open
       this.showUserMenu = false;
       
+      // Set flag to indicate modal is open
+      this.isUserProfileModalOpen = true;
+      
+      // Use the dialog service to open the modal with simple configuration
       const dialogRef = this.dialog.open(UserProfileModalComponent, {
         width: '500px',
         maxWidth: '90vw',
         data: { user: this.currentUser },
-        panelClass: ['centered-dialog', 'profile-modal'],
-        disableClose: false,
-        autoFocus: true,
-        hasBackdrop: true,
-        backdropClass: 'profile-backdrop'
-        // Using CSS classes for centering instead of explicit positioning
+        panelClass: 'centered-modal',
+        disableClose: true, // Prevent closing by clicking outside
+        autoFocus: false,
+        hasBackdrop: true
       });
       
       dialogRef.afterClosed().subscribe(result => {
+        // Reset the flag when modal is closed
+        this.isUserProfileModalOpen = false;
         if (result && result.imageUrl) {
           // Update the user's profile image and timestamp in the admin array
           this.admin = [{

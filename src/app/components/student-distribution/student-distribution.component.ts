@@ -545,4 +545,64 @@ export class StudentDistributionComponent implements OnInit {
       this.newIndustry = '';
     }
   }
+
+  /**
+   * Delete the currently selected factory
+   * This will remove the factory from both the UI and Firebase
+   */
+  async deleteFactory(): Promise<void> {
+    if (!this.selectedFactory) return;
+    
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete factory "${this.selectedFactory.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      // Check if factory has assigned students
+      if (this.selectedFactory.students.length > 0) {
+        if (!confirm(`This factory has ${this.selectedFactory.students.length} assigned students. Deleting it will remove the factory assignment from these students. Continue?`)) {
+          return;
+        }
+        
+        // Remove factory assignment from all students assigned to this factory
+        const promises = this.selectedFactory.students.map(student => {
+          // Update student's factory assignment to null
+          return this.updateStudentFactory(student, null);
+        });
+        
+        // Wait for all student updates to complete
+        await Promise.all(promises);
+      }
+      
+      // Delete factory from Firebase
+      await this.factoryService.deleteFactory(Number(this.selectedFactory.id));
+      
+      // Remove from local factories array
+      this.factories = this.factories.filter(f => f.id !== this.selectedFactory?.id);
+      
+      // Close the modal
+      const modalElement = document.getElementById('factoryDetailsModal');
+      if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+          modal.hide();
+          document.body.classList.remove('modal-open');
+          const backdrop = document.querySelector('.modal-backdrop');
+          if (backdrop) {
+            backdrop.remove();
+          }
+        }
+      }
+      
+      // Show success message
+      alert('Factory deleted successfully');
+      
+      // Reset selected factory
+      this.selectedFactory = null;
+    } catch (error) {
+      console.error('Error deleting factory:', error);
+      alert('An error occurred while deleting the factory. Please try again.');
+    }
+  }
 }

@@ -40,10 +40,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   filteredStudents: Student[] = [];
   totalStudents: number = 0;
   totalFactories: number = 0;
+  growthRate: number = 0;
   searchTerm: string = '';
   departments: string[] = ['Information Technology', 'Mechanics', 'Electrical'];
   factories: string[] = ['Factory A', 'Factory B', 'Factory C'];
   supervisors: string[] = ['Supervisor A', 'Supervisor B', 'Supervisor C'];
+  allFactories: any[] = [];
+  allSupervisors: any[] = [];
   allBatches: string[] = ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
   batches: string[] = this.allBatches;
   stages: string[] = ['School', 'Institute', 'Faculty'];
@@ -117,15 +120,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    await this.loadStudents();
+    await this.loadAllData();
     this.totalStudents = this.students.length;
     this.filteredStudents = [...this.students];
-    
+
     // Get the total number of factories from factory service
     this.factoryService.factories$.subscribe(factories => {
       this.totalFactories = factories.length;
     });
-    
+
     // Subscribe to student data updates
     this.dataUpdateSubscription = this.dataUpdateService.studentDataUpdated$.subscribe(async () => {
       console.log('Student data updated, refreshing dashboard...');
@@ -133,7 +136,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.applyFilters(); // Apply any active filters after reloading
     });
   }
-  
+
   ngOnDestroy(): void {
     // Clean up subscription when component is destroyed
     if (this.dataUpdateSubscription) {
@@ -154,9 +157,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Helper method to get Unix timestamp (seconds since epoch)
   getTimestamp(date: Date | string | number | undefined): string {
     if (!date) return '';
-    
+
     let timestamp: number;
-    
+
     if (date instanceof Date) {
       timestamp = date.getTime();
     } else if (typeof date === 'string') {
@@ -170,7 +173,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     } else {
       return '';
     }
-    
+
     // Convert to Unix timestamp (seconds since epoch)
     const unixTimestamp = Math.floor(timestamp / 1000);
     return unixTimestamp.toString();
@@ -180,12 +183,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     try {
       this.students = [];
       const studentsData = await this.authService.getAllStudents();
-      
+
       // Process each student to ensure dates are handled correctly
       this.students = studentsData.map(student => {
         // Make a copy of the student object
-        const processedStudent = {...student};
-        
+        const processedStudent = { ...student };
+
         // Format both birthDate and createOn as strings
         if (processedStudent.createOn) {
           // If createOn is a number (timestamp), convert to string in ISO format
@@ -195,7 +198,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           }
           // If it's already a string, leave it as is
         }
-        
+
         // For birthDate, ensure it's a string
         if (processedStudent.birthDate) {
           // If it's a number (timestamp), convert to string in ISO format
@@ -205,10 +208,10 @@ export class HomeComponent implements OnInit, OnDestroy {
           }
           // If it's already a string, leave it as is
         }
-        
+
         return processedStudent;
       });
-      
+
       this.filteredStudents = [...this.students];
       this.totalStudents = this.students.length;
     } catch (error) {
@@ -219,14 +222,113 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.totalStudents = 0;
     }
   }
-  
+
+  async loadAllData(): Promise<void> {
+    try {
+      // Get all students from Firebase
+      const students = await this.authService.getAllStudents();
+      this.students = students;
+      this.filteredStudents = students;
+      this.totalStudents = students.length;
+
+      // Get all factories from Firebase
+      const factories = await this.authService.getAllFactories();
+      this.allFactories = factories;
+      this.totalFactories = factories.length;
+
+      // Extract all unique departments, stages, and batches from students
+      this.extractUniqueValues();
+
+      // Get all supervisors from Firebase
+      this.allSupervisors = await this.authService.getAllSupervisors();
+
+      // Calculate growth rate based on student creation dates
+      this.calculateGrowthRate();
+
+      // Apply default sorting
+      this.applySorting('name_asc');
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
+
+  /**
+   * Extract unique values from student data for filtering
+   */
+  extractUniqueValues(): void {
+    // Extract unique departments
+    const departmentsSet = new Set<string>();
+    this.students.forEach(student => {
+      if (student.department) {
+        departmentsSet.add(student.department);
+      }
+    });
+    this.departments = Array.from(departmentsSet);
+
+    // Extract unique stages
+    const stagesSet = new Set<string>();
+    this.students.forEach(student => {
+      if (student.stage) {
+        stagesSet.add(student.stage);
+      }
+    });
+    this.stages = Array.from(stagesSet);
+
+    // Extract unique batches
+    const batchesSet = new Set<string>();
+    this.students.forEach(student => {
+      if (student.batch) {
+        batchesSet.add(student.batch);
+      }
+    });
+    this.allBatches = Array.from(batchesSet);
+    this.batches = this.allBatches;
+  }
+
+  /**
+   * Calculate growth rate based on student creation dates
+   */
+  calculateGrowthRate(): void {
+    // Get current month and previous month
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+
+    // Count students created in current month and previous month
+    let currentMonthCount = 0;
+    let previousMonthCount = 0;
+
+    this.students.forEach(student => {
+      if (student.createOn) {
+        const createDate = new Date(student.createOn);
+        const createMonth = createDate.getMonth();
+
+        if (createMonth === currentMonth) {
+          currentMonthCount++;
+        } else if (createMonth === previousMonth) {
+          previousMonthCount++;
+        }
+      }
+    });
+
+    // Calculate growth rate
+    if (previousMonthCount > 0) {
+      this.growthRate = ((currentMonthCount - previousMonthCount) / previousMonthCount) * 100;
+    } else {
+      this.growthRate = currentMonthCount > 0 ? 100 : 0;
+    }
+
+    // Ensure growth rate is not negative for display purposes
+    this.growthRate = Math.max(0, this.growthRate);
+  }
+
   // Helper method to convert any date value to timestamp
   private convertToTimestamp(dateValue: any): number | undefined {
     if (!dateValue) return undefined;
-    
+
     // If already a number, return it
     if (typeof dateValue === 'number') return dateValue;
-    
+
     // If string, convert to timestamp
     if (typeof dateValue === 'string') {
       const date = new Date(dateValue);
@@ -234,12 +336,12 @@ export class HomeComponent implements OnInit, OnDestroy {
         return date.getTime(); // Convert to timestamp (milliseconds)
       }
     }
-    
+
     // If Date object, convert to timestamp
     if (dateValue instanceof Date) {
       return dateValue.getTime();
     }
-    
+
     return undefined;
   }
 

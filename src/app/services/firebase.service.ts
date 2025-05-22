@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, UserCredential } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, getDoc, DocumentData, collection, getDocs, deleteDoc, updateDoc } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc, DocumentData, collection, getDocs, deleteDoc, updateDoc, onSnapshot, query, where } from '@angular/fire/firestore';
 import { Student } from '../interfaces/student';
 import { DataSource } from '@angular/cdk/collections';
 
@@ -63,51 +63,68 @@ export class AuthService {
   // Factory request notifications
   private factoryRequestsSubject = new BehaviorSubject<any[]>([]);
   public factoryRequests$ = this.factoryRequestsSubject.asObservable();
+
+  // Students real-time data
+  private studentsSubject = new BehaviorSubject<Student[]>([]);
+  public students$ = this.studentsSubject.asObservable();
+
+  // Factories real-time data
+  private factoriesSubject = new BehaviorSubject<FirebaseFactory[]>([]);
+  public factories$ = this.factoriesSubject.asObservable();
+
+  // Supervisors real-time data
+  private supervisorsSubject = new BehaviorSubject<FirebaseSupervisor[]>([]);
+  public supervisors$ = this.supervisorsSubject.asObservable();
+
+  // Store unsubscribe functions for cleanup
+  private unsubscribeStudents: (() => void) | null = null;
+  private unsubscribeFactories: (() => void) | null = null;
+  private unsubscribeSupervisors: (() => void) | null = null;
   // Helper method to convert any date value to a timestamp
   private convertToTimestamp(dateValue: any): number | undefined {
     if (!dateValue) return undefined;
-    
+
     // If already a number (timestamp), return it
     if (typeof dateValue === 'number') return dateValue;
-    
+
     // If it's a string, convert to timestamp
     if (typeof dateValue === 'string') {
       const date = new Date(dateValue);
       return isNaN(date.getTime()) ? undefined : date.getTime();
     }
-    
+
     // If it's a Firestore timestamp, convert to milliseconds
     if (dateValue && typeof dateValue === 'object' && 'toMillis' in dateValue) {
       return dateValue.toMillis();
     }
-    
+
     return undefined;
   }
-  
+
   // Helper method to convert any date value to a string in YYYY-MM-DD format
   private formatBirthDateToString(dateValue: any): string | undefined {
     if (!dateValue) return undefined;
-    
+
     // If already a string, validate and return it or convert to standard format
     if (typeof dateValue === 'string') {
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) return undefined;
       return date.toISOString().split('T')[0]; // Ensure YYYY-MM-DD format
     }
-    
+
     // If it's a number (timestamp), convert to string
     if (typeof dateValue === 'number') {
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) return undefined;
       return date.toISOString().split('T')[0];
     }
-    
+
     // If it's a Firestore timestamp, convert to string
     if (dateValue && typeof dateValue === 'object' && 'toMillis' in dateValue) {
       const date = new Date(dateValue.toMillis());
       return date.toISOString().split('T')[0];
     }
-    
+
     return undefined;
   }
   private currentUserSubject: BehaviorSubject<User | null>;
@@ -123,6 +140,11 @@ export class AuthService {
     const savedUser = localStorage.getItem('currentUser');
     this.currentUserSubject = new BehaviorSubject<User | null>(savedUser ? JSON.parse(savedUser) : null);
     this.currentUser = this.currentUserSubject.asObservable();
+
+    // Initialize real-time data subscriptions
+    this.subscribeToStudents();
+    this.subscribeToFactories();
+    this.subscribeToSupervisors();
 
     onAuthStateChanged(this.auth, async (user) => {
       if (user) {
@@ -156,9 +178,12 @@ export class AuthService {
   }
   public async sendStudentData(student: Student){
     try{
-      // Convert birthDate to timestamp if provided
-      const birthDateTimestamp = this.convertToTimestamp(student.birthDate || Date.now());
-      
+      // Ensure birthDate is stored as a string in YYYY-MM-DD format
+      // If birthDate is already a string, use it; otherwise convert from Date or use current date
+      const birthDateString = typeof student.birthDate === 'string'
+        ? student.birthDate
+        : (this.formatBirthDateToString(student.birthDate || new Date()) || new Date().toISOString().split('T')[0]);
+
       const userDocRef = doc(this.firestore, 'StudentsTable', student.code);
       await setDoc(userDocRef, {
         code: student.code,
@@ -168,11 +193,11 @@ export class AuthService {
         address: student.address,
         nationalID: student.nationalID,
         selected: student.selected,
-        createOn: Date.now(),
+        createOn: new Date().toISOString().split('T')[0], // Store as YYYY-MM-DD string
         factory: "",
         department: "",
         birthAddress: "",
-        birthDate: birthDateTimestamp, // Store as timestamp
+        birthDate: birthDateString, // Store as string in YYYY-MM-DD format
         email: "",
         stage: "",
         gender: "",
@@ -297,6 +322,63 @@ export class AuthService {
     }
   }
 
+  /**
+   * Subscribe to real-time updates for students
+   * Call this method once when your component initializes
+   */
+  public subscribeToStudents(): void {
+    // Unsubscribe from any existing subscription
+    if (this.unsubscribeStudents) {
+      this.unsubscribeStudents();
+    }
+
+    try {
+      const studentsCollection = collection(this.firestore, 'StudentsTable');
+
+      // Set up real-time listener
+      this.unsubscribeStudents = onSnapshot(studentsCollection, (snapshot) => {
+        const students: Student[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const student: Student = {
+            code: data['code'],
+            name: data['name'],
+            phone: data['phone'],
+            state: data['state'],
+            address: data['address'],
+            nationalID: data['nationalID'],
+            email: data['email'],
+            birthDate: data['birthDate'], // Ensure birthDate is a string
+            createOn: data['createOn'], // Ensure createOn is a string
+            gender: data['gender'],
+            department: data['department'],
+            birthAddress: data['birthAddress'],
+            factory: data['factory'],
+            batch: data['batch'],
+            stage: data['stage'],
+            factoryType: data['factoryType'],
+            selected: data['selected'],
+            supervisor: data['supervisor'] // Add supervisor field
+          };
+          students.push(student);
+        });
+
+        // Update the BehaviorSubject with new data
+        this.studentsSubject.next(students);
+        console.log('Real-time students data updated:', students.length, 'students');
+      }, (error) => {
+        console.error('Error getting real-time students:', error);
+      });
+
+    } catch (error) {
+      console.error('Error setting up students listener:', error);
+    }
+  }
+
+  /**
+   * Get all students (one-time fetch, kept for backward compatibility)
+   */
   public async getAllStudents(): Promise<Student[]> {
     try {
       const studentsCollection = collection(this.firestore, 'StudentsTable');
@@ -313,15 +395,14 @@ export class AuthService {
           address: data['address'],
           nationalID: data['nationalID'],
           email: data['email'],
-          birthDate: data['birthDate'] ? this.formatBirthDateToString(data['birthDate']) : undefined, // Ensure birthDate is a string
-          createOn: data['createOn'] ? this.formatBirthDateToString(data['createOn']) : undefined, // Ensure createOn is a string
+          birthDate: data['birthDate'] , // Ensure birthDate is a string
+          createOn: data['createOn'] , // Ensure createOn is a string
           gender: data['gender'],
           department: data['department'],
           birthAddress: data['birthAddress'],
           factory: data['factory'],
           batch: data['batch'],
           stage: data['stage'],
-          factoryType: data['factoryType'],
           selected: data['selected'],
           supervisor: data['supervisor'] // Add supervisor field
         };
@@ -337,9 +418,12 @@ export class AuthService {
 
   public async updateStudent(student: Student): Promise<boolean> {
     try {
-      // Convert birthDate to timestamp if provided
-      const birthDateTimestamp = this.convertToTimestamp(student.birthDate);
-      
+      // Ensure birthDate is stored as a string in YYYY-MM-DD format
+      // If birthDate is already a string, use it; otherwise convert from Date or use current date
+      const birthDateString = typeof student.birthDate === 'string'
+        ? student.birthDate
+        : this.formatBirthDateToString(student.birthDate || new Date()) || new Date().toISOString().split('T')[0];
+
       const userDocRef = doc(this.firestore, 'StudentsTable', student.code);
       await updateDoc(userDocRef, {
         name: student.name,
@@ -348,7 +432,7 @@ export class AuthService {
         address: student.address,
         nationalID: student.nationalID,
         email: student.email,
-        birthDate: birthDateTimestamp, // Store as timestamp
+        birthDate: birthDateString, // Store as formatted string
         createOn: Date.now(),
         gender: student.gender,
         department: student.department,
@@ -356,7 +440,6 @@ export class AuthService {
         factory: student.factory,
         batch: student.batch,
         stage: student.stage,
-        factoryType: student.factoryType,
         selected: student.selected,
         supervisor: student.supervisor // Add supervisor field to update
       });
@@ -379,18 +462,69 @@ export class AuthService {
   }
 
   // Factory methods
+  /**
+   * Subscribe to real-time updates for factories
+   * Call this method once when your component initializes
+   */
+  public subscribeToFactories(): void {
+    // Unsubscribe from any existing subscription
+    if (this.unsubscribeFactories) {
+      this.unsubscribeFactories();
+    }
+
+    try {
+      const factoriesCollection = collection(this.firestore, 'Factories');
+
+      // Set up real-time listener
+      this.unsubscribeFactories = onSnapshot(factoriesCollection, (snapshot) => {
+        const factories: FirebaseFactory[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          factories.push({
+            id: doc.id,
+            name: data['name'] || 'Unknown Factory',
+            capacity: data['capacity'] || 0,
+            assignedStudents: data['assignedStudents'] || 0,
+            students: data['students'] || [],
+            address: data['address'],
+            phone: data['phone'],
+            department: data['department'],
+            contactName: data['contactName'],
+            type: data['type'],
+            industry: data['industry'],
+            isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
+            createdAt: data['createdAt'] || Date.now()
+          });
+        });
+
+        // Update the BehaviorSubject with new data
+        this.factoriesSubject.next(factories);
+        console.log('Real-time factories data updated:', factories.length, 'factories');
+      }, (error) => {
+        console.error('Error getting real-time factories:', error);
+      });
+
+    } catch (error) {
+      console.error('Error setting up factories listener:', error);
+    }
+  }
+
+  /**
+   * Get all factories (one-time fetch, kept for backward compatibility)
+   */
   public async getAllFactories(): Promise<FirebaseFactory[]> {
     try {
       const factoriesCollection = collection(this.firestore, 'Factories');
-      const factoriesSnapshot = await getDocs(factoriesCollection);
+      const querySnapshot = await getDocs(factoriesCollection);
       const factories: FirebaseFactory[] = [];
-      
-      factoriesSnapshot.forEach((doc) => {
+
+      querySnapshot.forEach((doc) => {
         const data = doc.data();
         factories.push({
           id: doc.id,
-          name: data['name'],
-          capacity: data['capacity'],
+          name: data['name'] || 'Unknown Factory',
+          capacity: data['capacity'] || 0,
           assignedStudents: data['assignedStudents'] || 0,
           students: data['students'] || [],
           address: data['address'],
@@ -403,19 +537,19 @@ export class AuthService {
           createdAt: data['createdAt'] || Date.now()
         });
       });
-      
+
       return factories;
     } catch (error) {
       console.error('Error getting factories:', error);
       return [];
     }
   }
-  
+
   public async updateFactory(factory: FirebaseFactory): Promise<boolean> {
     try {
       const factoryId = factory.id || `factory_${Date.now()}`;
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
-      
+
       // Remove undefined values to prevent Firestore errors
       const cleanedData = Object.entries(factory).reduce((acc, [key, value]) => {
         if (value !== undefined) {
@@ -423,7 +557,7 @@ export class AuthService {
         }
         return acc;
       }, {} as Record<string, any>);
-      
+
       await setDoc(factoryRef, cleanedData, { merge: true });
       console.log('Factory updated successfully in Firebase with ID:', factoryId);
       return true;
@@ -432,7 +566,7 @@ export class AuthService {
       return false;
     }
   }
-  
+
   public async deleteFactory(factoryId: string): Promise<boolean> {
     try {
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
@@ -444,20 +578,71 @@ export class AuthService {
       return false;
     }
   }
-  
+
   // Supervisor methods
+  /**
+   * Subscribe to real-time updates for supervisors
+   * Call this method once when your component initializes
+   */
+  public subscribeToSupervisors(): void {
+    // Unsubscribe from any existing subscription
+    if (this.unsubscribeSupervisors) {
+      this.unsubscribeSupervisors();
+    }
+
+    try {
+      const supervisorsCollection = collection(this.firestore, 'Supervisors');
+
+      // Set up real-time listener
+      this.unsubscribeSupervisors = onSnapshot(supervisorsCollection, (snapshot) => {
+        const supervisors: FirebaseSupervisor[] = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          supervisors.push({
+            id: doc.id,
+            name: data['name'] || 'Unknown Supervisor',
+            capacity: data['capacity'] || 0,
+            assignedStudents: data['assignedStudents'] || 0,
+            students: data['students'] || [],
+            address: data['address'],
+            phone: data['phone'],
+            department: data['department'],
+            contactName: data['contactName'],
+            type: data['type'],
+            industry: data['industry'],
+            isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
+            createdAt: data['createdAt'] || Date.now()
+          });
+        });
+
+        // Update the BehaviorSubject with new data
+        this.supervisorsSubject.next(supervisors);
+        console.log('Real-time supervisors data updated:', supervisors.length, 'supervisors');
+      }, (error) => {
+        console.error('Error getting real-time supervisors:', error);
+      });
+
+    } catch (error) {
+      console.error('Error setting up supervisors listener:', error);
+    }
+  }
+
+  /**
+   * Get all supervisors (one-time fetch, kept for backward compatibility)
+   */
   public async getAllSupervisors(): Promise<FirebaseSupervisor[]> {
     try {
       const supervisorsCollection = collection(this.firestore, 'Supervisors');
       const supervisorsSnapshot = await getDocs(supervisorsCollection);
       const supervisors: FirebaseSupervisor[] = [];
-      
+
       supervisorsSnapshot.forEach((doc) => {
         const data = doc.data();
         supervisors.push({
           id: doc.id,
-          name: data['name'],
-          capacity: data['capacity'],
+          name: data['name'] || 'Unknown Supervisor',
+          capacity: data['capacity'] || 0,
           assignedStudents: data['assignedStudents'] || 0,
           students: data['students'] || [],
           address: data['address'],
@@ -470,19 +655,19 @@ export class AuthService {
           createdAt: data['createdAt'] || Date.now()
         });
       });
-      
+
       return supervisors;
     } catch (error) {
       console.error('Error getting supervisors:', error);
       return [];
     }
   }
-  
+
   public async updateSupervisor(supervisor: FirebaseSupervisor): Promise<boolean> {
     try {
       const supervisorId = supervisor.id || `supervisor_${Date.now()}`;
       const supervisorRef = doc(this.firestore, 'Supervisors', supervisorId);
-      
+
       // Remove undefined values to prevent Firestore errors
       const cleanedData = Object.entries(supervisor).reduce((acc, [key, value]) => {
         if (value !== undefined) {
@@ -490,7 +675,7 @@ export class AuthService {
         }
         return acc;
       }, {} as Record<string, any>);
-      
+
       await setDoc(supervisorRef, cleanedData, { merge: true });
       console.log('Supervisor updated successfully in Firebase with ID:', supervisorId);
       return true;
@@ -499,7 +684,7 @@ export class AuthService {
       return false;
     }
   }
-  
+
   public async deleteSupervisor(supervisorId: string): Promise<boolean> {
     try {
       const supervisorRef = doc(this.firestore, 'Supervisors', supervisorId);
@@ -511,12 +696,12 @@ export class AuthService {
       return false;
     }
   }
-  
+
   // Factory request methods
   public async submitFactoryRequest(factoryData: FirebaseFactory): Promise<boolean> {
     try {
       console.log('Submitting factory request:', factoryData);
-      
+
       // Generate a unique ID for the factory if not provided
       const factoryId = factoryData.id || `factory_${Date.now()}`;
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
@@ -541,7 +726,7 @@ export class AuthService {
       console.log('Saving factory data to Firestore:', cleanedData);
       await setDoc(factoryRef, cleanedData);
       console.log('Factory saved successfully to Firebase with ID:', factoryId);
-      
+
       // Reload factory requests
       await this.loadFactoryRequests();
       return true;
@@ -556,54 +741,13 @@ export class AuthService {
       console.log('Loading factory requests from Firebase...');
       const factoriesCollection = collection(this.firestore, 'Factories');
       const querySnapshot = await getDocs(factoriesCollection);
-      
+
       console.log(`Found ${querySnapshot.size} documents in Factories collection`);
-      
+
       const factories: FirebaseFactory[] = [];
 
-      // If no documents exist yet, create a sample factory request for testing
-      if (querySnapshot.empty) {
-        console.log('No factory requests found, creating a sample factory request for testing...');
-        // Create a sample factory request
-        await this.submitFactoryRequest({
-          name: 'Sample Factory',
-          capacity: 10,
-          assignedStudents: 0,
-          students: [],
-          address: '123 Test Street',
-          phone: '01234567890',
-          department: 'IT',
-          contactName: 'Test Contact',
-          type: 'Manufacturing',
-          industry: 'Technology',
-          isApproved: false,
-          studentName: 'Test Student',
-          createdAt: Date.now()
-        });
-        
-        // Fetch again after creating the sample
-        const updatedSnapshot = await getDocs(factoriesCollection);
-        updatedSnapshot.forEach((doc) => {
-          const data = doc.data();
-          console.log('Factory data:', data);
-          factories.push({
-            id: doc.id,
-            name: data['name'] || 'Unknown Factory',
-            capacity: data['capacity'] || 0,
-            assignedStudents: data['assignedStudents'] || 0,
-            students: data['students'] || [],
-            address: data['address'] || '',
-            phone: data['phone'] || '',
-            department: data['department'] || '',
-            contactName: data['contactName'] || '',
-            type: data['type'] || '',
-            industry: data['industry'] || '',
-            isApproved: data['isApproved'] || false,
-            studentName: data['studentName'] || '',
-            createdAt: this.convertToTimestamp(data['createdAt']) || Date.now()
-          });
-        });
-      } else {
+      // Process documents if they exist
+      if (!querySnapshot.empty) {
         // Process existing documents
         querySnapshot.forEach((doc) => {
           const data = doc.data();
@@ -628,7 +772,7 @@ export class AuthService {
       }
 
       console.log('Processed factories:', factories);
-      
+
       // Update the BehaviorSubject
       this.factoryRequestsSubject.next(factories);
     } catch (error) {
@@ -640,16 +784,71 @@ export class AuthService {
   public async handleFactoryRequest(factoryId: string, action: 'accept' | 'deny'): Promise<boolean> {
     try {
       console.log(`Handling factory request ${factoryId} with action: ${action}`);
-      
+
       if (action === 'accept') {
-        // Update the factory document to set isApproved to true
+        // Get the factory data to find the student who sent the request
         const factoryRef = doc(this.firestore, 'Factories', factoryId);
-        console.log('Updating factory to approved status');
-        await updateDoc(factoryRef, {
-          isApproved: true,
-          updatedAt: Date.now()
-        });
-        console.log('Factory approved successfully');
+        const factorySnap = await getDoc(factoryRef);
+        
+        if (factorySnap.exists()) {
+          const factoryData = factorySnap.data() as FirebaseFactory;
+          const studentName = factoryData.studentName;
+          
+          // Find the student by name
+          if (studentName) {
+            const students = await this.getAllStudents();
+            const student = students.find(s => s.name === studentName);
+            
+            if (student) {
+              console.log(`Found student ${student.name} with code ${student.code}`);
+              
+              // Update the factory's students array and assignedStudents count
+              const currentStudents = factoryData.students || [];
+              const updatedStudents = [...currentStudents, student.code];
+              const assignedStudents = updatedStudents.length;
+              
+              // Update the factory document
+              await updateDoc(factoryRef, {
+                isApproved: true,
+                updatedAt: Date.now(),
+                students: updatedStudents,
+                assignedStudents: assignedStudents
+              });
+              
+              // Update the student's factory field
+              if (student.code) {
+                const studentsCollection = collection(this.firestore, 'StudentsTable');
+                const studentQuery = query(studentsCollection, where('code', '==', student.code));
+                const studentQuerySnapshot = await getDocs(studentQuery);
+                
+                if (!studentQuerySnapshot.empty) {
+                  const studentDoc = studentQuerySnapshot.docs[0];
+                  await updateDoc(doc(this.firestore, 'StudentsTable', studentDoc.id), {
+                    factory: factoryId
+                  });
+                  console.log(`Updated student ${student.name} with factory ${factoryId}`);
+                }
+              }
+              
+              console.log('Factory approved successfully and student assigned');
+            } else {
+              console.log(`Student with name ${studentName} not found`);
+              // Still approve the factory even if student is not found
+              await updateDoc(factoryRef, {
+                isApproved: true,
+                updatedAt: Date.now()
+              });
+              console.log('Factory approved successfully');
+            }
+          } else {
+            // No student name found, just approve the factory
+            await updateDoc(factoryRef, {
+              isApproved: true,
+              updatedAt: Date.now()
+            });
+            console.log('Factory approved successfully');
+          }
+        }
       } else if (action === 'deny') {
         // Delete the factory document
         const factoryRef = doc(this.firestore, 'Factories', factoryId);

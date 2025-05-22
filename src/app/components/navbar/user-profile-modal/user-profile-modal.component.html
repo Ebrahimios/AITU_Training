@@ -1,10 +1,15 @@
-<div class="user-profile-modal">
-  <div class="modal-header">
-    <h2>{{ translationService.translate('profile') }}</h2>
-    <button class="close-btn" (click)="closeDialog()">
-      <i class="bi bi-x-lg"></i>
-    </button>
-  </div>
+<!-- Modal Overlay -->
+<div class="modal-overlay">
+  <!-- Bootstrap Modal -->
+  <div class="modal fade show" id="userProfileModal" tabindex="-1" role="dialog" aria-labelledby="userProfileModalLabel" aria-hidden="true" style="display: block;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content user-profile-modal">
+        <div class="modal-header">
+          <h2>{{ translationService.translate('profile') }}</h2>
+          <button class="close-btn" (click)="closeDialog()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
   
   <div class="modal-body">
     <div class="profile-image-container">
@@ -50,5 +55,8 @@
     <button class="btn-save" [disabled]="!selectedFile" (click)="uploadImage()">
       {{ translationService.translate('save') }}
     </button>
+      </div>
+    </div>
   </div>
 </div>
+<div class="modal-backdrop fade show"></div>

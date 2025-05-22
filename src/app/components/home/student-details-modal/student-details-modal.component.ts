@@ -177,7 +177,7 @@ interface CapacityEvaluation {
 
     this.student = {
       ...this.data.student,
-      birthDate: formatBirthDate(this.data.student.birthDate),
+      birthDate: formatBirthDate(this.data.student.birthDate) || undefined,
       createOn: formatCreateOnToString(this.data.student.createOn)
     };
     

@@ -21,7 +21,33 @@ export class UserProfileModalComponent {
     @Inject(MAT_DIALOG_DATA) public data: { user: User },
     public translationService: TranslationService,
     private authService: AuthService
-  ) {}
+  ) {
+    // Configure the dialog to disable closing when clicking outside
+    this.dialogRef.disableClose = true;
+    
+    // Set the backdrop to be static (not clickable)
+    this.dialogRef.backdropClick().subscribe(() => {
+      // Add subtle animation to indicate the modal can't be closed by clicking outside
+      const modalElement = document.querySelector('.modal-content') as HTMLElement;
+      if (modalElement) {
+        modalElement.classList.add('shake-animation');
+        setTimeout(() => {
+          modalElement.classList.remove('shake-animation');
+        }, 500);
+      }
+    });
+    
+    // Prevent keyboard escape key from closing the dialog
+    this.dialogRef.keydownEvents().subscribe(event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    });
+    
+    // Prevent scrolling of the background page when modal is open
+    document.body.style.overflow = 'hidden';
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -55,6 +81,9 @@ export class UserProfileModalComponent {
       const imageUrl = this.previewUrl as string;
       const timestamp = Date.now(); // Current timestamp in milliseconds
       
+      // Restore scrolling when modal is closed
+      document.body.style.overflow = '';
+      
       // For demonstration, we'll just close the dialog
       // In a real implementation, you would update the user profile in Firebase
       this.dialogRef.close({ imageUrl, timestamp });
@@ -62,6 +91,8 @@ export class UserProfileModalComponent {
   }
 
   closeDialog(): void {
+    // Restore scrolling when modal is closed
+    document.body.style.overflow = '';
     this.dialogRef.close();
   }
 }

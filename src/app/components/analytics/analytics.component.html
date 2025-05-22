@@ -2,7 +2,7 @@
   <!-- Header -->
   <div class="header">
     <div class="back-button">
-      <button class="btn btn-light" routerLink="/home">
+      <button class="btn btn-light" (click)="navigateToDashboard()">
         <i class="bi bi-arrow-left"></i>
         {{ translationService.translate('back_to_home') }}
       </button>

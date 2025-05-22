@@ -18,13 +18,7 @@ export interface Student {
 })
 export class DistributionService {
   // Shared students data
-  private students = new BehaviorSubject<Student[]>([
-    { id: 1, name: 'Ahmed Mohamed', factory: null, supervisor: null, department: 'IT', batch: 'Batch 1', stage: 'School', selected: false },
-    { id: 2, name: 'Sara Ahmed', factory: null, supervisor: null, department: 'Mechanics', batch: 'Batch 2', stage: 'Institute', selected: false },
-    { id: 3, name: 'Omar Ali', factory: null, supervisor: null, department: 'Electrical', batch: 'Batch 1', stage: 'Faculty', selected: false },
-    { id: 4, name: 'Nour Hassan', factory: null, supervisor: null, department: 'IT', batch: 'Batch 3', stage: 'School', selected: false },
-    { id: 5, name: 'Mona Khaled', factory: null, supervisor: null, department: 'Mechanics', batch: 'Batch 2', stage: 'Institute', selected: false }
-  ]);
+  private students = new BehaviorSubject<Student[]>([]);
   students$ = this.students.asObservable();
 
   constructor() {}

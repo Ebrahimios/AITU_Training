@@ -1,10 +1,10 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Student } from '../../../interfaces/student';
 import { AuthService } from '../../../services/firebase.service';
-
+import { Observable, map } from 'rxjs';
 
 @Component({
   selector: 'app-edit-student-modal',
@@ -22,65 +22,79 @@ import { AuthService } from '../../../services/firebase.service';
         <form [formGroup]="studentForm" (ngSubmit)="save()">
         <div class="modal-body">
           <div class="mb-3">
-            <label for="studentCode" class="form-label">Student Code</label>
-              <input type="text" class="form-control" id="studentCode" formControlName="studentCode" placeholder="Enter student code">
-              <div class="text-danger" *ngIf="studentForm.get('studentCode')?.touched && studentForm.get('studentCode')?.errors?.['required']">
-                Student code is required
+            <label for="code" class="form-label">Student Code</label>
+              <input type="text" class="form-control" id="code" formControlName="code" placeholder="Enter student code">
+              <div class="text-danger" *ngIf="studentForm.get('code')?.touched && studentForm.get('code')?.errors?.['required']">
+                Student code is required.
               </div>
           </div>
 
           <div class="mb-3">
-            <label for="studentName" class="form-label">Student Name</label>
-              <input type="text" class="form-control" id="studentName" formControlName="studentName" placeholder="Enter student name">
-              <div class="text-danger" *ngIf="studentForm.get('studentName')?.touched && studentForm.get('studentName')?.errors?.['required']">
-                Student name is required
+            <label for="name" class="form-label">Student Name</label>
+              <input type="text" class="form-control" id="name" formControlName="name" placeholder="Enter student name">
+              <div class="text-danger" *ngIf="studentForm.get('name')?.touched && studentForm.get('name')?.errors?.['required']">
+                Student name is required.
               </div>
           </div>
 
           <div class="mb-3">
-            <label for="studentAddress" class="form-label">Student Address</label>
-              <input type="text" class="form-control" id="studentAddress" formControlName="address" placeholder="Enter student address">
+            <label for="address" class="form-label">Student Address</label>
+              <input type="text" class="form-control" id="address" formControlName="address" placeholder="Enter student address">
               <div class="text-danger" *ngIf="studentForm.get('address')?.touched && studentForm.get('address')?.errors?.['required']">
                 Address is required
               </div>
           </div>
 
           <div class="mb-3">
-            <label for="studentSSN" class="form-label">Student SSN</label>
-              <input type="text" class="form-control" id="studentSSN" formControlName="ssn" placeholder="Enter student SSN">
-              <div class="text-danger" *ngIf="studentForm.get('ssn')?.touched && studentForm.get('ssn')?.errors?.['required']">
-                SSN is required
+            <label for="nationalID" class="form-label">National ID</label>
+              <input type="text" class="form-control" id="nationalID" formControlName="nationalID" placeholder="Enter National ID (15 digits)">
+              <div class="text-danger" *ngIf="studentForm.get('nationalID')?.touched && studentForm.get('nationalID')?.errors?.['required']">
+                National ID is required.
               </div>
-            </div>
-
-            <div class="mb-3">
-              <label for="phoneNumber" class="form-label">Phone Number</label>
-              <input type="tel" class="form-control" id="phoneNumber" formControlName="phoneNumber" placeholder="Enter phone number">
-              <div class="text-danger" *ngIf="studentForm.get('phoneNumber')?.touched && studentForm.get('phoneNumber')?.errors?.['required']">
-                Phone number is required
+              <div class="text-danger" *ngIf="studentForm.get('nationalID')?.touched && studentForm.get('nationalID')?.errors?.['minlength']">
+                National ID must be at least 15 characters.
               </div>
-              <div class="text-danger" *ngIf="studentForm.get('phoneNumber')?.touched && studentForm.get('phoneNumber')?.errors?.['maxlength']">
-                Phone number cannot exceed 15 digits
+              <div class="text-danger" *ngIf="studentForm.get('nationalID')?.touched && studentForm.get('nationalID')?.errors?.['maxlength']">
+                National ID must be at most 15 characters.
               </div>
-              <div class="text-danger" *ngIf="studentForm.get('phoneNumber')?.touched && studentForm.get('phoneNumber')?.errors?.['pattern']">
-                Please enter a valid phone number
+              <div class="text-danger" *ngIf="studentForm.get('nationalID')?.touched && studentForm.get('nationalID')?.errors?.['pattern']">
+                National ID must contain only numbers.
+              </div>
+              <div class="text-danger" *ngIf="studentForm.get('nationalID')?.touched && studentForm.get('nationalID')?.errors?.['nationalIDExists']">
+                National ID already exists.
               </div>
           </div>
 
           <div class="mb-3">
-            <label for="Status" class="form-label">Student Status</label>
-              <select class="form-select" id="Status" formControlName="status">
-              <option value="" disabled>Select Status</option>
-              <option *ngFor="let stat of status" [value]="stat">{{stat}}</option>
-            </select>
-              <div class="text-danger" *ngIf="studentForm.get('status')?.touched && studentForm.get('status')?.errors?.['required']">
-                Status is required
+            <label for="phone" class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" id="phone" formControlName="phone" placeholder="Enter phone number">
+              <div class="text-danger" *ngIf="studentForm.get('phone')?.touched && studentForm.get('phone')?.errors?.['required']">
+                Phone number is required.
+              </div>
+              <div class="text-danger" *ngIf="studentForm.get('phone')?.touched && studentForm.get('phone')?.errors?.['maxlength']">
+                Phone number must be at most 15 characters.
+              </div>
+              <div class="text-danger" *ngIf="studentForm.get('phone')?.touched && studentForm.get('phone')?.errors?.['pattern']">
+                Phone number must contain only numbers.
+              </div>
           </div>
+
+          <div class="mb-3">
+            <label for="state" class="form-label">Student Status</label>
+              <select class="form-select" id="state" formControlName="state">
+                <option value="">Select Status</option>
+              <option *ngFor="let stat of states" [value]="stat">{{stat}}</option>
+              </select>
+              <div class="text-danger" *ngIf="studentForm.get('state')?.touched && studentForm.get('state')?.errors?.['required']">
+                Status is required.
+              </div>
             </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" (click)="dialogRef.close()">Cancel</button>
-            <button type="submit" class="btn btn-primary" [disabled]="!studentForm.valid">{{ isEdit ? 'Save Changes' : 'Add Student' }}</button>
+          <button type="submit" class="btn btn-primary">
+            {{ isEdit ? 'Save Changes' : 'Add Student' }}
+          </button>
         </div>
         </form>
       </div>
@@ -240,7 +254,7 @@ import { AuthService } from '../../../services/firebase.service';
 })
 export class EditStudentModalComponent {
   studentForm!: FormGroup;
-  status = ['New', 'Returner'];
+  states = ['New', 'Returner'];
   isEdit: boolean;
   student?: Student;
 
@@ -251,41 +265,130 @@ export class EditStudentModalComponent {
     private authService: AuthService
   ) {
     this.isEdit = data.isEdit;
-    this.initForm(data.student);
+    this.student = data.student;
+    this.initForm(this.student);
   }
 
   private initForm(student?: Student) {
     this.studentForm = this.fb.group({
-      studentCode: [student?.code || '', [Validators.required]],
-      studentName: [student?.name || '', [Validators.required]],
-      address: [student?.address || '', [Validators.required]],
-      ssn: [student?.nationalID || '', [Validators.required]],
-      phoneNumber: [student?.phone || '', [
+      code: [student?.code || '', Validators.required],
+      name: [student?.name || '', Validators.required],
+      address: [student?.address || '', Validators.required],
+      nationalID: [
+        student?.nationalID || '',
+        [
+          Validators.required,
+          Validators.minLength(15),
+          Validators.maxLength(15),
+          Validators.pattern('^[0-9]*$'),
+          this.nationalIDExistsValidator.bind(this)
+        ]
+      ],
+      phone: [student?.phone || '', [
         Validators.required,
         Validators.maxLength(15),
         Validators.pattern('^[0-9]*$')
       ]],
-      status: [student?.state || this.status[0], [Validators.required]],
-      selected: [student?.selected || false]
+      state: [student?.state || '', Validators.required]
     });
   }
 
+  private nationalIDExistsValidator(control: AbstractControl): Observable<ValidationErrors | null> {
+    const nationalID = control.value;
+    if (!nationalID || nationalID.length !== 15) {
+      return new Observable(subscriber => {
+        subscriber.next(null);
+        subscriber.complete();
+      });
+    }
+
+    return new Observable<ValidationErrors | null>(subscriber => {
+      this.authService.getAllStudents()
+        .then((students: Student[]) => {
+          const nationalIDExists = students.some((student: Student) =>
+            student.nationalID === nationalID && (!this.isEdit || student.code !== this.student?.code)
+          );
+          subscriber.next(nationalIDExists ? { nationalIDExists: true } : null);
+          subscriber.complete();
+        })
+        .catch(error => {
+          console.error('Error validating National ID:', error);
+          subscriber.next(null);
+          subscriber.complete();
+        });
+    });
+  }
+
+  // Add a method to check form validity and log details
+  checkFormValidity() {
+    console.log('Form validity check:');
+    console.log('Form valid:', this.studentForm.valid);
+    console.log('code valid:', this.studentForm.get('code')?.valid);
+    console.log('name valid:', this.studentForm.get('name')?.valid);
+    console.log('address valid:', this.studentForm.get('address')?.valid);
+    console.log('nationalID valid:', this.studentForm.get('nationalID')?.valid);
+    console.log('phone valid:', this.studentForm.get('phone')?.valid);
+    console.log('state valid:', this.studentForm.get('state')?.valid);
+    
+    // Log errors if any
+    if (this.studentForm.get('nationalID')?.errors) {
+      console.log('nationalID errors:', this.studentForm.get('nationalID')?.errors);
+    }
+    if (this.studentForm.get('phone')?.errors) {
+      console.log('phone errors:', this.studentForm.get('phone')?.errors);
+    }
+  }
+
   save() {
-    if (this.studentForm.valid) {
-      this.student = {
-        code: this.studentForm.value.studentCode,
-        name: this.studentForm.value.studentName,
-        address: this.studentForm.value.address,
-        nationalID: this.studentForm.value.ssn,
-        phone: this.studentForm.value.phoneNumber,
-        state: this.studentForm.value.status,
-        selected: this.studentForm.value.selected
+    // Log form validity before saving
+    this.checkFormValidity();
+    
+    try {
+      console.log('Attempting to save student data...');
+      // Get form values regardless of validity
+      const formValue = this.studentForm.value;
+      console.log('Form values:', formValue);
+      
+      // Create student data object
+      const studentData: Student = {
+        code: formValue.code,
+        name: formValue.name,
+        address: formValue.address,
+        nationalID: formValue.nationalID,
+        phone: formValue.phone,
+        state: formValue.state,
+        selected: false
+      };
+      console.log('Student data to save:', studentData);
+
+      if (this.isEdit) {
+        console.log('Updating existing student...');
+        // Update existing student
+        this.authService.updateStudent(studentData)
+          .then(() => {
+            console.log('Student updated successfully!');
+            this.dialogRef.close(studentData);
+          })
+          .catch((error: any) => {
+            console.error('Error updating student:', error);
+            alert('Failed to update student: ' + (error?.message || 'Unknown error'));
+          });
+      } else {
+        console.log('Adding new student...');
+        // Add new student
+        this.authService.sendStudentData(studentData)
+          .then(() => {
+            console.log('Student added successfully!');
+            this.dialogRef.close(studentData);
+          })
+          .catch((error: any) => {
+            console.error('Error adding student:', error);
+            alert('Failed to add student: ' + (error?.message || 'Unknown error'));
+          });
       }
-      console.log(this.student);
-      this.authService.sendStudentData(this.student);
-      this.dialogRef.close(this.student);
-    } else {
-      this.markFormGroupTouched(this.studentForm);
+    } catch (error: any) {
+      console.error('Unexpected error in save method:', error);
+      alert('An unexpected error occurred: ' + (error?.message || 'Unknown error'));
     }
   }
 

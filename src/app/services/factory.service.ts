@@ -41,20 +41,21 @@ export class FactoryService {
   supervisors$ = this.supervisors.asObservable();
 
   constructor(private authService: AuthService) {
-    // Load factories and supervisors from Firebase when service initializes
-    this.loadFactoriesFromFirebase();
-    this.loadSupervisorsFromFirebase();
+    // Subscribe to real-time data from Firebase
+    this.subscribeToFactoriesStream();
+    this.subscribeToSupervisorsStream();
   }
   
   /**
-   * Loads factories from Firebase and updates the BehaviorSubject
+   * Subscribe to the real-time factories stream from the Firebase service
    */
-  async loadFactoriesFromFirebase(): Promise<void> {
-    try {
-      const firebaseFactories = await this.authService.getAllFactories();
+  private subscribeToFactoriesStream(): void {
+    this.authService.factories$.subscribe(firebaseFactories => {
+      // Filter out factories where isApproved is false
+      const approvedFactories = firebaseFactories.filter(f => f.isApproved === true);
       
       // Convert Firebase factories to our local Factory interface
-      const factories: Factory[] = firebaseFactories.map(f => ({
+      const factories: Factory[] = approvedFactories.map(f => ({
         id: Number(f.id) || Date.now(),
         name: f.name,
         capacity: f.capacity,
@@ -69,7 +70,66 @@ export class FactoryService {
       }));
       
       this.factories.next(factories);
-      console.log('Factories loaded from Firebase:', factories);
+      console.log('Real-time factories updated:', factories.length, 'factories');
+    });
+  }
+  
+  /**
+   * Subscribe to the real-time supervisors stream from the Firebase service
+   */
+  private subscribeToSupervisorsStream(): void {
+    this.authService.supervisors$.subscribe(firebaseSupervisors => {
+      // Filter out supervisors where isApproved is false
+      const approvedSupervisors = firebaseSupervisors.filter(s => s.isApproved === true);
+      
+      // Convert Firebase supervisors to our local Supervisor interface
+      const supervisors: Supervisor[] = approvedSupervisors.map(s => ({
+        id: Number(s.id) || Date.now(),
+        name: s.name,
+        capacity: s.capacity,
+        assignedStudents: s.assignedStudents || 0,
+        students: s.students || [],
+        address: s.address,
+        phone: s.phone,
+        department: s.department,
+        contactName: s.contactName,
+        type: s.type || 'Administrative Supervisor',
+        industry: s.industry
+      }));
+      
+      this.supervisors.next(supervisors);
+      console.log('Real-time supervisors updated:', supervisors.length, 'supervisors');
+    });
+  }
+  
+  /**
+   * Loads factories from Firebase and updates the BehaviorSubject (legacy method)
+   * @deprecated Use the real-time subscription instead
+   */
+  async loadFactoriesFromFirebase(): Promise<void> {
+    try {
+      const firebaseFactories = await this.authService.getAllFactories();
+      
+      // Filter out factories where isApproved is false
+      const approvedFactories = firebaseFactories.filter(f => f.isApproved === true);
+      
+      // Convert Firebase factories to our local Factory interface
+      const factories: Factory[] = approvedFactories.map(f => ({
+        id: Number(f.id) || Date.now(),
+        name: f.name,
+        capacity: f.capacity,
+        assignedStudents: f.assignedStudents || 0,
+        students: f.students || [],
+        address: f.address,
+        phone: f.phone,
+        department: f.department,
+        contactName: f.contactName,
+        type: f.type || 'External',
+        industry: f.industry
+      }));
+      
+      this.factories.next(factories);
+      console.log('Approved factories loaded from Firebase:', factories);
     } catch (error) {
       console.error('Error loading factories from Firebase:', error);
     }
@@ -155,14 +215,18 @@ export class FactoryService {
   }
   
   /**
-   * Loads supervisors from Firebase and updates the BehaviorSubject
+   * Loads supervisors from Firebase and updates the BehaviorSubject (legacy method)
+   * @deprecated Use the real-time subscription instead
    */
   async loadSupervisorsFromFirebase(): Promise<void> {
     try {
       const firebaseSupervisors = await this.authService.getAllSupervisors();
       
+      // Filter out supervisors where isApproved is false
+      const approvedSupervisors = firebaseSupervisors.filter(s => s.isApproved === true);
+      
       // Convert Firebase supervisors to our local Supervisor interface
-      const supervisors: Supervisor[] = firebaseSupervisors.map(s => ({
+      const supervisors: Supervisor[] = approvedSupervisors.map(s => ({
         id: Number(s.id) || Date.now(),
         name: s.name,
         capacity: s.capacity,
@@ -177,7 +241,7 @@ export class FactoryService {
       }));
       
       this.supervisors.next(supervisors);
-      console.log('Supervisors loaded from Firebase:', supervisors);
+      console.log('Approved supervisors loaded from Firebase:', supervisors);
     } catch (error) {
       console.error('Error loading supervisors from Firebase:', error);
     }
@@ -260,6 +324,29 @@ export class FactoryService {
       await this.authService.deleteSupervisor(supervisorId.toString());
     } catch (error) {
       console.error('Error deleting supervisor from Firebase:', error);
+    }
+  }
+
+  /**
+   * Approve a factory request by setting isApproved to true
+   * @param factoryId The ID of the factory to approve
+   * @returns Promise<boolean> indicating success or failure
+   */
+  async approveFactoryRequest(factoryId: number): Promise<boolean> {
+    try {
+      // Call the AuthService to handle the factory request approval
+      const success = await this.authService.handleFactoryRequest(factoryId.toString(), 'accept');
+      
+      if (success) {
+        // Refresh the factories list to reflect the changes
+        await this.loadFactoriesFromFirebase();
+        console.log('Factory request approved successfully');
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error approving factory request:', error);
+      return false;
     }
   }
 }

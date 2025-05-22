@@ -1,15 +1,61 @@
-.user-profile-modal {
+/* Modal overlay styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  max-width: 500px;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  font-family: 'Roboto', sans-serif;
+  height: 100%;
+  z-index: 1050;
+  overflow-x: hidden;
+  overflow-y: auto;
+  outline: 0;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+}
+
+/* Modal dialog positioning */
+.modal-dialog {
   position: relative;
-  z-index: 1000;
+  width: auto;
+  margin: 0 auto;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  max-width: 500px;
+}
+
+/* Modal content styling */
+.modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  pointer-events: auto;
+  background-color: #fff;
+  background-clip: padding-box;
+  border-radius: 12px;
+  outline: 0;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* User profile modal specific styles */
+.user-profile-modal {
+  font-family: 'Roboto', sans-serif;
+  max-width: 500px;
+  margin: 0 auto;
+}
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -171,4 +217,36 @@
 
 [dir="rtl"] .modal-footer {
   flex-direction: row-reverse;
+}
+
+/* Modal overlay styles */
+.cdk-overlay-container {
+  z-index: 9999;
+}
+
+.cdk-overlay-backdrop.profile-backdrop {
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+}
+
+.centered-dialog {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.mat-dialog-container {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Shake animation for feedback when clicking outside */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake-animation {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
 }

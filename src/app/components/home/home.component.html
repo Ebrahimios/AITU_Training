@@ -104,7 +104,7 @@
           </div>
           <div class="stat-info">
             <h4>{{ translationService.translate('growth') }}</h4>
-            <h2>+12%</h2>
+            <h2>+{{ growthRate | number:'1.0-0' }}%</h2>
           </div>
         </div>
       </div>
@@ -218,10 +218,9 @@
             <div *ngFor="let stat of departmentStats" class="chart-bar">
               <div class="bar-label">{{stat.name}}</div>
               <div class="bar-container">
-                <div class="bar" [style.width.%]="stat.percentage">
-                  <span class="bar-value">{{stat.count}}</span>
-                </div>
+                <div class="bar" [style.width.%]="stat.percentage"></div>
               </div>
+              <span class="bar-value">{{stat.count}}</span>
             </div>
           </div>
         </div>
