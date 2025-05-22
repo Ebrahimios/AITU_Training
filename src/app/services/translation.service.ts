@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-const translations = {
+const translations: Record<'en' | 'ar', Record<string, string>> = {
   en: {
     // Navigation
     welcome_back: 'Welcome Back!',
@@ -110,9 +110,47 @@ const translations = {
     required_field: 'This field is required',
     invalid_phone: 'Invalid phone number format',
     invalid_capacity: 'Capacity must be a positive number',
-    
+    //departments
+    electrical: 'Electrical',
+    mechanics: 'Mechanics',
+    information_technology: 'Information Technology',
     // Comparison
-    vs: 'vs'
+    vs: 'vs',
+
+    // Batch names
+    batch_1: 'Batch 1',
+    batch_2: 'Batch 2',
+    batch_3: 'Batch 3',
+    batch_4: 'Batch 4',
+
+    // Stage names
+    school: 'School',
+    institute: 'Institute',
+    faculty: 'Faculty',
+
+    // Month names
+    january: 'January',
+    february: 'February',
+    march: 'March',
+    april: 'April',
+    may: 'May',
+    june: 'June',
+    july: 'July',
+    august: 'August',
+    september: 'September',
+    october: 'October',
+    november: 'November',
+    december: 'December',
+
+    // Sort options
+    name_asc: 'Name (A-Z)',
+    name_desc: 'Name (Z-A)',
+    date_new: 'Newest First',
+    date_old: 'Oldest First',
+
+    // Student Distribution Component - New Keys Only
+    no_students_assigned: 'No students assigned',
+    save_changes: 'Save Changes',
   },
   ar: {
     // Navigation
@@ -222,14 +260,50 @@ const translations = {
     required_field: 'هذا الحقل مطلوب',
     invalid_phone: 'صيغة رقم الهاتف غير صحيحة',
     invalid_capacity: 'يجب أن تكون السعة رقمًا موجبًا',
-    
-    // Comparison
-    vs: 'مقابل'
+    //departments
+    electrical: 'كهرباء',
+    mechanics: 'ميكانيكا',
+    information_technology: 'تكنولوجيا المعلومات',
+
+    // Batch names
+    batch_1: 'دفعة 1',
+    batch_2: 'دفعة 2',
+    batch_3: 'دفعة 3',
+    batch_4: 'دفعة 4',
+
+    // Stage names
+    school: 'مدرسة',
+    institute: 'معهد',
+    faculty: 'كلية',
+
+    // Month names
+    january: 'يناير',
+    february: 'فبراير',
+    march: 'مارس',
+    april: 'أبريل',
+    may: 'مايو',
+    june: 'يونيو',
+    july: 'يوليو',
+    august: 'أغسطس',
+    september: 'سبتمبر',
+    october: 'أكتوبر',
+    november: 'نوفمبر',
+    december: 'ديسمبر',
+
+    // Sort options
+    name_asc: 'الاسم (أ-ي)',
+    name_desc: 'الاسم (ي-أ)',
+    date_new: 'الأحدث أولاً',
+    date_old: 'الأقدم أولاً',
+
+    // Student Distribution Component - New Keys Only
+    no_students_assigned: 'لا يوجد طلاب معينين',
+    save_changes: 'حفظ التغييرات',
   }
 } as const;
 
 // Create a type that represents all possible translation keys
-type TranslationKeys = keyof typeof translations.en;
+type TranslationKeys = keyof typeof translations.en & keyof typeof translations.ar;
 
 // Export the type for use in components
 export type { TranslationKeys };
@@ -259,16 +333,19 @@ export class TranslationService {
 
   translate(key: TranslationKeys): string {
     const currentLang = this.currentLang.value;
-    // Check if the key exists in the current language
-    if (translations[currentLang][key]) {
-      return translations[currentLang][key];
+    const translation = translations[currentLang][key];
+    
+    if (!translation) {
+      console.warn(`Translation key '${key}' not found in ${currentLang} language`);
+      // Fallback to English if the key doesn't exist in the current language
+      const englishTranslation = translations.en[key];
+      if (!englishTranslation) {
+        console.error(`Translation key '${key}' not found in both ${currentLang} and English`);
+        return `Missing translation: ${key}`;
+      }
+      return englishTranslation;
     }
-    // Fallback to English if the key doesn't exist in the current language
-    if (translations.en[key]) {
-      return translations.en[key];
-    }
-    // Return the key itself if it doesn't exist in any language
-    return key;
+    return translation;
   }
   
   // Helper method to get current language
