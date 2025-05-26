@@ -18,7 +18,7 @@ interface StudentWithPerformance extends Student {
     neatAppearance: number;
     responsivePersonality: number;
     confidentRelations: number;
-    
+
     // Practical and Professional Aspects
     attendance: number;
     understandingInstructions: number;
@@ -38,7 +38,7 @@ interface CapacityEvaluation {
   neatAppearance: number; // 3 points
   responsivePersonality: number; // 3 points
   confidentRelations: number; // 3 points
-  
+
   // Practical and Professional Aspects
   attendance: number; // 15 points
   understandingInstructions: number; // 3 points
@@ -50,7 +50,7 @@ interface CapacityEvaluation {
   informationGathering: number; // 3 points
   adaptToWorkEnvironment: number; // 5 points
   maintenanceSkills: number; // 3 points
-  
+
   overallRating: number; // Total out of 60
   comments: string;
   lastUpdated?: number;
@@ -98,7 +98,7 @@ interface CapacityEvaluation {
       this.convertDates(this.data.student);
     }
   }
-  
+
   // Helper method to convert dates to appropriate formats
   private convertDates(student: Student): void {
     // For birthDate, ensure it's a string in YYYY-MM-DD format
@@ -112,7 +112,7 @@ interface CapacityEvaluation {
       }
       // If it's already a string, leave it as is
     }
-    
+
     // For createOn, ensure it's a string in YYYY-MM-DD format
     if (student.createOn) {
       if (typeof student.createOn === 'number') {
@@ -124,7 +124,7 @@ interface CapacityEvaluation {
       }
       // If it's already a string, leave it as is
     }
-    
+
     // For birthDate, ensure it's a string in YYYY-MM-DD format
     if (student.birthDate) {
       if (typeof student.birthDate === 'number') {
@@ -136,42 +136,42 @@ interface CapacityEvaluation {
       }
     }
   }
-  
+
   ngOnInit(): void {
     // Load supervisors from factory service
     this.factoryService.supervisors$.subscribe(supervisors => {
       this.supervisors = supervisors;
       this.supervisorNames = supervisors.map(s => s.name);
     });
-    
+
     // Format dates appropriately
     const formatBirthDate = (value: any): string | null | undefined => {
       if (!value) return undefined;
-      
+
       // If already a string, return it
       if (typeof value === 'string') return value;
-      
+
       // If number (timestamp), convert to string
       if (typeof value === 'number') {
         const date = new Date(value);
         return isNaN(date.getTime()) ? undefined : date.toISOString().split('T')[0];
       }
-      
+
       return undefined;
     };
-    
+
     const formatCreateOnToString = (value: any): string | undefined => {
       if (!value) return undefined;
-      
+
       // If already a string, validate and return it
       if (typeof value === 'string') return value;
-      
+
       // If number (timestamp), convert to string
       if (typeof value === 'number') {
         const date = new Date(value);
         return isNaN(date.getTime()) ? undefined : date.toISOString().split('T')[0];
       }
-      
+
       return undefined;
     };
 
@@ -180,13 +180,13 @@ interface CapacityEvaluation {
       birthDate: formatBirthDate(this.data.student.birthDate) || undefined,
       createOn: formatCreateOnToString(this.data.student.createOn)
     };
-    
+
     // Convert timestamp to date string for the date input field
     this.updateBirthDateString();
 
     this.initializeForm();
     this.loadStudentProgress();
-    
+
     // Load student reports when the component initializes
     this.loadStudentReports();
   }
@@ -200,7 +200,7 @@ interface CapacityEvaluation {
       neatAppearance: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
       responsivePersonality: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
       confidentRelations: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      
+
       // Practical and Professional Aspects (51 points total)
       attendance: [0, [Validators.required, Validators.min(0), Validators.max(15)]],
       understandingInstructions: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
@@ -212,7 +212,7 @@ interface CapacityEvaluation {
       informationGathering: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
       adaptToWorkEnvironment: [0, [Validators.required, Validators.min(0), Validators.max(5)]],
       maintenanceSkills: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      
+
       overallRating: [0],
       comments: ['', [Validators.required, Validators.minLength(10)]]
     });
@@ -229,7 +229,7 @@ interface CapacityEvaluation {
       values.responsivePersonality || 0,
       values.confidentRelations || 0
     ];
-    
+
     // Practical and Professional Aspects (51 points total)
     const practicalProfessionalRatings = [
       values.attendance || 0,
@@ -243,27 +243,27 @@ interface CapacityEvaluation {
       values.adaptToWorkEnvironment || 0,
       values.maintenanceSkills || 0
     ];
-    
+
     // Calculate total points (out of 60)
     const totalPoints = [...personalEthicalRatings, ...practicalProfessionalRatings].reduce((a, b) => a + b, 0);
-    
+
     this.evaluationForm.patchValue({ overallRating: totalPoints }, { emitEvent: false });
   }
-  
+
   /**
    * Updates the evaluation form with data loaded from Firebase
    * @param evaluationData The evaluation data from Firebase
    */
   private updateEvaluationFormWithData(evaluationData: CapacityEvaluation): void {
     if (!evaluationData) return;
-    
+
     // Update form with loaded evaluation data
     this.evaluationForm.patchValue({
       // Personal and Ethical Aspects
       neatAppearance: evaluationData.neatAppearance || 0,
       responsivePersonality: evaluationData.responsivePersonality || 0,
       confidentRelations: evaluationData.confidentRelations || 0,
-      
+
       // Practical and Professional Aspects
       attendance: evaluationData.attendance || 0,
       understandingInstructions: evaluationData.understandingInstructions || 0,
@@ -275,7 +275,7 @@ interface CapacityEvaluation {
       informationGathering: evaluationData.informationGathering || 0,
       adaptToWorkEnvironment: evaluationData.adaptToWorkEnvironment || 0,
       maintenanceSkills: evaluationData.maintenanceSkills || 0,
-      
+
       // Overall rating and comments
       overallRating: evaluationData.overallRating || 0,
       comments: evaluationData.comments || ''
@@ -284,14 +284,14 @@ interface CapacityEvaluation {
 
   calculateOverallRating() {
     const values = this.evaluationForm.value;
-    
+
     // Personal and Ethical Aspects (9 points total)
     const personalEthicalRatings = [
       values.neatAppearance || 0,
       values.responsivePersonality || 0,
       values.confidentRelations || 0
     ];
-    
+
     // Practical and Professional Aspects (51 points total)
     const practicalProfessionalRatings = [
       values.attendance || 0,
@@ -305,10 +305,10 @@ interface CapacityEvaluation {
       values.adaptToWorkEnvironment || 0,
       values.maintenanceSkills || 0
     ];
-    
+
     // Calculate total points (out of 60)
     const totalPoints = [...personalEthicalRatings, ...practicalProfessionalRatings].reduce((a, b) => a + b, 0);
-    
+
     this.evaluationForm.patchValue({ overallRating: totalPoints });
     return totalPoints;
   }
@@ -320,20 +320,20 @@ interface CapacityEvaluation {
     }
 
     this.isLoading = true;
-    
+
     try {
       // Get a reference to the Firestore instance
       const firestore = this.authService['firestore'];
-      
+
       // Create a reference to the student's evaluation document
       const evaluationRef = doc(firestore, 'StudentsTable', this.student.code, 'evaluations', 'performance');
-      
+
       // Get the evaluation data
       const evaluationDoc = await getDoc(evaluationRef);
-      
+
       if (evaluationDoc.exists()) {
         const evaluationData = evaluationDoc.data() as CapacityEvaluation;
-        
+
         // Update the student object with the evaluation data
         this.student = {
           ...this.data.student,
@@ -346,7 +346,7 @@ interface CapacityEvaluation {
             neatAppearance: evaluationData.neatAppearance,
             responsivePersonality: evaluationData.responsivePersonality,
             confidentRelations: evaluationData.confidentRelations,
-            
+
             // Practical and Professional Aspects
             attendance: evaluationData.attendance,
             understandingInstructions: evaluationData.understandingInstructions,
@@ -360,7 +360,7 @@ interface CapacityEvaluation {
             maintenanceSkills: evaluationData.maintenanceSkills
           }
         };
-        
+
         // Update the evaluation form with the loaded data
         this.updateEvaluationFormWithData(evaluationData);
       } else {
@@ -374,7 +374,7 @@ interface CapacityEvaluation {
             neatAppearance: 0,
             responsivePersonality: 0,
             confidentRelations: 0,
-            
+
             // Practical and Professional Aspects
             attendance: 0,
             understandingInstructions: 0,
@@ -494,7 +494,7 @@ interface CapacityEvaluation {
   viewReport(report: StudentReport): void {
     // In a real app, this would open the report URL in a new tab
     window.open(report.url, '_blank');
-    
+
     this.snackBar.open(`Opening ${report.name}...`, 'Close', {
       duration: 3000
     });
@@ -515,15 +515,15 @@ interface CapacityEvaluation {
   submitEvaluation() {
     if (this.evaluationForm.valid && this.student && this.student.code) {
       this.isLoading = true;
-      
+
       const evaluation: CapacityEvaluation = {
         ...this.evaluationForm.value,
         lastUpdated: new Date().getTime() // Store as timestamp
       };
-      
+
       // Create a reference to the student's evaluation document
       const studentCode = this.student.code;
-      
+
       // Save evaluation to Firebase
       this.saveEvaluationToFirebase(studentCode, evaluation)
         .then((success) => {
@@ -545,12 +545,12 @@ interface CapacityEvaluation {
                 adaptToWorkEnvironment: evaluation.adaptToWorkEnvironment,
                 maintenanceSkills: evaluation.maintenanceSkills
               };
-              
+
               // Update progress and attendance percentages
               this.student.progress = Math.round((evaluation.overallRating / 60) * 100);
               this.student.attendance = Math.round((evaluation.attendance / 15) * 100);
             }
-            
+
             this.snackBar.open('Evaluation submitted successfully to Firebase', 'Close', {
               duration: 3000
             });
@@ -570,7 +570,7 @@ interface CapacityEvaluation {
       });
     }
   }
-  
+
   /**
    * Saves the student evaluation to Firebase
    * @param studentCode The student code
@@ -581,17 +581,17 @@ interface CapacityEvaluation {
     try {
       // Get a reference to the Firestore instance
       const firestore = this.authService['firestore'];
-      
+
       // Create a reference to the student's evaluation document
       const evaluationRef = doc(firestore, 'StudentsTable', studentCode, 'evaluations', 'performance');
-      
+
       // Save the evaluation data
       await setDoc(evaluationRef, {
         ...evaluation,
         updatedBy: this.authService.currentUserValue?.id || 'unknown',
         updatedAt: new Date().getTime()
       });
-      
+
       console.log('Evaluation saved to Firebase for student:', studentCode);
       return true;
     } catch (error) {
@@ -627,22 +627,22 @@ interface CapacityEvaluation {
   adjustRating(event: MouseEvent, controlName: string, maxValue: number): void {
     // Get the clicked element
     const sliderElement = event.currentTarget as HTMLElement;
-    
+
     // Calculate the position of the click relative to the slider width
     const rect = sliderElement.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const sliderWidth = rect.width;
-    
+
     // Calculate the new rating value based on click position
     // The calculation maps the click position (0 to sliderWidth) to rating value (0 to maxValue)
     let newValue = Math.round((clickX / sliderWidth) * maxValue);
-    
+
     // Ensure the value is within bounds
     newValue = Math.max(0, Math.min(newValue, maxValue));
-    
+
     // Update the form control value
     this.evaluationForm.get(controlName)?.setValue(newValue);
-    
+
     // Recalculate the overall rating
     this.calculateOverallRating();
   }
@@ -655,15 +655,15 @@ interface CapacityEvaluation {
    */
   formatDateToString(dateValue: number | string | Date | undefined, format: 'input' | 'display' = 'display'): string {
     if (!dateValue) return '';
-    
+
     // Convert to Date object
-    const date = typeof dateValue === 'object' 
-      ? dateValue 
+    const date = typeof dateValue === 'object'
+      ? dateValue
       : new Date(dateValue);
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) return '';
-    
+
     // Return formatted string based on requested format
     if (format === 'input') {
       // Format as YYYY-MM-DD for input[type=date]
@@ -714,7 +714,7 @@ interface CapacityEvaluation {
 
   toggleEditMode(): void {
     this.isEditMode = !this.isEditMode;
-    
+
     if (this.isEditMode) {
       // Update date string when entering edit mode
       this.updateBirthDateString();

@@ -45,9 +45,7 @@ export interface FirebaseSupervisor {
   address?: string;
   phone?: string;
   department?: string;
-  contactName?: string;
   type: string;
-  industry?: string;
   isApproved: boolean;
   createdAt: number;
 }
@@ -193,7 +191,7 @@ export class AuthService {
         address: student.address,
         nationalID: student.nationalID,
         selected: student.selected,
-        createOn: new Date().toISOString().split('T')[0], // Store as YYYY-MM-DD string
+        createOn: new Date().toISOString().split('T')[0], // Set to current date in YYYY-MM-DD format
         factory: "",
         department: "",
         birthAddress: "",
@@ -433,7 +431,6 @@ export class AuthService {
         nationalID: student.nationalID,
         email: student.email,
         birthDate: birthDateString, // Store as formatted string
-        createOn: Date.now(),
         gender: student.gender,
         department: student.department,
         birthAddress: student.birthAddress,
@@ -452,8 +449,34 @@ export class AuthService {
 
   public async deleteStudent(studentCode: string): Promise<boolean> {
     try {
-      const userDocRef = doc(this.firestore, 'StudentsTable', studentCode);
-      await deleteDoc(userDocRef);
+      // First, get the student to check if they have a factory
+      const studentDocRef = doc(this.firestore, 'StudentsTable', studentCode);
+      const studentDoc = await getDoc(studentDocRef);
+      const studentData = studentDoc.data();
+
+      if (studentData && studentData['factory']) {
+        // If student has a factory, update the factory's list
+        const factoriesRef = collection(this.firestore, 'Factories');
+        const q = query(factoriesRef, where('name', '==', studentData['factory']));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const factoryDoc = querySnapshot.docs[0];
+          const factoryData = factoryDoc.data();
+
+          // Remove student from factory's students array
+          const updatedStudents = factoryData['students'].filter((s: any) => s.code !== studentCode);
+
+          // Update factory document
+          await updateDoc(doc(this.firestore, 'Factories', factoryDoc.id), {
+            students: updatedStudents,
+            assignedStudents: updatedStudents.length
+          });
+        }
+      }
+
+      // Finally, delete the student
+      await deleteDoc(studentDocRef);
       return true;
     } catch (error) {
       console.error('Error deleting student:', error);
@@ -608,9 +631,7 @@ export class AuthService {
             address: data['address'],
             phone: data['phone'],
             department: data['department'],
-            contactName: data['contactName'],
             type: data['type'],
-            industry: data['industry'],
             isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
             createdAt: data['createdAt'] || Date.now()
           });
@@ -648,9 +669,7 @@ export class AuthService {
           address: data['address'],
           phone: data['phone'],
           department: data['department'],
-          contactName: data['contactName'],
           type: data['type'],
-          industry: data['industry'],
           isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
           createdAt: data['createdAt'] || Date.now()
         });
@@ -789,24 +808,24 @@ export class AuthService {
         // Get the factory data to find the student who sent the request
         const factoryRef = doc(this.firestore, 'Factories', factoryId);
         const factorySnap = await getDoc(factoryRef);
-        
+
         if (factorySnap.exists()) {
           const factoryData = factorySnap.data() as FirebaseFactory;
           const studentName = factoryData.studentName;
-          
+
           // Find the student by name
           if (studentName) {
             const students = await this.getAllStudents();
             const student = students.find(s => s.name === studentName);
-            
+
             if (student) {
               console.log(`Found student ${student.name} with code ${student.code}`);
-              
+
               // Update the factory's students array and assignedStudents count
               const currentStudents = factoryData.students || [];
               const updatedStudents = [...currentStudents, student.code];
               const assignedStudents = updatedStudents.length;
-              
+
               // Update the factory document
               await updateDoc(factoryRef, {
                 isApproved: true,
@@ -814,22 +833,22 @@ export class AuthService {
                 students: updatedStudents,
                 assignedStudents: assignedStudents
               });
-              
+
               // Update the student's factory field
               if (student.code) {
                 const studentsCollection = collection(this.firestore, 'StudentsTable');
                 const studentQuery = query(studentsCollection, where('code', '==', student.code));
                 const studentQuerySnapshot = await getDocs(studentQuery);
-                
+
                 if (!studentQuerySnapshot.empty) {
                   const studentDoc = studentQuerySnapshot.docs[0];
                   await updateDoc(doc(this.firestore, 'StudentsTable', studentDoc.id), {
-                    factory: factoryId
+                    factory: factoryData.name
                   });
-                  console.log(`Updated student ${student.name} with factory ${factoryId}`);
+                  console.log(`Updated student ${student.name} with factory ${factoryData.name}`);
                 }
               }
-              
+
               console.log('Factory approved successfully and student assigned');
             } else {
               console.log(`Student with name ${studentName} not found`);

@@ -106,11 +106,11 @@ export class StudentDistributionComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       console.log('Initializing student-distribution component');
-      
+
       // Subscribe to factories
       this.factoryService.factories$.subscribe(factories => {
         console.log('Received factories from service:', factories);
-        
+
         // Convert factory service factories to our local Factory interface
         this.factories = factories.map(f => ({
           id: f.id.toString(),
@@ -125,7 +125,7 @@ export class StudentDistributionComponent implements OnInit {
           assignedStudents: f.assignedStudents
         }));
         this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
-        
+
         // Load students after factories are loaded
         this.loadStudentsFromFirebase();
       });
@@ -133,15 +133,15 @@ export class StudentDistributionComponent implements OnInit {
       console.error('Error in ngOnInit:', error);
     }
   }
-  
+
   async loadStudentsFromFirebase(): Promise<void> {
     try {
       // Get students from Firebase
       const firebaseStudents = await this.authService.getAllStudents();
-      
+
       // Store all students
       this.students = firebaseStudents;
-      
+
       // Update factory assignments for students that already have factories
       this.students.forEach(student => {
         if (student.factory) {
@@ -152,7 +152,7 @@ export class StudentDistributionComponent implements OnInit {
           }
         }
       });
-      
+
       this.updateFactoryAssignments();
     } catch (error) {
       console.error('Error loading students from Firebase:', error);
@@ -165,7 +165,7 @@ export class StudentDistributionComponent implements OnInit {
       this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
     });
   }
-  
+
   // Add missing resetFormErrors method
   private resetFormErrors(): void {
     this.nameError = '';
@@ -286,7 +286,7 @@ export class StudentDistributionComponent implements OnInit {
                 }
               }
             }
-            
+
             // Assign student to factory
             this.assignToFactory(student, factory);
           });
@@ -294,7 +294,7 @@ export class StudentDistributionComponent implements OnInit {
       } else {
         // Handle single student drop
         const student = event.item.data as Student;
-        
+
         if (factory) {
           // Check if factory has enough capacity
           if (factory.assignedStudents >= factory.capacity) {
@@ -339,7 +339,7 @@ export class StudentDistributionComponent implements OnInit {
       }
     }
   }
-  
+
   private async updateStudentFactory(student: Student, factoryName: string | null): Promise<void> {
     try {
       // Create a copy of the student with the factory updated
@@ -347,11 +347,11 @@ export class StudentDistributionComponent implements OnInit {
         ...student,
         factory: factoryName
       };
-      
+
       // Update the student in Firebase
       await this.authService.updateStudent(updatedStudent);
       console.log(`Student ${student.name} assigned to factory ${factoryName || 'None'}`);
-      
+
       // Notify that student data has been updated
       this.dataUpdateService.notifyStudentDataUpdated();
     } catch (error) {
@@ -404,8 +404,8 @@ export class StudentDistributionComponent implements OnInit {
       });
     }
 
-    console.log('Factory assignments updated:', this.factories.map(f => ({ 
-      name: f.name, 
+    console.log('Factory assignments updated:', this.factories.map(f => ({
+      name: f.name,
       count: f.assignedStudents,
       students: f.students.length > 0 ? f.students.map(s => s.name) : []
     })));
@@ -414,10 +414,10 @@ export class StudentDistributionComponent implements OnInit {
   async addFactory(name: string, address: string, phone: string, contactName: string, industry: string, capacity: number, type: string): Promise<void> {
     // Reset error messages
     this.resetFormErrors();
-    
+
     // Validate inputs
     let hasError = false;
-    
+
     if (!name || name.trim().length < 3) {
       this.nameError = 'Factory name must be at least 3 characters long';
       hasError = true;
@@ -439,7 +439,7 @@ export class StudentDistributionComponent implements OnInit {
       this.contactNameError = 'Contact name must be at least 3 characters long';
       hasError = true;
     }
-    
+
     if (hasError) {
       return;
     }
@@ -448,7 +448,7 @@ export class StudentDistributionComponent implements OnInit {
       // Create a unique ID for the factory - use timestamp as numeric ID for consistency
       const timestamp = Date.now();
       const factoryId = timestamp.toString();
-      
+
       // Create the factory object for Firebase
       const firebaseFactory: FirebaseFactory = {
         id: factoryId,
@@ -465,15 +465,15 @@ export class StudentDistributionComponent implements OnInit {
         studentName: this.authService.currentUserValue?.firstName || 'Unknown',
         createdAt: Date.now()
       };
-      
+
       console.log('Submitting factory to Firebase:', firebaseFactory);
-      
+
       // Save to Firebase directly
       const success = await this.authService.submitFactoryRequest(firebaseFactory);
-      
+
       if (success) {
         console.log('Factory saved to Firebase successfully with ID:', factoryId);
-        
+
         // Also add to the local factory service for immediate display
         const newFactory: Factory = {
           id: factoryId,
@@ -493,17 +493,17 @@ export class StudentDistributionComponent implements OnInit {
           ...newFactory,
           id: timestamp // Use the same numeric timestamp as ID
         };
-        
+
         // Add to factory service to ensure it persists
         await this.factoryService.addFactory(serviceFactory);
         console.log('Factory added to FactoryService successfully');
-        
+
         // Reload factory requests to ensure the UI is updated
         await this.authService.loadFactoryRequests();
-        
+
         // Refresh factories from Firebase to ensure consistency
         await this.factoryService.loadFactoriesFromFirebase();
-        
+
         // Show success message
         alert('Factory added successfully and will persist after page reload.');
       } else {
@@ -552,35 +552,25 @@ export class StudentDistributionComponent implements OnInit {
    */
   async deleteFactory(): Promise<void> {
     if (!this.selectedFactory) return;
-    
+
+    // Check if factory has assigned students
+    if (this.selectedFactory.students.length > 0) {
+      alert(`Cannot delete factory "${this.selectedFactory.name}" because it has ${this.selectedFactory.students.length} assigned students. Please reassign or remove all students first.`);
+      return;
+    }
+
     // Confirm deletion
     if (!confirm(`Are you sure you want to delete factory "${this.selectedFactory.name}"? This action cannot be undone.`)) {
       return;
     }
-    
+
     try {
-      // Check if factory has assigned students
-      if (this.selectedFactory.students.length > 0) {
-        if (!confirm(`This factory has ${this.selectedFactory.students.length} assigned students. Deleting it will remove the factory assignment from these students. Continue?`)) {
-          return;
-        }
-        
-        // Remove factory assignment from all students assigned to this factory
-        const promises = this.selectedFactory.students.map(student => {
-          // Update student's factory assignment to null
-          return this.updateStudentFactory(student, null);
-        });
-        
-        // Wait for all student updates to complete
-        await Promise.all(promises);
-      }
-      
       // Delete factory from Firebase
       await this.factoryService.deleteFactory(Number(this.selectedFactory.id));
-      
+
       // Remove from local factories array
       this.factories = this.factories.filter(f => f.id !== this.selectedFactory?.id);
-      
+
       // Close the modal
       const modalElement = document.getElementById('factoryDetailsModal');
       if (modalElement) {
@@ -594,10 +584,10 @@ export class StudentDistributionComponent implements OnInit {
           }
         }
       }
-      
+
       // Show success message
       alert('Factory deleted successfully');
-      
+
       // Reset selected factory
       this.selectedFactory = null;
     } catch (error) {

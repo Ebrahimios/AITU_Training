@@ -25,9 +25,7 @@ export interface Supervisor {
   address?: string;
   phone?: string;
   department?: string;
-  contactName?: string;
   type: string;
-  industry?: string;
 }
 
 @Injectable({
@@ -36,7 +34,7 @@ export interface Supervisor {
 export class FactoryService {
   private factories = new BehaviorSubject<Factory[]>([]);
   factories$ = this.factories.asObservable();
-  
+
   private supervisors = new BehaviorSubject<Supervisor[]>([]);
   supervisors$ = this.supervisors.asObservable();
 
@@ -45,7 +43,7 @@ export class FactoryService {
     this.subscribeToFactoriesStream();
     this.subscribeToSupervisorsStream();
   }
-  
+
   /**
    * Subscribe to the real-time factories stream from the Firebase service
    */
@@ -53,7 +51,7 @@ export class FactoryService {
     this.authService.factories$.subscribe(firebaseFactories => {
       // Filter out factories where isApproved is false
       const approvedFactories = firebaseFactories.filter(f => f.isApproved === true);
-      
+
       // Convert Firebase factories to our local Factory interface
       const factories: Factory[] = approvedFactories.map(f => ({
         id: Number(f.id) || Date.now(),
@@ -68,12 +66,12 @@ export class FactoryService {
         type: f.type || 'External',
         industry: f.industry
       }));
-      
+
       this.factories.next(factories);
       console.log('Real-time factories updated:', factories.length, 'factories');
     });
   }
-  
+
   /**
    * Subscribe to the real-time supervisors stream from the Firebase service
    */
@@ -81,7 +79,7 @@ export class FactoryService {
     this.authService.supervisors$.subscribe(firebaseSupervisors => {
       // Filter out supervisors where isApproved is false
       const approvedSupervisors = firebaseSupervisors.filter(s => s.isApproved === true);
-      
+
       // Convert Firebase supervisors to our local Supervisor interface
       const supervisors: Supervisor[] = approvedSupervisors.map(s => ({
         id: Number(s.id) || Date.now(),
@@ -92,16 +90,14 @@ export class FactoryService {
         address: s.address,
         phone: s.phone,
         department: s.department,
-        contactName: s.contactName,
-        type: s.type || 'Administrative Supervisor',
-        industry: s.industry
+        type: s.type || 'Administrative Supervisor'
       }));
-      
+
       this.supervisors.next(supervisors);
       console.log('Real-time supervisors updated:', supervisors.length, 'supervisors');
     });
   }
-  
+
   /**
    * Loads factories from Firebase and updates the BehaviorSubject (legacy method)
    * @deprecated Use the real-time subscription instead
@@ -109,10 +105,10 @@ export class FactoryService {
   async loadFactoriesFromFirebase(): Promise<void> {
     try {
       const firebaseFactories = await this.authService.getAllFactories();
-      
+
       // Filter out factories where isApproved is false
       const approvedFactories = firebaseFactories.filter(f => f.isApproved === true);
-      
+
       // Convert Firebase factories to our local Factory interface
       const factories: Factory[] = approvedFactories.map(f => ({
         id: Number(f.id) || Date.now(),
@@ -127,7 +123,7 @@ export class FactoryService {
         type: f.type || 'External',
         industry: f.industry
       }));
-      
+
       this.factories.next(factories);
       console.log('Approved factories loaded from Firebase:', factories);
     } catch (error) {
@@ -143,7 +139,7 @@ export class FactoryService {
     // Add to local state
     const currentFactories = this.factories.value;
     this.factories.next([...currentFactories, factory]);
-    
+
     // Save to Firebase
     try {
       const firebaseFactory: FirebaseFactory = {
@@ -161,7 +157,7 @@ export class FactoryService {
         isApproved: true,
         createdAt: Date.now()
       };
-      
+
       await this.authService.updateFactory(firebaseFactory);
     } catch (error) {
       console.error('Error saving factory to Firebase:', error);
@@ -175,7 +171,7 @@ export class FactoryService {
     if (index !== -1) {
       currentFactories[index] = updatedFactory;
       this.factories.next([...currentFactories]);
-      
+
       // Update in Firebase
       try {
         const firebaseFactory: FirebaseFactory = {
@@ -193,7 +189,7 @@ export class FactoryService {
           isApproved: true,
           createdAt: Date.now()
         };
-        
+
         await this.authService.updateFactory(firebaseFactory);
       } catch (error) {
         console.error('Error updating factory in Firebase:', error);
@@ -205,7 +201,7 @@ export class FactoryService {
     // Delete from local state
     const currentFactories = this.factories.value;
     this.factories.next(currentFactories.filter(f => f.id !== factoryId));
-    
+
     // Delete from Firebase
     try {
       await this.authService.deleteFactory(factoryId.toString());
@@ -213,7 +209,7 @@ export class FactoryService {
       console.error('Error deleting factory from Firebase:', error);
     }
   }
-  
+
   /**
    * Loads supervisors from Firebase and updates the BehaviorSubject (legacy method)
    * @deprecated Use the real-time subscription instead
@@ -221,10 +217,10 @@ export class FactoryService {
   async loadSupervisorsFromFirebase(): Promise<void> {
     try {
       const firebaseSupervisors = await this.authService.getAllSupervisors();
-      
+
       // Filter out supervisors where isApproved is false
       const approvedSupervisors = firebaseSupervisors.filter(s => s.isApproved === true);
-      
+
       // Convert Firebase supervisors to our local Supervisor interface
       const supervisors: Supervisor[] = approvedSupervisors.map(s => ({
         id: Number(s.id) || Date.now(),
@@ -235,11 +231,9 @@ export class FactoryService {
         address: s.address,
         phone: s.phone,
         department: s.department,
-        contactName: s.contactName,
-        type: s.type || 'Administrative Supervisor',
-        industry: s.industry
+        type: s.type || 'Administrative Supervisor'
       }));
-      
+
       this.supervisors.next(supervisors);
       console.log('Approved supervisors loaded from Firebase:', supervisors);
     } catch (error) {
@@ -256,7 +250,7 @@ export class FactoryService {
     // Add to local state
     const currentSupervisors = this.supervisors.value;
     this.supervisors.next([...currentSupervisors, supervisor]);
-    
+
     // Save to Firebase
     try {
       const firebaseSupervisor: FirebaseSupervisor = {
@@ -268,13 +262,11 @@ export class FactoryService {
         address: supervisor.address,
         phone: supervisor.phone,
         department: supervisor.department,
-        contactName: supervisor.contactName,
         type: supervisor.type,
-        industry: supervisor.industry,
         isApproved: true,
         createdAt: Date.now()
       };
-      
+
       await this.authService.updateSupervisor(firebaseSupervisor);
     } catch (error) {
       console.error('Error saving supervisor to Firebase:', error);
@@ -288,7 +280,7 @@ export class FactoryService {
     if (index !== -1) {
       currentSupervisors[index] = updatedSupervisor;
       this.supervisors.next([...currentSupervisors]);
-      
+
       // Update in Firebase
       try {
         const firebaseSupervisor: FirebaseSupervisor = {
@@ -300,13 +292,11 @@ export class FactoryService {
           address: updatedSupervisor.address,
           phone: updatedSupervisor.phone,
           department: updatedSupervisor.department,
-          contactName: updatedSupervisor.contactName,
           type: updatedSupervisor.type,
-          industry: updatedSupervisor.industry,
           isApproved: true,
           createdAt: Date.now()
         };
-        
+
         await this.authService.updateSupervisor(firebaseSupervisor);
       } catch (error) {
         console.error('Error updating supervisor in Firebase:', error);
@@ -318,7 +308,7 @@ export class FactoryService {
     // Delete from local state
     const currentSupervisors = this.supervisors.value;
     this.supervisors.next(currentSupervisors.filter(s => s.id !== supervisorId));
-    
+
     // Delete from Firebase
     try {
       await this.authService.deleteSupervisor(supervisorId.toString());
@@ -336,13 +326,13 @@ export class FactoryService {
     try {
       // Call the AuthService to handle the factory request approval
       const success = await this.authService.handleFactoryRequest(factoryId.toString(), 'accept');
-      
+
       if (success) {
         // Refresh the factories list to reflect the changes
         await this.loadFactoriesFromFirebase();
         console.log('Factory request approved successfully');
       }
-      
+
       return success;
     } catch (error) {
       console.error('Error approving factory request:', error);

@@ -518,7 +518,7 @@
                   <div class="overall-value">{{ evaluationForm.get('overallRating')?.value || calculateOverallRating() }}/60</div>
                 </div>
               </div>
-              
+
               <!-- Personal and Ethical Aspects Section -->
               <h4 class="evaluation-category-title">First: Personal and Ethical Aspects of the Trainee</h4>
               <div class="modern-rating-grid">
@@ -535,7 +535,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Responsive Personality -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -549,7 +549,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Confident Relations -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -564,7 +564,7 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Practical and Professional Aspects Section -->
               <h4 class="evaluation-category-title">Second: Practical and Professional Aspects of the Trainee</h4>
               <div class="modern-rating-grid">
@@ -581,7 +581,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Understanding Instructions -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -595,7 +595,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Task Completion -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -609,7 +609,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Effective Interaction -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -623,7 +623,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Follow Up With Supervisor -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -637,7 +637,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Adherence To Instructions -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -651,7 +651,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Report Writing -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -665,7 +665,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Information Gathering -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -679,7 +679,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Adapt To Work Environment -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -693,7 +693,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Maintenance Skills -->
                 <div class="modern-rating-item">
                   <div class="rating-header">
@@ -708,14 +708,14 @@
                   </div>
                 </div>
               </div>
-              
+
               <form [formGroup]="evaluationForm" (ngSubmit)="submitEvaluation()">
                 <!-- Comments Section -->
                 <div class="modern-form-group">
                   <label for="comments">Additional Comments</label>
                   <textarea id="comments" formControlName="comments" class="modern-textarea" placeholder="Add any additional comments or observations about the trainee's performance..."></textarea>
                 </div>
-                
+
                 <div class="modern-form-actions">
                   <button type="submit" class="modern-submit-btn" [disabled]="!evaluationForm.valid">
                     <i class="fas fa-save"></i> Save Evaluation

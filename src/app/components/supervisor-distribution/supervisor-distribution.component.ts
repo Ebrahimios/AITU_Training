@@ -11,6 +11,7 @@ import { DistributionService } from '../../services/distribution.service';
 import { AuthService } from '../../services/firebase.service';
 import { Student } from '../../interfaces/student';
 import * as bootstrap from 'bootstrap';
+import { DataUpdateService } from '../../services/data-update.service';
 
 // Using Student interface from distribution.service
 
@@ -33,14 +34,13 @@ export class SupervisorDistributionComponent implements OnInit {
   addressError: string = '';
   phoneError: string = '';
   departmentError: string = '';
-  contactNameError: string = '';
-  industryError: string = '';
 
   constructor(
     public translationService: TranslationService,
     private factoryService: FactoryService,
     private distributionService: DistributionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private dataUpdateService: DataUpdateService
   ) {}
 
   students: Student[] = [];
@@ -100,7 +100,7 @@ export class SupervisorDistributionComponent implements OnInit {
       this.updateSupervisorAssignments();
       this.supervisorDropLists = this.supervisors.map(s => `supervisor-${s.id}`);
     });
-    
+
     // Load students from Firebase
     await this.loadStudentsFromFirebase();
   }
@@ -109,7 +109,7 @@ export class SupervisorDistributionComponent implements OnInit {
     try {
       // Get students from Firebase
       const firebaseStudents = await this.authService.getAllStudents();
-      
+
       // Map Firebase students to the format expected by the distribution component
       this.students = firebaseStudents.map(student => ({
         ...student,
@@ -117,7 +117,7 @@ export class SupervisorDistributionComponent implements OnInit {
         batch:  student.batch  ?.toString() || '',
         selected: false
       }));
-      
+
       // Update supervisor assignments for students that already have supervisors
       this.students.forEach(student => {
         if (student.supervisor) {
@@ -128,7 +128,7 @@ export class SupervisorDistributionComponent implements OnInit {
           }
         }
       });
-      
+
       this.updateSupervisorAssignments();
     } catch (error) {
       console.error('Error loading students from Firebase:', error);
@@ -171,13 +171,13 @@ export class SupervisorDistributionComponent implements OnInit {
           ...this.selectedSupervisor,
           id: Number(this.selectedSupervisor.id)
         };
-        
+
         try {
           // Save to Firebase through the factory service
           await this.factoryService.updateSupervisor(serviceSupervisor);
           console.log('Supervisor updated successfully and will persist after page reload');
           this.isEditing = false;
-          
+
           // Close the modal
           const modalElement = document.getElementById('supervisorDetailsModal');
           if (modalElement) {
@@ -191,7 +191,7 @@ export class SupervisorDistributionComponent implements OnInit {
               }
             }
           }
-          
+
           alert('Changes saved successfully');
         } catch (error) {
           console.error('Error updating supervisor:', error);
@@ -263,10 +263,10 @@ export class SupervisorDistributionComponent implements OnInit {
                 }
               }
             }
-            
+
             // Update student in Firebase
             this.updateStudentSupervisor(student, supervisor.name);
-            
+
             // Update local reference
             student.supervisor = supervisor.name;
           });
@@ -274,7 +274,7 @@ export class SupervisorDistributionComponent implements OnInit {
           // Add all selected students to the new supervisor
           supervisor.students.push(...selectedStudents);
           supervisor.assignedStudents = supervisor.students.length;
-          
+
           // Update the supervisor
           this.factoryService.updateSupervisor(supervisor);
         }
@@ -298,10 +298,10 @@ export class SupervisorDistributionComponent implements OnInit {
               }
             }
           }
-          
+
           // Update student in Firebase
           this.updateStudentSupervisor(student, supervisor.name);
-          
+
           // Update local reference
           student.supervisor = supervisor.name;
         }
@@ -321,24 +321,29 @@ export class SupervisorDistributionComponent implements OnInit {
     }
   }
 
-  removeFromSupervisor(student: Student, event?: Event): void {
-    if (event) {
-      event.stopPropagation();
-    }
+  removeFromSupervisor(student: Student, event: MouseEvent): void {
+    event.stopPropagation();
 
+    // Find the supervisor this student is assigned to
     const supervisor = this.supervisors.find(s => s.name === student.supervisor);
     if (supervisor) {
-      const index = supervisor.students.indexOf(student);
-      if (index > -1) {
-        supervisor.students.splice(index, 1);
-        supervisor.assignedStudents--;
-        
-        // Update the supervisor in the service
-        this.factoryService.updateSupervisor(supervisor);
-        
-        // Update the student in Firebase
-        this.updateStudentSupervisor(student, null);
+      // Remove from supervisor's student list
+      const supervisorStudentIndex = supervisor.students.findIndex(s => s.code === student.code);
+      if (supervisorStudentIndex !== -1) {
+        supervisor.students.splice(supervisorStudentIndex, 1);
+        supervisor.assignedStudents = supervisor.students.length;
       }
+    }
+
+    // Update student's supervisor assignment
+    const index = this.students.findIndex(s => s.code === student.code);
+    if (index !== -1) {
+      // Update in local array
+      this.students[index].supervisor = null;
+      this.students[index].selected = false; // Ensure student is not selected
+
+      // Update in service (Firebase)
+      this.updateStudentSupervisor(student, null);
     }
   }
 
@@ -355,22 +360,24 @@ export class SupervisorDistributionComponent implements OnInit {
         ...student,
         supervisor: supervisorName
       };
-      
+
       // Update the student in Firebase
       await this.authService.updateStudent(updatedStudent);
-      console.log(`Student ${student.name} assigned to supervisor ${supervisorName || 'None'}`);
+      console.log(`Student ${student.name} removed from supervisor ${supervisorName || 'None'}`);
+
+      // Notify that student data has been updated
+      this.dataUpdateService.notifyStudentDataUpdated();
     } catch (error) {
       console.error('Error updating student supervisor:', error);
     }
   }
 
-  async addSupervisor(name: string, address: string, phone: string, industry: string, contactName: string): Promise<void> {
+  async addSupervisor(name: string, address: string, phone: string, department: string): Promise<void> {
     // Reset error messages
     this.nameError = '';
     this.addressError = '';
     this.phoneError = '';
-    this.industryError = '';
-    this.contactNameError = '';
+    this.departmentError = '';
 
     let hasError = false;
 
@@ -393,15 +400,9 @@ export class SupervisorDistributionComponent implements OnInit {
       hasError = true;
     }
 
-    // Industry validation
-    if (!industry || industry === '') {
-      this.industryError = 'Please select an industry';
-      hasError = true;
-    }
-
-    // Contact Name validation
-    if (!contactName || contactName.trim().length < 3) {
-      this.contactNameError = 'Contact name must be at least 3 characters long';
+    // Department validation
+    if (!department || department === 'All') {
+      this.departmentError = 'Please select a department';
       hasError = true;
     }
 
@@ -411,7 +412,7 @@ export class SupervisorDistributionComponent implements OnInit {
 
     // Generate a unique ID for the supervisor
     const supervisorId = Date.now();
-    
+
     const newSupervisor: Supervisor = {
       id: supervisorId,
       name: name.trim(),
@@ -420,10 +421,8 @@ export class SupervisorDistributionComponent implements OnInit {
       students: [],
       address: address.trim(),
       phone: phone.trim(),
-      industry,
-      contactName: contactName.trim(),
       type: 'Administrative Supervisor',
-      department: ''
+      department: department
     };
 
     try {
@@ -452,12 +451,17 @@ export class SupervisorDistributionComponent implements OnInit {
   }
 
   async deleteSupervisor(supervisor: Supervisor): Promise<void> {
+    if (supervisor.assignedStudents > 0) {
+      alert(`Cannot delete supervisor ${supervisor.name} because they have ${supervisor.assignedStudents} assigned students. Please reassign or remove all students first.`);
+      return;
+    }
+
     if (confirm(`Are you sure you want to delete ${supervisor.name}?`)) {
       try {
         // Delete from Firebase through the factory service
         await this.factoryService.deleteSupervisor(supervisor.id);
         console.log('Supervisor deleted successfully');
-        
+
         // Close the modal if it's open
         const modalElement = document.getElementById('supervisorDetailsModal');
         if (modalElement) {

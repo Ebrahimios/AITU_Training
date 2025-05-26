@@ -186,29 +186,18 @@
                 <div class="text-danger" *ngIf="phoneError">{{phoneError}}</div>
               </div>
               <div class="mb-3">
-                <label for="supervisorContactName" class="form-label">Contact Name</label>
-                <input type="text" class="form-control" id="supervisorContactName" #supervisorContactName placeholder="Enter contact person name">
-                <div class="text-danger" *ngIf="contactNameError">{{contactNameError}}</div>
-              </div>
-              <div class="mb-3">
-                <label for="supervisorIndustry" class="form-label">Industry</label>
-                <div class="input-group">
-                  <select class="form-select" id="supervisorIndustry" #supervisorIndustry>
-                    <option value="" disabled selected>Select industry</option>
-                    <option *ngFor="let industry of industries" [value]="industry">{{industry}}</option>
-                  </select>
-                  <input type="text" class="form-control" placeholder="Add new industry" [(ngModel)]="newIndustry" name="newIndustry">
-                  <button class="btn btn-outline-secondary" type="button" (click)="addNewIndustry()">
-                    <i class="bi bi-plus"></i> Add
-                  </button>
-                </div>
-                <div class="text-danger" *ngIf="industryError">{{industryError}}</div>
+                <label for="supervisorDepartment" class="form-label">Department</label>
+                <select class="form-select" id="supervisorDepartment" #supervisorDepartment>
+                  <option value="All" disabled selected>Select department</option>
+                  <option *ngFor="let dept of departments.slice(1)" [value]="dept">{{dept}}</option>
+                </select>
+                <div class="text-danger" *ngIf="departmentError">{{departmentError}}</div>
               </div>
             </form>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" (click)="addSupervisor(supervisorName.value, supervisorAddress.value, supervisorPhone.value, supervisorIndustry.value, supervisorContactName.value)">Save Supervisor</button>
+            <button type="button" class="btn btn-primary" (click)="addSupervisor(supervisorName.value, supervisorAddress.value, supervisorPhone.value, supervisorDepartment.value)">Save Supervisor</button>
           </div>
         </div>
       </div>
@@ -237,21 +226,11 @@
                 <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.phone" name="supervisorPhone" [readonly]="!isEditing">
               </div>
               <div class="mb-3">
-                <label class="form-label"><strong>Contact Name:</strong></label>
-                <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.contactName" name="supervisorContactName" [readonly]="!isEditing">
-              </div>
-              <div class="mb-3">
-                <label class="form-label"><strong>Industry:</strong></label>
-                <div class="input-group">
-                  <select class="form-select" [(ngModel)]="selectedSupervisor.industry" name="supervisorIndustry" [disabled]="!isEditing">
-                    <option value="" disabled selected>Select industry</option>
-                    <option *ngFor="let industry of industries" [value]="industry">{{industry}}</option>
-                  </select>
-                  <input type="text" class="form-control" placeholder="Add new industry" [(ngModel)]="newIndustry" name="newIndustry" [disabled]="!isEditing">
-                  <button class="btn btn-outline-secondary" type="button" (click)="addNewIndustry()" [disabled]="!isEditing">
-                    <i class="bi bi-plus"></i> Add
-                  </button>
-                </div>
+                <label class="form-label"><strong>Department:</strong></label>
+                <select class="form-select" [(ngModel)]="selectedSupervisor.department" name="supervisorDepartment" [disabled]="!isEditing">
+                  <option value="All" disabled>Select department</option>
+                  <option *ngFor="let dept of departments.slice(1)" [value]="dept">{{dept}}</option>
+                </select>
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Capacity:</strong></label>
@@ -280,6 +259,9 @@
             </form>
           </div>
           <div class="modal-footer">
+            <button type="button" class="btn btn-danger" *ngIf="!isEditing && selectedSupervisor" (click)="deleteSupervisor(selectedSupervisor)">
+              <i class="bi bi-trash"></i> Delete Supervisor
+            </button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             <button type="button" class="btn btn-primary" *ngIf="!isEditing" (click)="startEditing()">
               <i class="bi bi-pencil"></i> Edit
