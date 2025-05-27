@@ -59,9 +59,9 @@ export class StudentDistributionComponent implements OnInit {
   factories: Factory[] = [];
   factoryDropLists: string[] = [];
 
-  departments: string[] = ['All', 'Information Technology', 'Mechanics', 'Electrical'];
-  stages: string[] = ['All', 'School', 'Institute', 'Faculty'];
-  batches: string[] = ['All', 'Batch 1', 'Batch 2', 'Batch 3', 'Batch 4'];
+  departments: string[] = [];
+  stages: string[] = [];
+  batches: string[] = [];
   selectedDepartment: string = 'All';
   selectedStage: string = 'All';
   selectedBatch: string = 'All';
@@ -142,6 +142,9 @@ export class StudentDistributionComponent implements OnInit {
       // Store all students
       this.students = firebaseStudents;
 
+      // استخراج القيم الفريدة للفلاتر
+      this.extractUniqueFilterValues();
+
       // Update factory assignments for students that already have factories
       this.students.forEach(student => {
         if (student.factory) {
@@ -158,6 +161,12 @@ export class StudentDistributionComponent implements OnInit {
       console.error('Error loading students from Firebase:', error);
       this.students = [];
     }
+  }
+
+  private extractUniqueFilterValues(): void {
+    this.departments = Array.from(new Set(this.students.map(s => s.department).filter((v): v is string => !!v)));
+    this.batches = Array.from(new Set(this.students.map(s => s.batch).filter((v): v is string => !!v)));
+    this.stages = Array.from(new Set(this.students.map(s => s.stage).filter((v): v is string => !!v)));
   }
 
   ngAfterViewInit(): void {
