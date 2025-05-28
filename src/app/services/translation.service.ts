@@ -5,7 +5,7 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
   en: {
     // Navigation
     welcome_back: 'Welcome Back!',
-    welcome_subtitle: 'Here\'s what\'s happening with your students today.',
+    welcome_subtitle: "Here's what's happening with your students today.",
     notifications: 'Notifications',
     clear_all: 'Clear all',
     settings: 'Settings',
@@ -99,13 +99,13 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     assigned_students: 'Assigned Students',
     students: 'Students',
     factories: 'Factories',
-    
+
     // Notifications
     new_factory_added: 'New factory added by student',
     new_student_registered: 'New student registered',
     factory_capacity_updated: 'Factory capacity updated',
     view_details: 'View Details',
-    
+
     // Validation messages
     required_field: 'This field is required',
     invalid_phone: 'Invalid phone number format',
@@ -249,13 +249,13 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     assigned_students: 'الطلاب المعينين',
     students: 'الطلاب',
     factories: 'المصانع',
-    
+
     // Notifications
     new_factory_added: 'تمت إضافة مصنع جديد بواسطة طالب',
     new_student_registered: 'تم تسجيل طالب جديد',
     factory_capacity_updated: 'تم تحديث سعة المصنع',
     view_details: 'عرض التفاصيل',
-    
+
     // Validation messages
     required_field: 'هذا الحقل مطلوب',
     invalid_phone: 'صيغة رقم الهاتف غير صحيحة',
@@ -299,17 +299,18 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     // Student Distribution Component - New Keys Only
     no_students_assigned: 'لا يوجد طلاب معينين',
     save_changes: 'حفظ التغييرات',
-  }
+  },
 } as const;
 
 // Create a type that represents all possible translation keys
-type TranslationKeys = keyof typeof translations.en & keyof typeof translations.ar;
+type TranslationKeys = keyof typeof translations.en &
+  keyof typeof translations.ar;
 
 // Export the type for use in components
 export type { TranslationKeys };
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TranslationService {
   private currentLang = new BehaviorSubject<'en' | 'ar'>('en');
@@ -317,7 +318,10 @@ export class TranslationService {
 
   constructor() {
     // Check if language preference exists in localStorage
-    const savedLang = localStorage.getItem('preferredLanguage') as 'en' | 'ar' | null;
+    const savedLang = localStorage.getItem('preferredLanguage') as
+      | 'en'
+      | 'ar'
+      | null;
     if (savedLang && (savedLang === 'en' || savedLang === 'ar')) {
       this.setLanguage(savedLang);
     }
@@ -334,25 +338,29 @@ export class TranslationService {
   translate(key: TranslationKeys): string {
     const currentLang = this.currentLang.value;
     const translation = translations[currentLang][key];
-    
+
     if (!translation) {
-      console.warn(`Translation key '${key}' not found in ${currentLang} language`);
+      console.warn(
+        `Translation key '${key}' not found in ${currentLang} language`,
+      );
       // Fallback to English if the key doesn't exist in the current language
       const englishTranslation = translations.en[key];
       if (!englishTranslation) {
-        console.error(`Translation key '${key}' not found in both ${currentLang} and English`);
+        console.error(
+          `Translation key '${key}' not found in both ${currentLang} and English`,
+        );
         return `Missing translation: ${key}`;
       }
       return englishTranslation;
     }
     return translation;
   }
-  
+
   // Helper method to get current language
   getCurrentLanguage(): 'en' | 'ar' {
     return this.currentLang.value;
   }
-  
+
   // Helper method to check if current language is RTL
   isRtl(): boolean {
     return this.currentLang.value === 'ar';

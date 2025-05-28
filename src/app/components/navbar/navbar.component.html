@@ -1,48 +1,107 @@
-<nav class="navbar justify-content-between align-items-center" [dir]="(translationService.currentLang$ | async) === 'ar' ? 'rtl' : 'ltr'">
+<nav
+  class="navbar justify-content-between align-items-center"
+  [dir]="(translationService.currentLang$ | async) === 'ar' ? 'rtl' : 'ltr'"
+>
   <div class="nav-content">
     <!-- Welcome Message -->
 
-
     <!-- Right Side Icons -->
-    <div class="nav-icons" [ngClass]="{'rtl-icon-order': (translationService.currentLang$ | async) === 'ar'}">
+    <div
+      class="nav-icons"
+      [ngClass]="{
+        'rtl-icon-order': (translationService.currentLang$ | async) === 'ar',
+      }"
+    >
       <!-- Language Switcher -->
       <app-language-switcher></app-language-switcher>
 
       <!-- Notifications -->
-      <div class="icon-btn" [class.has-notifications]="hasNotifications" (click)="toggleNotifications()">
+      <div
+        class="icon-btn"
+        [class.has-notifications]="hasNotifications"
+        (click)="toggleNotifications()"
+      >
         <i class="bi bi-bell"></i>
-        <span class="notification-badge" *ngIf="notificationCount > 0">{{notificationCount}}</span>
+        <span class="notification-badge" *ngIf="notificationCount > 0">{{
+          notificationCount
+        }}</span>
 
         <!-- Notifications Dropdown -->
         <div class="notifications-dropdown" *ngIf="showNotifications">
           <div class="notification-header">
-            <h6>{{ translationService.translate('notifications') }}</h6>
+            <h6>{{ translationService.translate("notifications") }}</h6>
             <button class="clear-all" (click)="clearAllNotifications()">
-              {{ translationService.translate('clear_all') }}
+              {{ translationService.translate("clear_all") }}
             </button>
           </div>
           <div class="notification-list">
-            <div class="notification-item" *ngFor="let notification of notifications">
+            <div
+              class="notification-item"
+              *ngFor="let notification of notifications"
+            >
               <i class="bi" [class]="notification.icon"></i>
               <div class="notification-content">
-                <p class="notification-text" [class.clickable]="notification.type.includes('factory')" (click)="notification.type.includes('factory') && showFactoryDetails(notification.factoryName)">{{getNotificationMessage(notification)}}</p>
-                <span class="notification-time">{{notification.time}}</span>
-                <div class="factory-actions" *ngIf="notification.type === 'factory_request'">
+                <p
+                  class="notification-text"
+                  [class.clickable]="notification.type.includes('factory')"
+                  (click)="
+                    notification.type.includes('factory') &&
+                      showFactoryDetails(notification.factoryName)
+                  "
+                >
+                  {{ getNotificationMessage(notification) }}
+                </p>
+                <span class="notification-time">{{ notification.time }}</span>
+                <div
+                  class="factory-actions"
+                  *ngIf="notification.type === 'factory_request'"
+                >
                   <div class="factory-details">
-                    <p><i class="bi bi-person-circle"></i> {{ translationService.translate('student') }}: {{notification.studentName}}</p>
-                    <p><i class="bi bi-building"></i> {{ translationService.translate('factory') }}: <a href="javascript:void(0)" (click)="showFactoryDetails(notification.factoryName)">{{notification.factoryName}}</a></p>
+                    <p>
+                      <i class="bi bi-person-circle"></i>
+                      {{ translationService.translate("student") }}:
+                      {{ notification.studentName }}
+                    </p>
+                    <p>
+                      <i class="bi bi-building"></i>
+                      {{ translationService.translate("factory") }}:
+                      <a
+                        href="javascript:void(0)"
+                        (click)="showFactoryDetails(notification.factoryName)"
+                        >{{ notification.factoryName }}</a
+                      >
+                    </p>
                   </div>
                   <div class="action-buttons">
-                    <button class="btn-accept" (click)="notification.id && handleFactoryRequest(notification.id, 'accept')">
-                      <i class="bi bi-check-circle"></i> {{ translationService.translate('accept') }}
+                    <button
+                      class="btn-accept"
+                      (click)="
+                        notification.id &&
+                          handleFactoryRequest(notification.id, 'accept')
+                      "
+                    >
+                      <i class="bi bi-check-circle"></i>
+                      {{ translationService.translate("accept") }}
                     </button>
-                    <button class="btn-deny" (click)="notification.id && handleFactoryRequest(notification.id, 'deny')">
-                      <i class="bi bi-x-circle"></i> {{ translationService.translate('deny') }}
+                    <button
+                      class="btn-deny"
+                      (click)="
+                        notification.id &&
+                          handleFactoryRequest(notification.id, 'deny')
+                      "
+                    >
+                      <i class="bi bi-x-circle"></i>
+                      {{ translationService.translate("deny") }}
                     </button>
                   </div>
                 </div>
                 <div *ngIf="notification.type === 'factory_update'">
-                  <a href="javascript:void(0)" (click)="showFactoryDetails(notification.factoryName)" class="view-details-link">{{ translationService.translate('view_details') }}</a>
+                  <a
+                    href="javascript:void(0)"
+                    (click)="showFactoryDetails(notification.factoryName)"
+                    class="view-details-link"
+                    >{{ translationService.translate("view_details") }}</a
+                  >
                 </div>
               </div>
             </div>
@@ -59,11 +118,18 @@
       <div class="user-profile" *ngFor="let adm of admin">
         <!-- Each element is individually clickable to open the modal -->
         <div class="user-info">
-          <div class="user-name clickable" (click)="openUserProfileModal()">{{adm.name}}</div>
-          <div class="user-role clickable" (click)="openUserProfileModal()">{{adm.types[0]}}</div>
+          <div class="user-name clickable" (click)="openUserProfileModal()">
+            {{ adm.name }}
+          </div>
+          <div class="user-role clickable" (click)="openUserProfileModal()">
+            {{ adm.types[0] }}
+          </div>
         </div>
-        <div class="avatar-container clickable" (click)="openUserProfileModal()">
-          <img [src]="adm.image" alt="User Avatar" class="avatar">
+        <div
+          class="avatar-container clickable"
+          (click)="openUserProfileModal()"
+        >
+          <img [src]="adm.image" alt="User Avatar" class="avatar" />
         </div>
       </div>
     </div>
@@ -71,49 +137,98 @@
 </nav>
 
 <!-- Factory Details Modal -->
-<div class="modal fade" id="factoryDetailsModal" tabindex="-1" aria-labelledby="factoryDetailsModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="factoryDetailsModal"
+  tabindex="-1"
+  aria-labelledby="factoryDetailsModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="factoryDetailsModalLabel">{{ translationService.translate('factory_details') }}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="factoryDetailsModalLabel">
+          {{ translationService.translate("factory_details") }}
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
       <div class="modal-body" *ngIf="selectedFactory">
         <div class="factory-info">
           <div class="info-group">
-            <label>{{ translationService.translate('name') }}:</label>
-            <p>{{selectedFactory.name}}</p>
+            <label>{{ translationService.translate("name") }}:</label>
+            <p>{{ selectedFactory.name }}</p>
           </div>
           <div class="info-group">
-            <label>{{ translationService.translate('address') }}:</label>
-            <p>{{selectedFactory.address}}</p>
+            <label>{{ translationService.translate("address") }}:</label>
+            <p>{{ selectedFactory.address }}</p>
           </div>
           <div class="info-group">
-            <label>{{ translationService.translate('phone') }}:</label>
-            <p>{{selectedFactory.phone}}</p>
+            <label>{{ translationService.translate("phone") }}:</label>
+            <p>{{ selectedFactory.phone }}</p>
           </div>
           <div class="info-group">
-            <label>{{ translationService.translate('industry') }}:</label>
-            <p>{{selectedFactory.industry}}</p>
+            <label>{{ translationService.translate("industry") }}:</label>
+            <p>{{ selectedFactory.industry }}</p>
           </div>
           <div class="info-group">
-            <label>{{ translationService.translate('contact_name') }}:</label>
-            <p>{{selectedFactory.contactName}}</p>
+            <label>{{ translationService.translate("contact_name") }}:</label>
+            <p>{{ selectedFactory.contactName }}</p>
           </div>
           <div class="info-group">
-            <label>{{ translationService.translate('type') }}:</label>
-            <p>{{selectedFactory.type}}</p>
+            <label>{{ translationService.translate("type") }}:</label>
+            <p>{{ selectedFactory.type }}</p>
           </div>
           <div class="info-group">
-            <label>{{ translationService.translate('capacity') }}:</label>
-            <p>{{selectedFactory.assignedStudents}} / {{selectedFactory.capacity}}</p>
+            <label>{{ translationService.translate("capacity") }}:</label>
+            <p>
+              {{ selectedFactory.assignedStudents }} /
+              {{ selectedFactory.capacity }}
+            </p>
+          </div>
+          <div
+            class="info-group"
+            *ngIf="
+              selectedFactory.longitude == 0 && selectedFactory.latitude == 0
+            "
+          >
+            <div class="info-group">
+              <button
+                class="btn btn-outline-primary"
+                (click)="
+                  goToMap(selectedFactory.longitude, selectedFactory.latitude)
+                "
+              >
+                {{ translationService.translate("address") }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-success" (click)="acceptFactory()"><i class="bi bi-check-circle"></i> {{ translationService.translate('accept') }}</button>
-        <button type="button" class="btn btn-danger" (click)="denyFactory()"><i class="bi bi-x-circle"></i> {{ translationService.translate('deny') }}</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ translationService.translate('close') }}</button>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-success"
+            (click)="acceptFactory()"
+          >
+            <i class="bi bi-check-circle"></i>
+            {{ translationService.translate("accept") }}
+          </button>
+          <button type="button" class="btn btn-danger" (click)="denyFactory()">
+            <i class="bi bi-x-circle"></i>
+            {{ translationService.translate("deny") }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            {{ translationService.translate("close") }}
+          </button>
+        </div>
       </div>
     </div>
   </div>

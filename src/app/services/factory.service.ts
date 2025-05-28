@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { AuthService, FirebaseFactory, FirebaseSupervisor } from './firebase.service';
+import {
+  AuthService,
+  FirebaseFactory,
+  FirebaseSupervisor,
+} from './firebase.service';
 
 export interface Factory {
   id: number;
@@ -10,6 +14,8 @@ export interface Factory {
   students: any[];
   address?: string;
   phone?: string;
+  longitude?: number;
+  latitude?: number;
   department?: string;
   contactName?: string;
   type: string;
@@ -29,7 +35,7 @@ export interface Supervisor {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FactoryService {
   private factories = new BehaviorSubject<Factory[]>([]);
@@ -48,12 +54,14 @@ export class FactoryService {
    * Subscribe to the real-time factories stream from the Firebase service
    */
   private subscribeToFactoriesStream(): void {
-    this.authService.factories$.subscribe(firebaseFactories => {
+    this.authService.factories$.subscribe((firebaseFactories) => {
       // Filter out factories where isApproved is false
-      const approvedFactories = firebaseFactories.filter(f => f.isApproved === true);
+      const approvedFactories = firebaseFactories.filter(
+        (f) => f.isApproved === true,
+      );
 
       // Convert Firebase factories to our local Factory interface
-      const factories: Factory[] = approvedFactories.map(f => ({
+      const factories: Factory[] = approvedFactories.map((f) => ({
         id: Number(f.id) || Date.now(),
         name: f.name,
         capacity: f.capacity,
@@ -64,11 +72,15 @@ export class FactoryService {
         department: f.department,
         contactName: f.contactName,
         type: f.type || 'External',
-        industry: f.industry
+        industry: f.industry,
       }));
 
       this.factories.next(factories);
-      console.log('Real-time factories updated:', factories.length, 'factories');
+      console.log(
+        'Real-time factories updated:',
+        factories.length,
+        'factories',
+      );
     });
   }
 
@@ -76,12 +88,14 @@ export class FactoryService {
    * Subscribe to the real-time supervisors stream from the Firebase service
    */
   private subscribeToSupervisorsStream(): void {
-    this.authService.supervisors$.subscribe(firebaseSupervisors => {
+    this.authService.supervisors$.subscribe((firebaseSupervisors) => {
       // Filter out supervisors where isApproved is false
-      const approvedSupervisors = firebaseSupervisors.filter(s => s.isApproved === true);
+      const approvedSupervisors = firebaseSupervisors.filter(
+        (s) => s.isApproved === true,
+      );
 
       // Convert Firebase supervisors to our local Supervisor interface
-      const supervisors: Supervisor[] = approvedSupervisors.map(s => ({
+      const supervisors: Supervisor[] = approvedSupervisors.map((s) => ({
         id: Number(s.id) || Date.now(),
         name: s.name,
         capacity: s.capacity,
@@ -90,11 +104,15 @@ export class FactoryService {
         address: s.address,
         phone: s.phone,
         department: s.department,
-        type: s.type || 'Administrative Supervisor'
+        type: s.type || 'Administrative Supervisor',
       }));
 
       this.supervisors.next(supervisors);
-      console.log('Real-time supervisors updated:', supervisors.length, 'supervisors');
+      console.log(
+        'Real-time supervisors updated:',
+        supervisors.length,
+        'supervisors',
+      );
     });
   }
 
@@ -107,10 +125,12 @@ export class FactoryService {
       const firebaseFactories = await this.authService.getAllFactories();
 
       // Filter out factories where isApproved is false
-      const approvedFactories = firebaseFactories.filter(f => f.isApproved === true);
+      const approvedFactories = firebaseFactories.filter(
+        (f) => f.isApproved === true,
+      );
 
       // Convert Firebase factories to our local Factory interface
-      const factories: Factory[] = approvedFactories.map(f => ({
+      const factories: Factory[] = approvedFactories.map((f) => ({
         id: Number(f.id) || Date.now(),
         name: f.name,
         capacity: f.capacity,
@@ -121,7 +141,7 @@ export class FactoryService {
         department: f.department,
         contactName: f.contactName,
         type: f.type || 'External',
-        industry: f.industry
+        industry: f.industry,
       }));
 
       this.factories.next(factories);
@@ -155,7 +175,7 @@ export class FactoryService {
         type: factory.type,
         industry: factory.industry,
         isApproved: true,
-        createdAt: Date.now()
+        createdAt: Date.now(),
       };
 
       await this.authService.updateFactory(firebaseFactory);
@@ -167,7 +187,7 @@ export class FactoryService {
   async updateFactory(updatedFactory: Factory): Promise<void> {
     // Update local state
     const currentFactories = this.factories.value;
-    const index = currentFactories.findIndex(f => f.id === updatedFactory.id);
+    const index = currentFactories.findIndex((f) => f.id === updatedFactory.id);
     if (index !== -1) {
       currentFactories[index] = updatedFactory;
       this.factories.next([...currentFactories]);
@@ -187,7 +207,7 @@ export class FactoryService {
           type: updatedFactory.type,
           industry: updatedFactory.industry,
           isApproved: true,
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         await this.authService.updateFactory(firebaseFactory);
@@ -200,7 +220,7 @@ export class FactoryService {
   async deleteFactory(factoryId: number): Promise<void> {
     // Delete from local state
     const currentFactories = this.factories.value;
-    this.factories.next(currentFactories.filter(f => f.id !== factoryId));
+    this.factories.next(currentFactories.filter((f) => f.id !== factoryId));
 
     // Delete from Firebase
     try {
@@ -219,10 +239,12 @@ export class FactoryService {
       const firebaseSupervisors = await this.authService.getAllSupervisors();
 
       // Filter out supervisors where isApproved is false
-      const approvedSupervisors = firebaseSupervisors.filter(s => s.isApproved === true);
+      const approvedSupervisors = firebaseSupervisors.filter(
+        (s) => s.isApproved === true,
+      );
 
       // Convert Firebase supervisors to our local Supervisor interface
-      const supervisors: Supervisor[] = approvedSupervisors.map(s => ({
+      const supervisors: Supervisor[] = approvedSupervisors.map((s) => ({
         id: Number(s.id) || Date.now(),
         name: s.name,
         capacity: s.capacity,
@@ -231,7 +253,7 @@ export class FactoryService {
         address: s.address,
         phone: s.phone,
         department: s.department,
-        type: s.type || 'Administrative Supervisor'
+        type: s.type || 'Administrative Supervisor',
       }));
 
       this.supervisors.next(supervisors);
@@ -264,7 +286,7 @@ export class FactoryService {
         department: supervisor.department,
         type: supervisor.type,
         isApproved: true,
-        createdAt: Date.now()
+        createdAt: Date.now(),
       };
 
       await this.authService.updateSupervisor(firebaseSupervisor);
@@ -276,7 +298,9 @@ export class FactoryService {
   async updateSupervisor(updatedSupervisor: Supervisor): Promise<void> {
     // Update local state
     const currentSupervisors = this.supervisors.value;
-    const index = currentSupervisors.findIndex(s => s.id === updatedSupervisor.id);
+    const index = currentSupervisors.findIndex(
+      (s) => s.id === updatedSupervisor.id,
+    );
     if (index !== -1) {
       currentSupervisors[index] = updatedSupervisor;
       this.supervisors.next([...currentSupervisors]);
@@ -294,7 +318,7 @@ export class FactoryService {
           department: updatedSupervisor.department,
           type: updatedSupervisor.type,
           isApproved: true,
-          createdAt: Date.now()
+          createdAt: Date.now(),
         };
 
         await this.authService.updateSupervisor(firebaseSupervisor);
@@ -307,7 +331,9 @@ export class FactoryService {
   async deleteSupervisor(supervisorId: number): Promise<void> {
     // Delete from local state
     const currentSupervisors = this.supervisors.value;
-    this.supervisors.next(currentSupervisors.filter(s => s.id !== supervisorId));
+    this.supervisors.next(
+      currentSupervisors.filter((s) => s.id !== supervisorId),
+    );
 
     // Delete from Firebase
     try {
@@ -325,7 +351,10 @@ export class FactoryService {
   async approveFactoryRequest(factoryId: number): Promise<boolean> {
     try {
       // Call the AuthService to handle the factory request approval
-      const success = await this.authService.handleFactoryRequest(factoryId.toString(), 'accept');
+      const success = await this.authService.handleFactoryRequest(
+        factoryId.toString(),
+        'accept',
+      );
 
       if (success) {
         // Refresh the factories list to reflect the changes

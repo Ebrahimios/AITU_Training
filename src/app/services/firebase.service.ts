@@ -1,8 +1,28 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, UserCredential } from '@angular/fire/auth';
-import { Firestore, doc, setDoc, getDoc, DocumentData, collection, getDocs, deleteDoc, updateDoc, onSnapshot, query, where } from '@angular/fire/firestore';
+import {
+  Auth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  UserCredential,
+} from '@angular/fire/auth';
+import {
+  Firestore,
+  doc,
+  setDoc,
+  getDoc,
+  DocumentData,
+  collection,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  onSnapshot,
+  query,
+  where,
+} from '@angular/fire/firestore';
 import { Student } from '../interfaces/student';
 import { DataSource } from '@angular/cdk/collections';
 
@@ -27,6 +47,8 @@ export interface FirebaseFactory {
   students: any[];
   address?: string;
   phone?: string;
+  longitude?: number;
+  latitude?: number;
   department?: string;
   contactName?: string;
   type: string;
@@ -50,12 +72,10 @@ export interface FirebaseSupervisor {
   createdAt: number;
 }
 
-export interface student {
-
-}
+export interface student {}
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   // Factory request notifications
@@ -136,7 +156,9 @@ export class AuthService {
     this.loadFactoryRequests();
     // Initialize from localStorage if available
     const savedUser = localStorage.getItem('currentUser');
-    this.currentUserSubject = new BehaviorSubject<User | null>(savedUser ? JSON.parse(savedUser) : null);
+    this.currentUserSubject = new BehaviorSubject<User | null>(
+      savedUser ? JSON.parse(savedUser) : null,
+    );
     this.currentUser = this.currentUserSubject.asObservable();
 
     // Initialize real-time data subscriptions
@@ -157,7 +179,7 @@ export class AuthService {
             email: userData['email'],
             phone: userData['phone'],
             role: userData['role'],
-            token: token
+            token: token,
           };
           // Save to localStorage and update BehaviorSubject
           localStorage.setItem('currentUser', JSON.stringify(fullUser));
@@ -174,13 +196,15 @@ export class AuthService {
   public get currentUserValue(): User | null {
     return this.currentUserSubject.value;
   }
-  public async sendStudentData(student: Student){
-    try{
+  public async sendStudentData(student: Student) {
+    try {
       // Ensure birthDate is stored as a string in YYYY-MM-DD format
       // If birthDate is already a string, use it; otherwise convert from Date or use current date
-      const birthDateString = typeof student.birthDate === 'string'
-        ? student.birthDate
-        : (this.formatBirthDateToString(student.birthDate || new Date()) || new Date().toISOString().split('T')[0]);
+      const birthDateString =
+        typeof student.birthDate === 'string'
+          ? student.birthDate
+          : this.formatBirthDateToString(student.birthDate || new Date()) ||
+            new Date().toISOString().split('T')[0];
 
       const userDocRef = doc(this.firestore, 'StudentsTable', student.code);
       await setDoc(userDocRef, {
@@ -192,19 +216,18 @@ export class AuthService {
         nationalID: student.nationalID,
         selected: student.selected,
         createOn: new Date().toISOString().split('T')[0], // Set to current date in YYYY-MM-DD format
-        factory: "",
-        department: "",
-        birthAddress: "",
+        factory: '',
+        department: '',
+        birthAddress: '',
         birthDate: birthDateString, // Store as string in YYYY-MM-DD format
-        email: "",
-        stage: "",
-        gender: "",
+        email: '',
+        stage: '',
+        gender: '',
         factoryType: true,
         grade: 0,
-        supervisor: student.supervisor || null // Add supervisor field with default null
+        supervisor: student.supervisor || null, // Add supervisor field with default null
       });
-    }
-    catch (error) {
+    } catch (error) {
       console.error('Error sending student data:', error);
     }
   }
@@ -225,12 +248,14 @@ export class AuthService {
         department: data.department,
         batch: data.batch,
         birthAddress: data.birthAddress,
-        birthDate: data['birthDate'] ? this.formatBirthDateToString(data['birthDate']) : undefined, // Ensure birthDate is a string
+        birthDate: data['birthDate']
+          ? this.formatBirthDateToString(data['birthDate'])
+          : undefined, // Ensure birthDate is a string
         email: data.email,
         gender: data.gender,
         stage: data.stage,
         factoryType: data.factoryType,
-        supervisor: data.supervisor // Add supervisor field
+        supervisor: data.supervisor, // Add supervisor field
       };
     } else {
       console.error('No such document in Firestore!');
@@ -239,10 +264,16 @@ export class AuthService {
   }
   async login(email: string, password: string): Promise<boolean> {
     try {
-      const userCredential: UserCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      const userCredential: UserCredential = await signInWithEmailAndPassword(
+        this.auth,
+        email,
+        password,
+      );
       const token = await userCredential.user.getIdToken();
 
-      const userData = await this.getUserDataFromFirestore(userCredential.user.uid);
+      const userData = await this.getUserDataFromFirestore(
+        userCredential.user.uid,
+      );
 
       if (userData) {
         const fullUser: User = {
@@ -252,7 +283,7 @@ export class AuthService {
           email: userData['email'],
           phone: userData['phone'],
           role: userData['role'],
-          token: token
+          token: token,
         };
         // Save to localStorage and update BehaviorSubject
         localStorage.setItem('currentUser', JSON.stringify(fullUser));
@@ -262,16 +293,22 @@ export class AuthService {
         console.error('No user data found in Firestore');
         return false;
       }
-
     } catch (error) {
       console.error('Login failed:', error);
       return false;
     }
   }
 
-  async register(user: Omit<User, 'id' | 'token'> & { password: string }): Promise<boolean> {
+  async register(
+    user: Omit<User, 'id' | 'token'> & { password: string },
+  ): Promise<boolean> {
     try {
-      const userCredential: UserCredential = await createUserWithEmailAndPassword(this.auth, user.email, user.password);
+      const userCredential: UserCredential =
+        await createUserWithEmailAndPassword(
+          this.auth,
+          user.email,
+          user.password,
+        );
 
       // Save extra user data to Firestore
       const userDocRef = doc(this.firestore, 'users', userCredential.user.uid);
@@ -280,12 +317,11 @@ export class AuthService {
         lastName: user.lastName,
         email: user.email,
         phone: user.phone,
-        role: user.role
+        role: user.role,
       });
 
       console.log('Registered user & saved to Firestore');
       return true;
-
     } catch (error) {
       console.error('Registration failed:', error);
       return false;
@@ -308,7 +344,9 @@ export class AuthService {
     return this.currentUserSubject.value?.token || null;
   }
 
-  private async getUserDataFromFirestore(uid: string): Promise<DocumentData | null> {
+  private async getUserDataFromFirestore(
+    uid: string,
+  ): Promise<DocumentData | null> {
     const userDocRef = doc(this.firestore, 'users', uid);
     const userDocSnap = await getDoc(userDocRef);
 
@@ -334,41 +372,48 @@ export class AuthService {
       const studentsCollection = collection(this.firestore, 'StudentsTable');
 
       // Set up real-time listener
-      this.unsubscribeStudents = onSnapshot(studentsCollection, (snapshot) => {
-        const students: Student[] = [];
+      this.unsubscribeStudents = onSnapshot(
+        studentsCollection,
+        (snapshot) => {
+          const students: Student[] = [];
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const student: Student = {
-            code: data['code'],
-            name: data['name'],
-            phone: data['phone'],
-            state: data['state'],
-            address: data['address'],
-            nationalID: data['nationalID'],
-            email: data['email'],
-            birthDate: data['birthDate'], // Ensure birthDate is a string
-            createOn: data['createOn'], // Ensure createOn is a string
-            gender: data['gender'],
-            department: data['department'],
-            birthAddress: data['birthAddress'],
-            factory: data['factory'],
-            batch: data['batch'],
-            stage: data['stage'],
-            factoryType: data['factoryType'],
-            selected: data['selected'],
-            supervisor: data['supervisor'] // Add supervisor field
-          };
-          students.push(student);
-        });
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const student: Student = {
+              code: data['code'],
+              name: data['name'],
+              phone: data['phone'],
+              state: data['state'],
+              address: data['address'],
+              nationalID: data['nationalID'],
+              email: data['email'],
+              birthDate: data['birthDate'], // Ensure birthDate is a string
+              createOn: data['createOn'], // Ensure createOn is a string
+              gender: data['gender'],
+              department: data['department'],
+              birthAddress: data['birthAddress'],
+              factory: data['factory'],
+              batch: data['batch'],
+              stage: data['stage'],
+              factoryType: data['factoryType'],
+              selected: data['selected'],
+              supervisor: data['supervisor'], // Add supervisor field
+            };
+            students.push(student);
+          });
 
-        // Update the BehaviorSubject with new data
-        this.studentsSubject.next(students);
-        console.log('Real-time students data updated:', students.length, 'students');
-      }, (error) => {
-        console.error('Error getting real-time students:', error);
-      });
-
+          // Update the BehaviorSubject with new data
+          this.studentsSubject.next(students);
+          console.log(
+            'Real-time students data updated:',
+            students.length,
+            'students',
+          );
+        },
+        (error) => {
+          console.error('Error getting real-time students:', error);
+        },
+      );
     } catch (error) {
       console.error('Error setting up students listener:', error);
     }
@@ -393,8 +438,8 @@ export class AuthService {
           address: data['address'],
           nationalID: data['nationalID'],
           email: data['email'],
-          birthDate: data['birthDate'] , // Ensure birthDate is a string
-          createOn: data['createOn'] , // Ensure createOn is a string
+          birthDate: data['birthDate'], // Ensure birthDate is a string
+          createOn: data['createOn'], // Ensure createOn is a string
           gender: data['gender'],
           department: data['department'],
           birthAddress: data['birthAddress'],
@@ -402,7 +447,7 @@ export class AuthService {
           batch: data['batch'],
           stage: data['stage'],
           selected: data['selected'],
-          supervisor: data['supervisor'] // Add supervisor field
+          supervisor: data['supervisor'], // Add supervisor field
         };
         students.push(student);
       });
@@ -418,9 +463,11 @@ export class AuthService {
     try {
       // Ensure birthDate is stored as a string in YYYY-MM-DD format
       // If birthDate is already a string, use it; otherwise convert from Date or use current date
-      const birthDateString = typeof student.birthDate === 'string'
-        ? student.birthDate
-        : this.formatBirthDateToString(student.birthDate || new Date()) || new Date().toISOString().split('T')[0];
+      const birthDateString =
+        typeof student.birthDate === 'string'
+          ? student.birthDate
+          : this.formatBirthDateToString(student.birthDate || new Date()) ||
+            new Date().toISOString().split('T')[0];
 
       const userDocRef = doc(this.firestore, 'StudentsTable', student.code);
       await updateDoc(userDocRef, {
@@ -438,7 +485,7 @@ export class AuthService {
         batch: student.batch,
         stage: student.stage,
         selected: student.selected,
-        supervisor: student.supervisor // Add supervisor field to update
+        supervisor: student.supervisor, // Add supervisor field to update
       });
       return true;
     } catch (error) {
@@ -457,7 +504,10 @@ export class AuthService {
       if (studentData && studentData['factory']) {
         // If student has a factory, update the factory's list
         const factoriesRef = collection(this.firestore, 'Factories');
-        const q = query(factoriesRef, where('name', '==', studentData['factory']));
+        const q = query(
+          factoriesRef,
+          where('name', '==', studentData['factory']),
+        );
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
@@ -465,12 +515,14 @@ export class AuthService {
           const factoryData = factoryDoc.data();
 
           // Remove student from factory's students array
-          const updatedStudents = factoryData['students'].filter((s: any) => s.code !== studentCode);
+          const updatedStudents = factoryData['students'].filter(
+            (s: any) => s.code !== studentCode,
+          );
 
           // Update factory document
           await updateDoc(doc(this.firestore, 'Factories', factoryDoc.id), {
             students: updatedStudents,
-            assignedStudents: updatedStudents.length
+            assignedStudents: updatedStudents.length,
           });
         }
       }
@@ -499,35 +551,43 @@ export class AuthService {
       const factoriesCollection = collection(this.firestore, 'Factories');
 
       // Set up real-time listener
-      this.unsubscribeFactories = onSnapshot(factoriesCollection, (snapshot) => {
-        const factories: FirebaseFactory[] = [];
+      this.unsubscribeFactories = onSnapshot(
+        factoriesCollection,
+        (snapshot) => {
+          const factories: FirebaseFactory[] = [];
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          factories.push({
-            id: doc.id,
-            name: data['name'] || 'Unknown Factory',
-            capacity: data['capacity'] || 0,
-            assignedStudents: data['assignedStudents'] || 0,
-            students: data['students'] || [],
-            address: data['address'],
-            phone: data['phone'],
-            department: data['department'],
-            contactName: data['contactName'],
-            type: data['type'],
-            industry: data['industry'],
-            isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
-            createdAt: data['createdAt'] || Date.now()
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            factories.push({
+              id: doc.id,
+              name: data['name'] || 'Unknown Factory',
+              capacity: data['capacity'] || 0,
+              assignedStudents: data['assignedStudents'] || 0,
+              students: data['students'] || [],
+              address: data['address'],
+              phone: data['phone'],
+              department: data['department'],
+              contactName: data['contactName'],
+              type: data['type'],
+              industry: data['industry'],
+              isApproved:
+                data['isApproved'] !== undefined ? data['isApproved'] : true,
+              createdAt: data['createdAt'] || Date.now(),
+            });
           });
-        });
 
-        // Update the BehaviorSubject with new data
-        this.factoriesSubject.next(factories);
-        console.log('Real-time factories data updated:', factories.length, 'factories');
-      }, (error) => {
-        console.error('Error getting real-time factories:', error);
-      });
-
+          // Update the BehaviorSubject with new data
+          this.factoriesSubject.next(factories);
+          console.log(
+            'Real-time factories data updated:',
+            factories.length,
+            'factories',
+          );
+        },
+        (error) => {
+          console.error('Error getting real-time factories:', error);
+        },
+      );
     } catch (error) {
       console.error('Error setting up factories listener:', error);
     }
@@ -556,8 +616,9 @@ export class AuthService {
           contactName: data['contactName'],
           type: data['type'],
           industry: data['industry'],
-          isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
-          createdAt: data['createdAt'] || Date.now()
+          isApproved:
+            data['isApproved'] !== undefined ? data['isApproved'] : true,
+          createdAt: data['createdAt'] || Date.now(),
         });
       });
 
@@ -574,15 +635,21 @@ export class AuthService {
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
 
       // Remove undefined values to prevent Firestore errors
-      const cleanedData = Object.entries(factory).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
+      const cleanedData = Object.entries(factory).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
 
       await setDoc(factoryRef, cleanedData, { merge: true });
-      console.log('Factory updated successfully in Firebase with ID:', factoryId);
+      console.log(
+        'Factory updated successfully in Firebase with ID:',
+        factoryId,
+      );
       return true;
     } catch (error) {
       console.error('Error updating factory in Firebase:', error);
@@ -594,7 +661,10 @@ export class AuthService {
     try {
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
       await deleteDoc(factoryRef);
-      console.log('Factory deleted successfully from Firebase with ID:', factoryId);
+      console.log(
+        'Factory deleted successfully from Firebase with ID:',
+        factoryId,
+      );
       return true;
     } catch (error) {
       console.error('Error deleting factory from Firebase:', error);
@@ -617,33 +687,41 @@ export class AuthService {
       const supervisorsCollection = collection(this.firestore, 'Supervisors');
 
       // Set up real-time listener
-      this.unsubscribeSupervisors = onSnapshot(supervisorsCollection, (snapshot) => {
-        const supervisors: FirebaseSupervisor[] = [];
+      this.unsubscribeSupervisors = onSnapshot(
+        supervisorsCollection,
+        (snapshot) => {
+          const supervisors: FirebaseSupervisor[] = [];
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          supervisors.push({
-            id: doc.id,
-            name: data['name'] || 'Unknown Supervisor',
-            capacity: data['capacity'] || 0,
-            assignedStudents: data['assignedStudents'] || 0,
-            students: data['students'] || [],
-            address: data['address'],
-            phone: data['phone'],
-            department: data['department'],
-            type: data['type'],
-            isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
-            createdAt: data['createdAt'] || Date.now()
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            supervisors.push({
+              id: doc.id,
+              name: data['name'] || 'Unknown Supervisor',
+              capacity: data['capacity'] || 0,
+              assignedStudents: data['assignedStudents'] || 0,
+              students: data['students'] || [],
+              address: data['address'],
+              phone: data['phone'],
+              department: data['department'],
+              type: data['type'],
+              isApproved:
+                data['isApproved'] !== undefined ? data['isApproved'] : true,
+              createdAt: data['createdAt'] || Date.now(),
+            });
           });
-        });
 
-        // Update the BehaviorSubject with new data
-        this.supervisorsSubject.next(supervisors);
-        console.log('Real-time supervisors data updated:', supervisors.length, 'supervisors');
-      }, (error) => {
-        console.error('Error getting real-time supervisors:', error);
-      });
-
+          // Update the BehaviorSubject with new data
+          this.supervisorsSubject.next(supervisors);
+          console.log(
+            'Real-time supervisors data updated:',
+            supervisors.length,
+            'supervisors',
+          );
+        },
+        (error) => {
+          console.error('Error getting real-time supervisors:', error);
+        },
+      );
     } catch (error) {
       console.error('Error setting up supervisors listener:', error);
     }
@@ -670,8 +748,9 @@ export class AuthService {
           phone: data['phone'],
           department: data['department'],
           type: data['type'],
-          isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
-          createdAt: data['createdAt'] || Date.now()
+          isApproved:
+            data['isApproved'] !== undefined ? data['isApproved'] : true,
+          createdAt: data['createdAt'] || Date.now(),
         });
       });
 
@@ -682,21 +761,29 @@ export class AuthService {
     }
   }
 
-  public async updateSupervisor(supervisor: FirebaseSupervisor): Promise<boolean> {
+  public async updateSupervisor(
+    supervisor: FirebaseSupervisor,
+  ): Promise<boolean> {
     try {
       const supervisorId = supervisor.id || `supervisor_${Date.now()}`;
       const supervisorRef = doc(this.firestore, 'Supervisors', supervisorId);
 
       // Remove undefined values to prevent Firestore errors
-      const cleanedData = Object.entries(supervisor).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
+      const cleanedData = Object.entries(supervisor).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
 
       await setDoc(supervisorRef, cleanedData, { merge: true });
-      console.log('Supervisor updated successfully in Firebase with ID:', supervisorId);
+      console.log(
+        'Supervisor updated successfully in Firebase with ID:',
+        supervisorId,
+      );
       return true;
     } catch (error) {
       console.error('Error updating supervisor in Firebase:', error);
@@ -708,7 +795,10 @@ export class AuthService {
     try {
       const supervisorRef = doc(this.firestore, 'Supervisors', supervisorId);
       await deleteDoc(supervisorRef);
-      console.log('Supervisor deleted successfully from Firebase with ID:', supervisorId);
+      console.log(
+        'Supervisor deleted successfully from Firebase with ID:',
+        supervisorId,
+      );
       return true;
     } catch (error) {
       console.error('Error deleting supervisor from Firebase:', error);
@@ -717,7 +807,9 @@ export class AuthService {
   }
 
   // Factory request methods
-  public async submitFactoryRequest(factoryData: FirebaseFactory): Promise<boolean> {
+  public async submitFactoryRequest(
+    factoryData: FirebaseFactory,
+  ): Promise<boolean> {
     try {
       console.log('Submitting factory request:', factoryData);
 
@@ -730,17 +822,21 @@ export class AuthService {
       const factoryWithTimestamp = {
         ...factoryData,
         id: factoryId,
-        isApproved: factoryData.isApproved !== undefined ? factoryData.isApproved : false,
-        createdAt: factoryData.createdAt || Date.now()
+        isApproved:
+          factoryData.isApproved !== undefined ? factoryData.isApproved : false,
+        createdAt: factoryData.createdAt || Date.now(),
       };
 
       // Remove undefined values to prevent Firestore errors
-      const cleanedData = Object.entries(factoryWithTimestamp).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
+      const cleanedData = Object.entries(factoryWithTimestamp).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
 
       console.log('Saving factory data to Firestore:', cleanedData);
       await setDoc(factoryRef, cleanedData);
@@ -761,7 +857,9 @@ export class AuthService {
       const factoriesCollection = collection(this.firestore, 'Factories');
       const querySnapshot = await getDocs(factoriesCollection);
 
-      console.log(`Found ${querySnapshot.size} documents in Factories collection`);
+      console.log(
+        `Found ${querySnapshot.size} documents in Factories collection`,
+      );
 
       const factories: FirebaseFactory[] = [];
 
@@ -779,13 +877,15 @@ export class AuthService {
             students: data['students'] || [],
             address: data['address'] || '',
             phone: data['phone'] || '',
+            longitude: data['longitude'] || 0,
+            latitude: data['latitude'] || 0,
             department: data['department'] || '',
             contactName: data['contactName'] || '',
             type: data['type'] || '',
             industry: data['industry'] || '',
             isApproved: data['isApproved'] || false,
             studentName: data['studentName'] || '',
-            createdAt: this.convertToTimestamp(data['createdAt']) || Date.now()
+            createdAt: this.convertToTimestamp(data['createdAt']) || Date.now(),
           });
         });
       }
@@ -800,9 +900,14 @@ export class AuthService {
     }
   }
 
-  public async handleFactoryRequest(factoryId: string, action: 'accept' | 'deny'): Promise<boolean> {
+  public async handleFactoryRequest(
+    factoryId: string,
+    action: 'accept' | 'deny',
+  ): Promise<boolean> {
     try {
-      console.log(`Handling factory request ${factoryId} with action: ${action}`);
+      console.log(
+        `Handling factory request ${factoryId} with action: ${action}`,
+      );
 
       if (action === 'accept') {
         // Get the factory data to find the student who sent the request
@@ -816,10 +921,12 @@ export class AuthService {
           // Find the student by name
           if (studentName) {
             const students = await this.getAllStudents();
-            const student = students.find(s => s.name === studentName);
+            const student = students.find((s) => s.name === studentName);
 
             if (student) {
-              console.log(`Found student ${student.name} with code ${student.code}`);
+              console.log(
+                `Found student ${student.name} with code ${student.code}`,
+              );
 
               // Update the factory's students array and assignedStudents count
               const currentStudents = factoryData.students || [];
@@ -831,21 +938,32 @@ export class AuthService {
                 isApproved: true,
                 updatedAt: Date.now(),
                 students: updatedStudents,
-                assignedStudents: assignedStudents
+                assignedStudents: assignedStudents,
               });
 
               // Update the student's factory field
               if (student.code) {
-                const studentsCollection = collection(this.firestore, 'StudentsTable');
-                const studentQuery = query(studentsCollection, where('code', '==', student.code));
+                const studentsCollection = collection(
+                  this.firestore,
+                  'StudentsTable',
+                );
+                const studentQuery = query(
+                  studentsCollection,
+                  where('code', '==', student.code),
+                );
                 const studentQuerySnapshot = await getDocs(studentQuery);
 
                 if (!studentQuerySnapshot.empty) {
                   const studentDoc = studentQuerySnapshot.docs[0];
-                  await updateDoc(doc(this.firestore, 'StudentsTable', studentDoc.id), {
-                    factory: factoryData.name
-                  });
-                  console.log(`Updated student ${student.name} with factory ${factoryData.name}`);
+                  await updateDoc(
+                    doc(this.firestore, 'StudentsTable', studentDoc.id),
+                    {
+                      factory: factoryData.name,
+                    },
+                  );
+                  console.log(
+                    `Updated student ${student.name} with factory ${factoryData.name}`,
+                  );
                 }
               }
 
@@ -855,7 +973,7 @@ export class AuthService {
               // Still approve the factory even if student is not found
               await updateDoc(factoryRef, {
                 isApproved: true,
-                updatedAt: Date.now()
+                updatedAt: Date.now(),
               });
               console.log('Factory approved successfully');
             }
@@ -863,7 +981,7 @@ export class AuthService {
             // No student name found, just approve the factory
             await updateDoc(factoryRef, {
               isApproved: true,
-              updatedAt: Date.now()
+              updatedAt: Date.now(),
             });
             console.log('Factory approved successfully');
           }
@@ -880,7 +998,10 @@ export class AuthService {
       await this.loadFactoryRequests();
       return true;
     } catch (error) {
-      console.error(`Error ${action === 'accept' ? 'accepting' : 'denying'} factory request:`, error);
+      console.error(
+        `Error ${action === 'accept' ? 'accepting' : 'denying'} factory request:`,
+        error,
+      );
       return false;
     }
   }
