@@ -4,11 +4,11 @@
     <div class="back-button">
       <button class="btn btn-light" routerLink="/home">
         <i class="bi bi-arrow-left"></i>
-        {{ translationService.translate('back_to_home') }}
+        {{ translationService.translate("back_to_home") }}
       </button>
     </div>
     <div class="header-content">
-      <h2>{{ translationService.translate('students_distribution') }}</h2>
+      <h2>{{ translationService.translate("supervisor_distribution") }}</h2>
       <div class="filters">
         <div class="search-box">
           <i class="bi bi-search"></i>
@@ -16,33 +16,39 @@
             type="text"
             [(ngModel)]="searchTerm"
             placeholder="Search students..."
-          >
+          />
         </div>
         <div class="add-supervisor-button">
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupervisorModal">
+          <button
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#addSupervisorModal"
+          >
             Add Supervisor
           </button>
         </div>
         <select [(ngModel)]="selectedDepartment">
           <option *ngFor="let dept of departments" [value]="dept">
-            {{dept}} Department
+            {{ dept }} Department
           </option>
         </select>
 
         <select [(ngModel)]="selectedStage">
           <option *ngFor="let stage of stages" [value]="stage">
-            {{stage}} Stage
+            {{ stage }} Stage
           </option>
         </select>
 
         <select [(ngModel)]="selectedBatch">
           <option *ngFor="let batch of batches" [value]="batch">
-            {{batch}} Batch
+            {{ batch }} Batch
           </option>
         </select>
 
         <select [(ngModel)]="selectedSupervisorType">
-          <option *ngFor="let type of supervisorTypes" [value]="type">{{type}} Supervisors</option>
+          <option *ngFor="let type of supervisorTypes" [value]="type">
+            {{ type }} Supervisors
+          </option>
         </select>
       </div>
     </div>
@@ -53,44 +59,58 @@
     <!-- Students List -->
     <div class="students-list">
       <div class="students-header">
-        <h3>Students ({{filteredStudents.length}})</h3>
+        <h3>Students ({{ filteredStudents.length }})</h3>
         <div class="selection-controls">
           <label class="select-all-checkbox">
-            <input type="checkbox"
-                   [checked]="selectAll"
-                   (change)="toggleSelectAll()">
+            <input
+              type="checkbox"
+              [checked]="selectAll"
+              (change)="toggleSelectAll()"
+            />
             <span>Select All</span>
           </label>
           <div class="selection-info" *ngIf="selectedStudents.length > 0">
-            {{selectedStudents.length}} students selected
+            {{ selectedStudents.length }} students selected
           </div>
         </div>
       </div>
 
-      <div class="students-container"
-           cdkDropList
-           #studentList="cdkDropList"
-           [cdkDropListData]="filteredStudents"
-           [cdkDropListConnectedTo]="supervisorDropLists"
-           (cdkDropListDropped)="onDrop($event)">
-        <div class="student-card"
-             *ngFor="let student of filteredStudents"
-             cdkDrag
-             [cdkDragData]="student"
-             [class.selected]="student.selected">
+      <div
+        class="students-container"
+        cdkDropList
+        #studentList="cdkDropList"
+        [cdkDropListData]="filteredStudents"
+        [cdkDropListConnectedTo]="supervisorDropLists"
+        (cdkDropListDropped)="onDrop($event)"
+      >
+        <div
+          class="student-card"
+          *ngFor="let student of filteredStudents"
+          cdkDrag
+          [cdkDragData]="student"
+          [class.selected]="student.selected"
+        >
           <div class="checkbox-wrapper">
-            <input type="checkbox"
-                   [checked]="student.selected"
-                   (click)="toggleSelection($event, student)">
+            <input
+              type="checkbox"
+              [checked]="student.selected"
+              (click)="toggleSelection($event, student)"
+            />
           </div>
           <div class="student-info" (click)="toggleSelection($event, student)">
-            <h4>{{student.name}}</h4>
-            <p>{{student.department}} | {{student.stage}} | {{student.batch}}</p>
+            <h4>{{ student.name }}</h4>
+            <p>
+              {{ student.department }} | {{ student.stage }} |
+              {{ student.batch }}
+            </p>
           </div>
           <div class="student-supervisor">
             <span *ngIf="student.supervisor" class="supervisor-badge">
-              {{student.supervisor}}
-              <button class="remove-btn" (click)="removeFromSupervisor(student, $event)">
+              {{ student.supervisor }}
+              <button
+                class="remove-btn"
+                (click)="removeFromSupervisor(student, $event)"
+              >
                 <i class="bi bi-x"></i>
               </button>
             </span>
@@ -109,35 +129,52 @@
             type="text"
             [(ngModel)]="supervisorSearchTerm"
             placeholder="Search supervisors..."
-          >
+          />
         </div>
       </div>
       <div class="supervisors-grid">
-        <div class="supervisor-card" *ngFor="let supervisor of filteredSupervisors"
-             [class.full]="supervisor.assignedStudents >= supervisor.capacity"
-             (click)="openSupervisorDetails(supervisor)">
+        <div
+          class="supervisor-card"
+          *ngFor="let supervisor of filteredSupervisors"
+          [class.full]="supervisor.assignedStudents >= supervisor.capacity"
+          (click)="openSupervisorDetails(supervisor)"
+        >
           <div class="supervisor-header">
             <h3>{{ supervisor.name }}</h3>
-            <span class="capacity">{{ supervisor.assignedStudents }}/{{ supervisor.capacity }}</span>
+            <span class="capacity"
+              >{{ supervisor.assignedStudents }}/{{ supervisor.capacity }}</span
+            >
           </div>
           <div class="progress-bar">
-            <div class="progress"
-                 [style.width.%]="(supervisor.assignedStudents / supervisor.capacity) * 100"
-                 [ngClass]="{
-                   'empty': supervisor.assignedStudents === 0,
-                   'low': supervisor.assignedStudents > 0 && supervisor.assignedStudents < supervisor.capacity * 0.5,
-                   'medium': supervisor.assignedStudents >= supervisor.capacity * 0.5 && supervisor.assignedStudents < supervisor.capacity * 0.8,
-                   'high': supervisor.assignedStudents >= supervisor.capacity * 0.8
-                 }">
-            </div>
+            <div
+              class="progress"
+              [style.width.%]="
+                (supervisor.assignedStudents / supervisor.capacity) * 100
+              "
+              [ngClass]="{
+                empty: supervisor.assignedStudents === 0,
+                low:
+                  supervisor.assignedStudents > 0 &&
+                  supervisor.assignedStudents < supervisor.capacity * 0.5,
+                medium:
+                  supervisor.assignedStudents >= supervisor.capacity * 0.5 &&
+                  supervisor.assignedStudents < supervisor.capacity * 0.8,
+                high: supervisor.assignedStudents >= supervisor.capacity * 0.8,
+              }"
+            ></div>
           </div>
-          <div class="supervisor-students"
-               cdkDropList
-               [id]="'supervisor-' + supervisor.id"
-               [cdkDropListData]="supervisor.students"
-               [cdkDropListConnectedTo]="[studentList]"
-               (cdkDropListDropped)="onDrop($event, supervisor)">
-            <div class="dropzone-content" *ngIf="supervisor.students.length === 0">
+          <div
+            class="supervisor-students"
+            cdkDropList
+            [id]="'supervisor-' + supervisor.id"
+            [cdkDropListData]="supervisor.students"
+            [cdkDropListConnectedTo]="[studentList]"
+            (cdkDropListDropped)="onDrop($event, supervisor)"
+          >
+            <div
+              class="dropzone-content"
+              *ngIf="supervisor.students.length === 0"
+            >
               <i class="bi bi-plus-circle"></i>
               <span *ngIf="supervisor.assignedStudents < supervisor.capacity">
                 Drag students here
@@ -148,9 +185,15 @@
             </div>
 
             <div class="assigned-students">
-              <div class="assigned-student" *ngFor="let student of supervisor.students">
-                <span class="student-name">{{student.name}}</span>
-                <button class="remove-btn" (click)="removeFromSupervisor(student, $event)">
+              <div
+                class="assigned-student"
+                *ngFor="let student of supervisor.students"
+              >
+                <span class="student-name">{{ student.name }}</span>
+                <button
+                  class="remove-btn"
+                  (click)="removeFromSupervisor(student, $event)"
+                >
                   <i class="bi bi-x"></i>
                 </button>
               </div>
@@ -161,97 +204,244 @@
     </div>
 
     <!-- Add Supervisor Modal -->
-    <div class="modal fade" id="addSupervisorModal" tabindex="-1" aria-labelledby="addSupervisorModalLabel" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="addSupervisorModal"
+      tabindex="-1"
+      aria-labelledby="addSupervisorModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="addSupervisorModalLabel">Add New Supervisor</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title" id="addSupervisorModalLabel">
+              Add New Supervisor
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form>
               <div class="mb-3">
-                <label for="supervisorName" class="form-label">Supervisor Name</label>
-                <input type="text" class="form-control" id="supervisorName" #supervisorName placeholder="Enter supervisor name">
-                <div class="text-danger" *ngIf="nameError">{{nameError}}</div>
+                <label for="supervisorName" class="form-label"
+                  >Supervisor Name</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="supervisorName"
+                  #supervisorName
+                  placeholder="Enter supervisor name"
+                />
+                <div class="text-danger" *ngIf="nameError">{{ nameError }}</div>
               </div>
               <div class="mb-3">
-                <label for="supervisorAddress" class="form-label">Address</label>
-                <input type="text" class="form-control" id="supervisorAddress" #supervisorAddress placeholder="Enter address">
-                <div class="text-danger" *ngIf="addressError">{{addressError}}</div>
+                <label for="supervisorAddress" class="form-label"
+                  >Address</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="supervisorAddress"
+                  #supervisorAddress
+                  placeholder="Enter address"
+                />
+                <div class="text-danger" *ngIf="addressError">
+                  {{ addressError }}
+                </div>
               </div>
               <div class="mb-3">
-                <label for="supervisorPhone" class="form-label">Phone Number</label>
-                <input type="text" class="form-control" id="supervisorPhone" #supervisorPhone placeholder="Enter phone number">
-                <div class="text-danger" *ngIf="phoneError">{{phoneError}}</div>
+                <label for="supervisorPhone" class="form-label"
+                  >Phone Number</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="supervisorPhone"
+                  #supervisorPhone
+                  placeholder="Enter phone number"
+                />
+                <div class="text-danger" *ngIf="phoneError">
+                  {{ phoneError }}
+                </div>
               </div>
               <div class="mb-3">
-                <label for="supervisorDepartment" class="form-label">Department</label>
-                <select class="form-select" id="supervisorDepartment" #supervisorDepartment>
-                  <option value="All" disabled selected>Select department</option>
-                  <option *ngFor="let dept of departments.slice(1)" [value]="dept">{{dept}}</option>
+                <label for="supervisorDepartment" class="form-label"
+                  >Department</label
+                >
+                <select
+                  class="form-select"
+                  id="supervisorDepartment"
+                  #supervisorDepartment
+                >
+                  <option value="All" disabled selected>
+                    Select department
+                  </option>
+                  <option
+                    *ngFor="let dept of departments.slice(1)"
+                    [value]="dept"
+                  >
+                    {{ dept }}
+                  </option>
                 </select>
-                <div class="text-danger" *ngIf="departmentError">{{departmentError}}</div>
+                <div class="text-danger" *ngIf="departmentError">
+                  {{ departmentError }}
+                </div>
               </div>
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" (click)="addSupervisor(supervisorName.value, supervisorAddress.value, supervisorPhone.value, supervisorDepartment.value)">Save Supervisor</button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="
+                addSupervisor(
+                  supervisorName.value,
+                  supervisorAddress.value,
+                  supervisorPhone.value,
+                  supervisorDepartment.value
+                )
+              "
+            >
+              Save Supervisor
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Supervisor Details Modal -->
-    <div class="modal fade" id="supervisorDetailsModal" tabindex="-1" aria-labelledby="supervisorDetailsModalLabel" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="supervisorDetailsModal"
+      tabindex="-1"
+      aria-labelledby="supervisorDetailsModalLabel"
+      aria-hidden="true"
+    >
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="supervisorDetailsModalLabel">Supervisor Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title" id="supervisorDetailsModalLabel">
+              Supervisor Details
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body" *ngIf="selectedSupervisor">
             <form>
               <div class="mb-3">
-                <label class="form-label"><strong>Supervisor Name:</strong></label>
-                <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.name" name="supervisorName" [readonly]="!isEditing">
+                <label class="form-label"
+                  ><strong>Supervisor Name:</strong></label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="selectedSupervisor.name"
+                  name="supervisorName"
+                  [readonly]="!isEditing"
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Address:</strong></label>
-                <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.address" name="supervisorAddress" [readonly]="!isEditing">
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="selectedSupervisor.address"
+                  name="supervisorAddress"
+                  [readonly]="!isEditing"
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Phone:</strong></label>
-                <input type="text" class="form-control" [(ngModel)]="selectedSupervisor.phone" name="supervisorPhone" [readonly]="!isEditing">
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="selectedSupervisor.phone"
+                  name="supervisorPhone"
+                  [readonly]="!isEditing"
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Department:</strong></label>
-                <select class="form-select" [(ngModel)]="selectedSupervisor.department" name="supervisorDepartment" [disabled]="!isEditing">
+                <select
+                  class="form-select"
+                  [(ngModel)]="selectedSupervisor.department"
+                  name="supervisorDepartment"
+                  [disabled]="!isEditing"
+                >
                   <option value="All" disabled>Select department</option>
-                  <option *ngFor="let dept of departments.slice(1)" [value]="dept">{{dept}}</option>
+                  <option
+                    *ngFor="let dept of departments.slice(1)"
+                    [value]="dept"
+                  >
+                    {{ dept }}
+                  </option>
                 </select>
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Capacity:</strong></label>
-                <input type="number" class="form-control" [(ngModel)]="selectedSupervisor.capacity" name="supervisorCapacity" min="1" [readonly]="!isEditing">
+                <input
+                  type="number"
+                  class="form-control"
+                  [(ngModel)]="selectedSupervisor.capacity"
+                  name="supervisorCapacity"
+                  min="1"
+                  [readonly]="!isEditing"
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label"><strong>Type:</strong></label>
-                <select class="form-select" [(ngModel)]="selectedSupervisor.type" name="supervisorType" [disabled]="!isEditing">
-                  <option *ngFor="let type of supervisorTypes.slice(1)" [value]="type">{{type}}</option>
+                <select
+                  class="form-select"
+                  [(ngModel)]="selectedSupervisor.type"
+                  name="supervisorType"
+                  [disabled]="!isEditing"
+                >
+                  <option
+                    *ngFor="let type of supervisorTypes.slice(1)"
+                    [value]="type"
+                  >
+                    {{ type }}
+                  </option>
                 </select>
               </div>
               <div class="mb-3">
-                <label class="form-label"><strong>Assigned Students:</strong></label>
+                <label class="form-label"
+                  ><strong>Assigned Students:</strong></label
+                >
                 <ul class="list-group">
-                  <li class="list-group-item d-flex justify-content-between align-items-center" *ngFor="let student of selectedSupervisor.students">
-                    {{student.name}} ({{student.department}} - {{student.stage}})
-                    <button class="btn btn-sm btn-outline-danger" (click)="removeFromSupervisor(student, $event)">
+                  <li
+                    class="list-group-item d-flex justify-content-between align-items-center"
+                    *ngFor="let student of selectedSupervisor.students"
+                  >
+                    {{ student.name }} ({{ student.department }} -
+                    {{ student.stage }})
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="removeFromSupervisor(student, $event)"
+                    >
                       <i class="bi bi-x"></i>
                     </button>
                   </li>
-                  <li class="list-group-item text-muted" *ngIf="selectedSupervisor.students.length === 0">
+                  <li
+                    class="list-group-item text-muted"
+                    *ngIf="selectedSupervisor.students.length === 0"
+                  >
                     No students assigned
                   </li>
                 </ul>
@@ -259,17 +449,43 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-danger" *ngIf="!isEditing && selectedSupervisor" (click)="deleteSupervisor(selectedSupervisor)">
+            <button
+              type="button"
+              class="btn btn-danger"
+              *ngIf="!isEditing && selectedSupervisor"
+              (click)="deleteSupervisor(selectedSupervisor)"
+            >
               <i class="bi bi-trash"></i> Delete Supervisor
             </button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary" *ngIf="!isEditing" (click)="startEditing()">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              *ngIf="!isEditing"
+              (click)="startEditing()"
+            >
               <i class="bi bi-pencil"></i> Edit
             </button>
-            <button type="button" class="btn btn-success" *ngIf="isEditing" (click)="saveChanges()">
+            <button
+              type="button"
+              class="btn btn-success"
+              *ngIf="isEditing"
+              (click)="saveChanges()"
+            >
               <i class="bi bi-check"></i> Save Changes
             </button>
-            <button type="button" class="btn btn-secondary" *ngIf="isEditing" (click)="cancelEditing()">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              *ngIf="isEditing"
+              (click)="cancelEditing()"
+            >
               <i class="bi bi-x"></i> Cancel
             </button>
           </div>

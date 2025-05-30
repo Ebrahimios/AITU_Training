@@ -3,7 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
 import { RouterModule } from '@angular/router';
-import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem, CdkDropList } from '@angular/cdk/drag-drop';
+import {
+  CdkDragDrop,
+  DragDropModule,
+  moveItemInArray,
+  transferArrayItem,
+  CdkDropList,
+} from '@angular/cdk/drag-drop';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
 import { FactoryService } from '../../services/factory.service';
@@ -24,13 +30,21 @@ interface Factory {
   type: string;
   students: Student[];
   assignedStudents: number;
+  longitude?: number; // <-- أضف هذا السطر
+  latitude?: number; // <-- أضف هذا السطر
 }
 
 @Component({
-    selector: 'app-student-distribution',
-    imports: [CommonModule, FormsModule, MatDialogModule, DragDropModule, RouterModule],
-    templateUrl: './student-distribution.component.html',
-    styleUrls: ['./student-distribution.component.css']
+  selector: 'app-student-distribution',
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    DragDropModule,
+    RouterModule,
+  ],
+  templateUrl: './student-distribution.component.html',
+  styleUrls: ['./student-distribution.component.css'],
 })
 export class StudentDistributionComponent implements OnInit {
   @ViewChildren(CdkDropList) dropLists!: QueryList<CdkDropList>;
@@ -51,7 +65,7 @@ export class StudentDistributionComponent implements OnInit {
     public translationService: TranslationService,
     private factoryService: FactoryService,
     private authService: AuthService,
-    private dataUpdateService: DataUpdateService
+    private dataUpdateService: DataUpdateService,
   ) {}
 
   students: Student[] = [];
@@ -78,41 +92,59 @@ export class StudentDistributionComponent implements OnInit {
     'Agriculture',
     'Energy',
     'Transportation',
-    'Retail'
+    'Retail',
   ];
   newIndustry: string = '';
 
   get filteredStudents(): Student[] {
-    return this.students.filter(student => {
-      const matchesDepartment = this.selectedDepartment === 'All' || student.department === this.selectedDepartment;
-      const matchesStage = this.selectedStage === 'All' || student.stage === this.selectedStage;
-      const matchesBatch = this.selectedBatch === 'All' || student.batch === this.selectedBatch;
-      const matchesSearch = student.name.toLowerCase().includes(this.searchTerm.toLowerCase());
+    return this.students.filter((student) => {
+      const matchesDepartment =
+        this.selectedDepartment === 'All' ||
+        student.department === this.selectedDepartment;
+      const matchesStage =
+        this.selectedStage === 'All' || student.stage === this.selectedStage;
+      const matchesBatch =
+        this.selectedBatch === 'All' || student.batch === this.selectedBatch;
+      const matchesSearch = student.name
+        .toLowerCase()
+        .includes(this.searchTerm.toLowerCase());
       const notAssigned = !student.factory || student.factory === '';
 
-      return matchesDepartment && matchesStage && matchesBatch && matchesSearch && notAssigned;
+      return (
+        matchesDepartment &&
+        matchesStage &&
+        matchesBatch &&
+        matchesSearch &&
+        notAssigned
+      );
     });
   }
 
   get filteredFactories(): Factory[] {
     return this.factories
-      .filter(f => this.selectedFactoryType === 'All' || f.type === this.selectedFactoryType)
-      .filter(f => f.name.toLowerCase().includes(this.factorySearchTerm.toLowerCase()));
+      .filter(
+        (f) =>
+          this.selectedFactoryType === 'All' ||
+          f.type === this.selectedFactoryType,
+      )
+      .filter((f) =>
+        f.name.toLowerCase().includes(this.factorySearchTerm.toLowerCase()),
+      );
   }
 
   get selectedStudents(): Student[] {
-    return this.students.filter(student => student.selected);
+    return this.students.filter((student) => student.selected);
   }
   async ngOnInit(): Promise<void> {
     try {
       console.log('Initializing student-distribution component');
 
       // Subscribe to factories
-      this.factoryService.factories$.subscribe(factories => {
+      this.factoryService.factories$.subscribe((factories) => {
         console.log('Received factories from service:', factories);
 
         // Convert factory service factories to our local Factory interface
-        this.factories = factories.map(f => ({
+        this.factories = factories.map((f) => ({
           id: f.id.toString(),
           name: f.name,
           address: f.address,
@@ -122,9 +154,9 @@ export class StudentDistributionComponent implements OnInit {
           capacity: f.capacity,
           type: f.type,
           students: [],
-          assignedStudents: f.assignedStudents
+          assignedStudents: f.assignedStudents,
         }));
-        this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+        this.factoryDropLists = this.factories.map((f) => `factory-${f.id}`);
 
         // Load students after factories are loaded
         this.loadStudentsFromFirebase();
@@ -146,10 +178,15 @@ export class StudentDistributionComponent implements OnInit {
       this.extractUniqueFilterValues();
 
       // Update factory assignments for students that already have factories
-      this.students.forEach(student => {
+      this.students.forEach((student) => {
         if (student.factory) {
-          const factory = this.factories.find(f => f.name === student.factory);
-          if (factory && !factory.students.some(s => s.code === student.code)) {
+          const factory = this.factories.find(
+            (f) => f.name === student.factory,
+          );
+          if (
+            factory &&
+            !factory.students.some((s) => s.code === student.code)
+          ) {
             factory.students.push(student);
             factory.assignedStudents = factory.students.length;
           }
@@ -164,14 +201,26 @@ export class StudentDistributionComponent implements OnInit {
   }
 
   private extractUniqueFilterValues(): void {
-    this.departments = Array.from(new Set(this.students.map(s => s.department).filter((v): v is string => !!v)));
-    this.batches = Array.from(new Set(this.students.map(s => s.batch).filter((v): v is string => !!v)));
-    this.stages = Array.from(new Set(this.students.map(s => s.stage).filter((v): v is string => !!v)));
+    this.departments = Array.from(
+      new Set(
+        this.students.map((s) => s.department).filter((v): v is string => !!v),
+      ),
+    );
+    this.batches = Array.from(
+      new Set(
+        this.students.map((s) => s.batch).filter((v): v is string => !!v),
+      ),
+    );
+    this.stages = Array.from(
+      new Set(
+        this.students.map((s) => s.stage).filter((v): v is string => !!v),
+      ),
+    );
   }
 
   ngAfterViewInit(): void {
     this.dropLists.changes.subscribe(() => {
-      this.factoryDropLists = this.factories.map(f => `factory-${f.id}`);
+      this.factoryDropLists = this.factories.map((f) => `factory-${f.id}`);
     });
   }
 
@@ -212,7 +261,7 @@ export class StudentDistributionComponent implements OnInit {
         // Convert our local Factory to the service Factory type
         const serviceFactory = {
           ...this.selectedFactory,
-          id: Number(this.selectedFactory.id)
+          id: Number(this.selectedFactory.id),
         };
         this.factoryService.updateFactory(serviceFactory);
         this.isEditing = false;
@@ -237,7 +286,7 @@ export class StudentDistributionComponent implements OnInit {
 
   toggleSelectAll(): void {
     this.selectAll = !this.selectAll;
-    this.filteredStudents.forEach(student => {
+    this.filteredStudents.forEach((student) => {
       student.selected = this.selectAll;
     });
   }
@@ -265,12 +314,18 @@ export class StudentDistributionComponent implements OnInit {
 
   private updateSelectAllState(): void {
     const filteredStudents = this.filteredStudents;
-    this.selectAll = filteredStudents.length > 0 && filteredStudents.every(student => student.selected);
+    this.selectAll =
+      filteredStudents.length > 0 &&
+      filteredStudents.every((student) => student.selected);
   }
 
   onDrop(event: CdkDragDrop<Student[]>, factory?: Factory): void {
     if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+      moveItemInArray(
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex,
+      );
     } else {
       const selectedStudents = this.selectedStudents;
 
@@ -278,17 +333,26 @@ export class StudentDistributionComponent implements OnInit {
         // Handle multiple students drop
         if (factory) {
           // Check if factory has enough capacity
-          if (factory.assignedStudents + selectedStudents.length > factory.capacity) {
-            alert(`Factory ${factory.name} doesn't have enough capacity for ${selectedStudents.length} students`);
+          if (
+            factory.assignedStudents + selectedStudents.length >
+            factory.capacity
+          ) {
+            alert(
+              `Factory ${factory.name} doesn't have enough capacity for ${selectedStudents.length} students`,
+            );
             return;
           }
 
           // Remove from previous factories if exists
-          selectedStudents.forEach(student => {
+          selectedStudents.forEach((student) => {
             if (student.factory) {
-              const prevFactory = this.factories.find(f => f.name === student.factory);
+              const prevFactory = this.factories.find(
+                (f) => f.name === student.factory,
+              );
               if (prevFactory) {
-                const index = prevFactory.students.findIndex(s => s.code === student.code);
+                const index = prevFactory.students.findIndex(
+                  (s) => s.code === student.code,
+                );
                 if (index > -1) {
                   prevFactory.students.splice(index, 1);
                   prevFactory.assignedStudents--;
@@ -313,9 +377,13 @@ export class StudentDistributionComponent implements OnInit {
 
           // Remove from previous factory if exists
           if (student.factory) {
-            const prevFactory = this.factories.find(f => f.name === student.factory);
+            const prevFactory = this.factories.find(
+              (f) => f.name === student.factory,
+            );
             if (prevFactory) {
-              const index = prevFactory.students.findIndex(s => s.code === student.code);
+              const index = prevFactory.students.findIndex(
+                (s) => s.code === student.code,
+              );
               if (index > -1) {
                 prevFactory.students.splice(index, 1);
                 prevFactory.assignedStudents--;
@@ -331,7 +399,7 @@ export class StudentDistributionComponent implements OnInit {
 
   assignToFactory(student: Student, factory: Factory): void {
     // Update student's factory assignment
-    const index = this.students.findIndex(s => s.code === student.code);
+    const index = this.students.findIndex((s) => s.code === student.code);
     if (index !== -1) {
       // Update in local array
       this.students[index].factory = factory.name;
@@ -342,24 +410,29 @@ export class StudentDistributionComponent implements OnInit {
       this.updateStudentFactory(student, factory.name);
 
       // Update factory students list
-      if (!factory.students.some(s => s.code === student.code)) {
+      if (!factory.students.some((s) => s.code === student.code)) {
         factory.students.push(student);
         factory.assignedStudents = factory.students.length;
       }
     }
   }
 
-  private async updateStudentFactory(student: Student, factoryName: string | null): Promise<void> {
+  private async updateStudentFactory(
+    student: Student,
+    factoryName: string | null,
+  ): Promise<void> {
     try {
       // Create a copy of the student with the factory updated
       const updatedStudent = {
         ...student,
-        factory: factoryName
+        factory: factoryName,
       };
 
       // Update the student in Firebase
       await this.authService.updateStudent(updatedStudent);
-      console.log(`Student ${student.name} assigned to factory ${factoryName || 'None'}`);
+      console.log(
+        `Student ${student.name} assigned to factory ${factoryName || 'None'}`,
+      );
 
       // Notify that student data has been updated
       this.dataUpdateService.notifyStudentDataUpdated();
@@ -372,10 +445,12 @@ export class StudentDistributionComponent implements OnInit {
     event.stopPropagation();
 
     // Find the factory this student is assigned to
-    const factory = this.factories.find(f => f.name === student.factory);
+    const factory = this.factories.find((f) => f.name === student.factory);
     if (factory) {
       // Remove from factory's student list
-      const factoryStudentIndex = factory.students.findIndex(s => s.code === student.code);
+      const factoryStudentIndex = factory.students.findIndex(
+        (s) => s.code === student.code,
+      );
       if (factoryStudentIndex !== -1) {
         factory.students.splice(factoryStudentIndex, 1);
         factory.assignedStudents = factory.students.length;
@@ -383,7 +458,7 @@ export class StudentDistributionComponent implements OnInit {
     }
 
     // Update student's factory assignment
-    const index = this.students.findIndex(s => s.code === student.code);
+    const index = this.students.findIndex((s) => s.code === student.code);
     if (index !== -1) {
       // Update in local array
       this.students[index].factory = null;
@@ -395,16 +470,18 @@ export class StudentDistributionComponent implements OnInit {
 
   private updateFactoryAssignments(): void {
     // Clear factory students first
-    this.factories.forEach(factory => {
+    this.factories.forEach((factory) => {
       factory.students = [];
       factory.assignedStudents = 0;
     });
 
     // Get all students and assign them to factories
     if (this.students && this.students.length > 0) {
-      this.students.forEach(student => {
+      this.students.forEach((student) => {
         if (student.factory) {
-          const factory = this.factories.find(f => f.name === student.factory);
+          const factory = this.factories.find(
+            (f) => f.name === student.factory,
+          );
           if (factory) {
             factory.students.push(student);
             factory.assignedStudents = factory.students.length;
@@ -413,14 +490,25 @@ export class StudentDistributionComponent implements OnInit {
       });
     }
 
-    console.log('Factory assignments updated:', this.factories.map(f => ({
-      name: f.name,
-      count: f.assignedStudents,
-      students: f.students.length > 0 ? f.students.map(s => s.name) : []
-    })));
+    console.log(
+      'Factory assignments updated:',
+      this.factories.map((f) => ({
+        name: f.name,
+        count: f.assignedStudents,
+        students: f.students.length > 0 ? f.students.map((s) => s.name) : [],
+      })),
+    );
   }
 
-  async addFactory(name: string, address: string, phone: string, contactName: string, industry: string, capacity: number, type: string): Promise<void> {
+  async addFactory(
+    name: string,
+    address: string,
+    phone: string,
+    contactName: string,
+    industry: string,
+    capacity: number,
+    type: string,
+  ): Promise<void> {
     // Reset error messages
     this.resetFormErrors();
 
@@ -457,8 +545,6 @@ export class StudentDistributionComponent implements OnInit {
       // Create a unique ID for the factory - use timestamp as numeric ID for consistency
       const timestamp = Date.now();
       const factoryId = timestamp.toString();
-
-      // Create the factory object for Firebase
       const firebaseFactory: FirebaseFactory = {
         id: factoryId,
         name,
@@ -472,16 +558,20 @@ export class StudentDistributionComponent implements OnInit {
         assignedStudents: 0,
         isApproved: true, // Set to true to make it immediately available
         studentName: this.authService.currentUserValue?.firstName || 'Unknown',
-        createdAt: Date.now()
+        createdAt: Date.now(),
       };
 
       console.log('Submitting factory to Firebase:', firebaseFactory);
 
       // Save to Firebase directly
-      const success = await this.authService.submitFactoryRequest(firebaseFactory);
+      const success =
+        await this.authService.submitFactoryRequest(firebaseFactory);
 
       if (success) {
-        console.log('Factory saved to Firebase successfully with ID:', factoryId);
+        console.log(
+          'Factory saved to Firebase successfully with ID:',
+          factoryId,
+        );
 
         // Also add to the local factory service for immediate display
         const newFactory: Factory = {
@@ -494,13 +584,13 @@ export class StudentDistributionComponent implements OnInit {
           capacity,
           type,
           students: [],
-          assignedStudents: 0
+          assignedStudents: 0,
         };
 
         // Convert our local Factory to the service Factory type
         const serviceFactory = {
           ...newFactory,
-          id: timestamp // Use the same numeric timestamp as ID
+          id: timestamp, // Use the same numeric timestamp as ID
         };
 
         // Add to factory service to ensure it persists
@@ -564,12 +654,18 @@ export class StudentDistributionComponent implements OnInit {
 
     // Check if factory has assigned students
     if (this.selectedFactory.students.length > 0) {
-      alert(`Cannot delete factory "${this.selectedFactory.name}" because it has ${this.selectedFactory.students.length} assigned students. Please reassign or remove all students first.`);
+      alert(
+        `Cannot delete factory "${this.selectedFactory.name}" because it has ${this.selectedFactory.students.length} assigned students. Please reassign or remove all students first.`,
+      );
       return;
     }
 
     // Confirm deletion
-    if (!confirm(`Are you sure you want to delete factory "${this.selectedFactory.name}"? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete factory "${this.selectedFactory.name}"? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -578,7 +674,9 @@ export class StudentDistributionComponent implements OnInit {
       await this.factoryService.deleteFactory(Number(this.selectedFactory.id));
 
       // Remove from local factories array
-      this.factories = this.factories.filter(f => f.id !== this.selectedFactory?.id);
+      this.factories = this.factories.filter(
+        (f) => f.id !== this.selectedFactory?.id,
+      );
 
       // Close the modal
       const modalElement = document.getElementById('factoryDetailsModal');

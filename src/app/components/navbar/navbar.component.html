@@ -190,22 +190,21 @@
               {{ selectedFactory.capacity }}
             </p>
           </div>
+
           <div
             class="info-group"
             *ngIf="
-              selectedFactory.longitude == 0 && selectedFactory.latitude == 0
+              !(selectedFactory.longitude == 0 && selectedFactory.latitude == 0)
             "
           >
-            <div class="info-group">
-              <button
-                class="btn btn-outline-primary"
-                (click)="
-                  goToMap(selectedFactory.longitude, selectedFactory.latitude)
-                "
-              >
-                {{ translationService.translate("address") }}
-              </button>
-            </div>
+            <button
+              class="btn btn-outline-primary"
+              (click)="
+                goToMap(selectedFactory.longitude, selectedFactory.latitude)
+              "
+            >
+              {{ translationService.translate("address") }}
+            </button>
           </div>
         </div>
         <div class="modal-footer">

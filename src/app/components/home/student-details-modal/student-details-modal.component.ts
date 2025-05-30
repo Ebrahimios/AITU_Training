@@ -1,7 +1,18 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import {
+  MatDialogModule,
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialog,
+} from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EditStudentModalComponent } from '../edit-student-modal/edit-student-modal.component';
 import { Student, StudentReport } from '../../../interfaces/student';
@@ -57,32 +68,27 @@ interface CapacityEvaluation {
   birthDateString?: string; // For date input field
 }
 
-  @Component({
-      selector: 'app-student-details-modal',
-      imports: [
-          CommonModule,
-          FormsModule,
-          ReactiveFormsModule,
-          MatDialogModule
-      ],
-      templateUrl: './student-details-modal.component.html',
-      styleUrls: ['./student-details-modal.component.css']
-  })
-  export class StudentDetailsModalComponent implements OnInit {
-    student!: StudentWithPerformance;
-    evaluationForm!: FormGroup;
-    isSupervisor: boolean = true;
-    isLoading: boolean = false;
-    showProgress: boolean = false;
-    progressValue: number = 0;
-    activeTab: 'basic' | 'progress' | 'evaluation' | 'report' = 'basic';
-    isEditMode: boolean = false;
-    isLoadingReport: boolean = false;
-    isLoadingReports: boolean = false; // Added property for reports loading state
-    studentReports: StudentReport[] = []; // Added property for student reports
-    supervisors: Supervisor[] = [];
-    birthDateString: string = ''; // For date input field
-    supervisorNames: string[] = [];
+@Component({
+  selector: 'app-student-details-modal',
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule],
+  templateUrl: './student-details-modal.component.html',
+  styleUrls: ['./student-details-modal.component.css'],
+})
+export class StudentDetailsModalComponent implements OnInit {
+  student!: StudentWithPerformance;
+  evaluationForm!: FormGroup;
+  isSupervisor: boolean = true;
+  isLoading: boolean = false;
+  showProgress: boolean = false;
+  progressValue: number = 0;
+  activeTab: 'basic' | 'progress' | 'evaluation' | 'report' = 'basic';
+  isEditMode: boolean = false;
+  isLoadingReport: boolean = false;
+  isLoadingReports: boolean = false; // Added property for reports loading state
+  studentReports: StudentReport[] = []; // Added property for student reports
+  supervisors: Supervisor[] = [];
+  birthDateString: string = ''; // For date input field
+  supervisorNames: string[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<StudentDetailsModalComponent>,
@@ -91,7 +97,7 @@ interface CapacityEvaluation {
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private authService: AuthService,
-    private factoryService: FactoryService
+    private factoryService: FactoryService,
   ) {
     // Convert dates to appropriate formats
     if (this.data && this.data.student) {
@@ -139,9 +145,9 @@ interface CapacityEvaluation {
 
   ngOnInit(): void {
     // Load supervisors from factory service
-    this.factoryService.supervisors$.subscribe(supervisors => {
+    this.factoryService.supervisors$.subscribe((supervisors) => {
       this.supervisors = supervisors;
-      this.supervisorNames = supervisors.map(s => s.name);
+      this.supervisorNames = supervisors.map((s) => s.name);
     });
 
     // Format dates appropriately
@@ -154,7 +160,9 @@ interface CapacityEvaluation {
       // If number (timestamp), convert to string
       if (typeof value === 'number') {
         const date = new Date(value);
-        return isNaN(date.getTime()) ? undefined : date.toISOString().split('T')[0];
+        return isNaN(date.getTime())
+          ? undefined
+          : date.toISOString().split('T')[0];
       }
 
       return undefined;
@@ -169,7 +177,9 @@ interface CapacityEvaluation {
       // If number (timestamp), convert to string
       if (typeof value === 'number') {
         const date = new Date(value);
-        return isNaN(date.getTime()) ? undefined : date.toISOString().split('T')[0];
+        return isNaN(date.getTime())
+          ? undefined
+          : date.toISOString().split('T')[0];
       }
 
       return undefined;
@@ -178,7 +188,7 @@ interface CapacityEvaluation {
     this.student = {
       ...this.data.student,
       birthDate: formatBirthDate(this.data.student.birthDate) || undefined,
-      createOn: formatCreateOnToString(this.data.student.createOn)
+      createOn: formatCreateOnToString(this.data.student.createOn),
     };
 
     // Convert timestamp to date string for the date input field
@@ -193,28 +203,66 @@ interface CapacityEvaluation {
 
   // باقي الكود بدون تغيير...
 
-
   private initializeForm() {
     this.evaluationForm = this.fb.group({
       // Personal and Ethical Aspects (9 points total)
-      neatAppearance: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      responsivePersonality: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      confidentRelations: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      neatAppearance: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
+      responsivePersonality: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
+      confidentRelations: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
 
       // Practical and Professional Aspects (51 points total)
-      attendance: [0, [Validators.required, Validators.min(0), Validators.max(15)]],
-      understandingInstructions: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      taskCompletion: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      effectiveInteraction: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      followUpWithSupervisor: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      adherenceToInstructions: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      reportWriting: [0, [Validators.required, Validators.min(0), Validators.max(10)]],
-      informationGathering: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
-      adaptToWorkEnvironment: [0, [Validators.required, Validators.min(0), Validators.max(5)]],
-      maintenanceSkills: [0, [Validators.required, Validators.min(0), Validators.max(3)]],
+      attendance: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(15)],
+      ],
+      understandingInstructions: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
+      taskCompletion: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
+      effectiveInteraction: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
+      followUpWithSupervisor: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
+      adherenceToInstructions: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
+      reportWriting: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(10)],
+      ],
+      informationGathering: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
+      adaptToWorkEnvironment: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(5)],
+      ],
+      maintenanceSkills: [
+        0,
+        [Validators.required, Validators.min(0), Validators.max(3)],
+      ],
 
       overallRating: [0],
-      comments: ['', [Validators.required, Validators.minLength(10)]]
+      comments: ['', [Validators.required, Validators.minLength(10)]],
     });
 
     this.evaluationForm.valueChanges.subscribe(() => {
@@ -227,7 +275,7 @@ interface CapacityEvaluation {
     const personalEthicalRatings = [
       values.neatAppearance || 0,
       values.responsivePersonality || 0,
-      values.confidentRelations || 0
+      values.confidentRelations || 0,
     ];
 
     // Practical and Professional Aspects (51 points total)
@@ -241,20 +289,28 @@ interface CapacityEvaluation {
       values.reportWriting || 0,
       values.informationGathering || 0,
       values.adaptToWorkEnvironment || 0,
-      values.maintenanceSkills || 0
+      values.maintenanceSkills || 0,
     ];
 
     // Calculate total points (out of 60)
-    const totalPoints = [...personalEthicalRatings, ...practicalProfessionalRatings].reduce((a, b) => a + b, 0);
+    const totalPoints = [
+      ...personalEthicalRatings,
+      ...practicalProfessionalRatings,
+    ].reduce((a, b) => a + b, 0);
 
-    this.evaluationForm.patchValue({ overallRating: totalPoints }, { emitEvent: false });
+    this.evaluationForm.patchValue(
+      { overallRating: totalPoints },
+      { emitEvent: false },
+    );
   }
 
   /**
    * Updates the evaluation form with data loaded from Firebase
    * @param evaluationData The evaluation data from Firebase
    */
-  private updateEvaluationFormWithData(evaluationData: CapacityEvaluation): void {
+  private updateEvaluationFormWithData(
+    evaluationData: CapacityEvaluation,
+  ): void {
     if (!evaluationData) return;
 
     // Update form with loaded evaluation data
@@ -278,7 +334,7 @@ interface CapacityEvaluation {
 
       // Overall rating and comments
       overallRating: evaluationData.overallRating || 0,
-      comments: evaluationData.comments || ''
+      comments: evaluationData.comments || '',
     });
   }
 
@@ -289,7 +345,7 @@ interface CapacityEvaluation {
     const personalEthicalRatings = [
       values.neatAppearance || 0,
       values.responsivePersonality || 0,
-      values.confidentRelations || 0
+      values.confidentRelations || 0,
     ];
 
     // Practical and Professional Aspects (51 points total)
@@ -303,11 +359,14 @@ interface CapacityEvaluation {
       values.reportWriting || 0,
       values.informationGathering || 0,
       values.adaptToWorkEnvironment || 0,
-      values.maintenanceSkills || 0
+      values.maintenanceSkills || 0,
     ];
 
     // Calculate total points (out of 60)
-    const totalPoints = [...personalEthicalRatings, ...practicalProfessionalRatings].reduce((a, b) => a + b, 0);
+    const totalPoints = [
+      ...personalEthicalRatings,
+      ...practicalProfessionalRatings,
+    ].reduce((a, b) => a + b, 0);
 
     this.evaluationForm.patchValue({ overallRating: totalPoints });
     return totalPoints;
@@ -326,7 +385,13 @@ interface CapacityEvaluation {
       const firestore = this.authService['firestore'];
 
       // Create a reference to the student's evaluation document
-      const evaluationRef = doc(firestore, 'StudentsTable', this.student.code, 'evaluations', 'performance');
+      const evaluationRef = doc(
+        firestore,
+        'StudentsTable',
+        this.student.code,
+        'evaluations',
+        'performance',
+      );
 
       // Get the evaluation data
       const evaluationDoc = await getDoc(evaluationRef);
@@ -357,8 +422,8 @@ interface CapacityEvaluation {
             reportWriting: evaluationData.reportWriting,
             informationGathering: evaluationData.informationGathering,
             adaptToWorkEnvironment: evaluationData.adaptToWorkEnvironment,
-            maintenanceSkills: evaluationData.maintenanceSkills
-          }
+            maintenanceSkills: evaluationData.maintenanceSkills,
+          },
         };
 
         // Update the evaluation form with the loaded data
@@ -385,8 +450,8 @@ interface CapacityEvaluation {
             reportWriting: 0,
             informationGathering: 0,
             adaptToWorkEnvironment: 0,
-            maintenanceSkills: 0
-          }
+            maintenanceSkills: 0,
+          },
         };
       }
     } catch (error) {
@@ -410,8 +475,8 @@ interface CapacityEvaluation {
           reportWriting: 0,
           informationGathering: 0,
           adaptToWorkEnvironment: 0,
-          maintenanceSkills: 0
-        }
+          maintenanceSkills: 0,
+        },
       };
     } finally {
       this.isLoading = false;
@@ -422,9 +487,13 @@ interface CapacityEvaluation {
     this.isLoading = true;
     // Simulate report generation
     setTimeout(() => {
-      this.snackBar.open(`${reportType} report generated successfully`, 'Close', {
-        duration: 3000
-      });
+      this.snackBar.open(
+        `${reportType} report generated successfully`,
+        'Close',
+        {
+          duration: 3000,
+        },
+      );
       this.isLoading = false;
     }, 1500);
   }
@@ -450,8 +519,8 @@ interface CapacityEvaluation {
           date: new Date().getTime(), // Current date
           url: 'https://firebasestorage.example.com/reports/student-report.pdf',
           status: 'approved',
-          feedback: 'Good work!'
-        }
+          feedback: 'Good work!',
+        },
       ];
 
       this.isLoadingReports = false;
@@ -496,7 +565,7 @@ interface CapacityEvaluation {
     window.open(report.url, '_blank');
 
     this.snackBar.open(`Opening ${report.name}...`, 'Close', {
-      duration: 3000
+      duration: 3000,
     });
   }
 
@@ -508,7 +577,7 @@ interface CapacityEvaluation {
     // In a real app, this would initiate the download
     // For now, we'll just show a notification
     this.snackBar.open(`Downloading ${report.name}...`, 'Close', {
-      duration: 3000
+      duration: 3000,
     });
   }
 
@@ -518,7 +587,7 @@ interface CapacityEvaluation {
 
       const evaluation: CapacityEvaluation = {
         ...this.evaluationForm.value,
-        lastUpdated: new Date().getTime() // Store as timestamp
+        lastUpdated: new Date().getTime(), // Store as timestamp
       };
 
       // Create a reference to the student's evaluation document
@@ -543,22 +612,34 @@ interface CapacityEvaluation {
                 reportWriting: evaluation.reportWriting,
                 informationGathering: evaluation.informationGathering,
                 adaptToWorkEnvironment: evaluation.adaptToWorkEnvironment,
-                maintenanceSkills: evaluation.maintenanceSkills
+                maintenanceSkills: evaluation.maintenanceSkills,
               };
 
               // Update progress and attendance percentages
-              this.student.progress = Math.round((evaluation.overallRating / 60) * 100);
-              this.student.attendance = Math.round((evaluation.attendance / 15) * 100);
+              this.student.progress = Math.round(
+                (evaluation.overallRating / 60) * 100,
+              );
+              this.student.attendance = Math.round(
+                (evaluation.attendance / 15) * 100,
+              );
             }
 
-            this.snackBar.open('Evaluation submitted successfully to Firebase', 'Close', {
-              duration: 3000
-            });
+            this.snackBar.open(
+              'Evaluation submitted successfully to Firebase',
+              'Close',
+              {
+                duration: 3000,
+              },
+            );
             this.dialogRef.close();
           } else {
-            this.snackBar.open('Error submitting evaluation to Firebase', 'Close', {
-              duration: 3000
-            });
+            this.snackBar.open(
+              'Error submitting evaluation to Firebase',
+              'Close',
+              {
+                duration: 3000,
+              },
+            );
           }
         })
         .finally(() => {
@@ -566,7 +647,7 @@ interface CapacityEvaluation {
         });
     } else {
       this.snackBar.open('Please fill out all required fields', 'Close', {
-        duration: 3000
+        duration: 3000,
       });
     }
   }
@@ -577,19 +658,28 @@ interface CapacityEvaluation {
    * @param evaluation The evaluation data
    * @returns Promise resolving to boolean indicating success
    */
-  private async saveEvaluationToFirebase(studentCode: string, evaluation: CapacityEvaluation): Promise<boolean> {
+  private async saveEvaluationToFirebase(
+    studentCode: string,
+    evaluation: CapacityEvaluation,
+  ): Promise<boolean> {
     try {
       // Get a reference to the Firestore instance
       const firestore = this.authService['firestore'];
 
       // Create a reference to the student's evaluation document
-      const evaluationRef = doc(firestore, 'StudentsTable', studentCode, 'evaluations', 'performance');
+      const evaluationRef = doc(
+        firestore,
+        'StudentsTable',
+        studentCode,
+        'evaluations',
+        'performance',
+      );
 
       // Save the evaluation data
       await setDoc(evaluationRef, {
         ...evaluation,
         updatedBy: this.authService.currentUserValue?.id || 'unknown',
-        updatedAt: new Date().getTime()
+        updatedAt: new Date().getTime(),
       });
 
       console.log('Evaluation saved to Firebase for student:', studentCode);
@@ -653,13 +743,15 @@ interface CapacityEvaluation {
    * @param format The format to use ('input' for YYYY-MM-DD, 'display' for localized format)
    * @returns Formatted date string or empty string if invalid date
    */
-  formatDateToString(dateValue: number | string | Date | undefined, format: 'input' | 'display' = 'display'): string {
+  formatDateToString(
+    dateValue: number | string | Date | undefined,
+    format: 'input' | 'display' = 'display',
+  ): string {
     if (!dateValue) return '';
 
     // Convert to Date object
-    const date = typeof dateValue === 'object'
-      ? dateValue
-      : new Date(dateValue);
+    const date =
+      typeof dateValue === 'object' ? dateValue : new Date(dateValue);
 
     // Check if date is valid
     if (isNaN(date.getTime())) return '';
@@ -735,8 +827,10 @@ interface CapacityEvaluation {
           address: this.student.address?.trim() || '',
           nationalID: this.student.nationalID?.trim() || '',
           email: this.student.email?.trim() || '',
-          birthDate: this.student.birthDate || new Date().toISOString().split('T')[0],
-          createOn: this.student.createOn || new Date().toISOString().split('T')[0],
+          birthDate:
+            this.student.birthDate || new Date().toISOString().split('T')[0],
+          createOn:
+            this.student.createOn || new Date().toISOString().split('T')[0],
           gender: this.student.gender || 'غير محدد',
           department: this.student.department || '',
           birthAddress: this.student.birthAddress || '',
@@ -745,33 +839,49 @@ interface CapacityEvaluation {
           stage: this.student.stage || '',
           factoryType: this.student.factoryType || true,
           selected: this.student.selected ?? false,
-          supervisor: this.student.supervisor || ''
+          supervisor: this.student.supervisor || '',
         };
 
         // Additional validation before sending
         if (!updatedStudent.code) {
-          this.snackBar.open('Error: Missing student code!', 'Close', { duration: 3000 });
+          this.snackBar.open('Error: Missing student code!', 'Close', {
+            duration: 3000,
+          });
           this.isLoading = false;
           return;
         }
 
         // Update student
-        this.authService.updateStudent(updatedStudent).then((success: any) => {
-          this.isLoading = false;
-          if (success) {
-            this.snackBar.open('Changes saved successfully', 'Close', { duration: 3000 });
-            this.dialogRef.close({ action: 'update', student: updatedStudent });
-          } else {
-            this.snackBar.open('Error saving changes', 'Close', { duration: 3000 });
-          }
-        }).catch((err: any) => {
-          this.isLoading = false;
-          console.error('Update failed:', err);
-          this.snackBar.open('An error occurred while saving', 'Close', { duration: 3000 });
-        });
+        this.authService
+          .updateStudent(updatedStudent)
+          .then((success: any) => {
+            this.isLoading = false;
+            if (success) {
+              this.snackBar.open('Changes saved successfully', 'Close', {
+                duration: 3000,
+              });
+              this.dialogRef.close({
+                action: 'update',
+                student: updatedStudent,
+              });
+            } else {
+              this.snackBar.open('Error saving changes', 'Close', {
+                duration: 3000,
+              });
+            }
+          })
+          .catch((err: any) => {
+            this.isLoading = false;
+            console.error('Update failed:', err);
+            this.snackBar.open('An error occurred while saving', 'Close', {
+              duration: 3000,
+            });
+          });
       } else {
         this.isLoading = false;
-        this.snackBar.open('Error: Student data is missing', 'Close', { duration: 3000 });
+        this.snackBar.open('Error: Student data is missing', 'Close', {
+          duration: 3000,
+        });
       }
     }
   }
@@ -780,21 +890,25 @@ interface CapacityEvaluation {
     if (confirm('Are you sure you want to delete this student?')) {
       this.isLoading = true;
       if (this.student && this.student.code) {
-        this.authService.deleteStudent(this.student.code).then((success: any) => {
-          if (success) {
-            this.snackBar.open('Student deleted successfully', 'Close', {
-              duration: 3000
-            });
-            this.dialogRef.close({ action: 'delete', student: this.student });
-          } else {
-            this.snackBar.open('Error deleting student', 'Close', {
-              duration: 3000
-            });
-          }
-          this.isLoading = false;
-        });
+        this.authService
+          .deleteStudent(this.student.code)
+          .then((success: any) => {
+            if (success) {
+              this.snackBar.open('Student deleted successfully', 'Close', {
+                duration: 3000,
+              });
+              this.dialogRef.close({ action: 'delete', student: this.student });
+            } else {
+              this.snackBar.open('Error deleting student', 'Close', {
+                duration: 3000,
+              });
+            }
+            this.isLoading = false;
+          });
       } else {
-        this.snackBar.open('Error: Student code is missing', 'Close', { duration: 3000 });
+        this.snackBar.open('Error: Student code is missing', 'Close', {
+          duration: 3000,
+        });
         this.isLoading = false;
       }
     } else {
