@@ -661,13 +661,35 @@ export class StudentDistributionComponent implements OnInit {
         console.log('Factory added to FactoryService successfully');
 
         // Reload factory requests to ensure the UI is updated
-        await this.authService.loadFactoryRequests();
+        //await this.authService.loadFactoryRequests();
 
         // Refresh factories from Firebase to ensure consistency
-        await this.factoryService.loadFactoriesFromFirebase();
+        //await this.factoryService.loadFactoriesFromFirebase();
+        this.factoryService.factories$.subscribe((factories) => {
+          console.log('Received factories from service:', factories);
 
+          // Convert factory service factories to our local Factory interface
+          this.factories = factories.map((f) => ({
+            id: f.id.toString(),
+            name: f.name,
+            address: f.address,
+            phone: f.phone,
+            contactName: f.contactName,
+            industry: f.industry,
+            capacity: f.capacity,
+            type: f.type,
+            longitude: f.longitude,
+            latitude: f.latitude,
+            students: [],
+            assignedStudents: f.assignedStudents,
+          }));
+          this.factoryDropLists = this.factories.map((f) => `factory-${f.id}`);
+
+          // Load students after factories are loaded
+          this.loadStudentsFromFirebase();
+        });
         // Show success message
-        alert('Factory added successfully and will persist after page reload.');
+        alert('Factory added successfully');
       } else {
         console.error('Failed to save factory to Firebase');
         alert('Failed to add factory. Please try again.');
