@@ -53,6 +53,8 @@ export class StudentDistributionComponent implements OnInit {
   selectedFactoryType: string = 'All';
   isEditing: boolean = false;
   originalFactoryData: Factory | null = null;
+  coordinatesInput: string = '';
+  factoryCoordinates: string = '';
 
   // Error messages
   nameError: string = '';
@@ -60,6 +62,7 @@ export class StudentDistributionComponent implements OnInit {
   phoneError: string = '';
   industryError: string = '';
   contactNameError: string = '';
+  coordinatesError: string = '';
 
   constructor(
     public translationService: TranslationService,
@@ -153,6 +156,8 @@ export class StudentDistributionComponent implements OnInit {
           industry: f.industry,
           capacity: f.capacity,
           type: f.type,
+          longitude: f.longitude,
+          latitude: f.latitude,
           students: [],
           assignedStudents: f.assignedStudents,
         }));
@@ -231,6 +236,7 @@ export class StudentDistributionComponent implements OnInit {
     this.phoneError = '';
     this.contactNameError = '';
     this.industryError = '';
+    this.coordinatesError = '';
   }
 
   openFactoryDetails(factory: Factory): void {
@@ -246,6 +252,13 @@ export class StudentDistributionComponent implements OnInit {
 
   startEditing(): void {
     this.isEditing = true;
+    if (this.selectedFactory) {
+      // Make sure we have a copy of the original data
+      this.originalFactoryData = { ...this.selectedFactory };
+      // Set the coordinates input with current values
+      this.coordinatesInput = `${this.selectedFactory.latitude}, ${this.selectedFactory.longitude}`;
+      console.log('Starting edit with coordinates:', this.coordinatesInput);
+    }
   }
 
   cancelEditing(): void {
@@ -253,18 +266,39 @@ export class StudentDistributionComponent implements OnInit {
       Object.assign(this.selectedFactory, this.originalFactoryData);
     }
     this.isEditing = false;
+    this.coordinatesInput = '';
+    this.coordinatesError = '';
   }
 
   saveChanges(): void {
     if (this.selectedFactory) {
+      console.log('Current coordinates input:', this.coordinatesInput);
+      // Parse coordinates
+      const parsedCoordinates = this.parseCoordinates(this.coordinatesInput);
+      console.log('Parsed coordinates:', parsedCoordinates);
+
+      if (!parsedCoordinates) {
+        this.coordinatesError =
+          'Invalid coordinates format. Please use format: latitude, longitude';
+        return;
+      }
+
+      // Update coordinates
+      this.selectedFactory.latitude = parsedCoordinates.latitude;
+      this.selectedFactory.longitude = parsedCoordinates.longitude;
+      console.log('Updated factory coordinates:', this.selectedFactory);
+
       if (confirm('Are you sure you want to save these changes?')) {
         // Convert our local Factory to the service Factory type
         const serviceFactory = {
           ...this.selectedFactory,
           id: Number(this.selectedFactory.id),
         };
+        console.log('Saving factory with coordinates:', serviceFactory);
         this.factoryService.updateFactory(serviceFactory);
         this.isEditing = false;
+        this.coordinatesInput = '';
+        this.coordinatesError = '';
 
         // Close the modal
         const modalElement = document.getElementById('factoryDetailsModal');
@@ -281,6 +315,22 @@ export class StudentDistributionComponent implements OnInit {
         }
         alert('Changes saved successfully');
       }
+    }
+  }
+
+  private parseCoordinates(
+    coordinates: string,
+  ): { latitude: number; longitude: number } | null {
+    try {
+      const [lat, lng] = coordinates
+        .split(',')
+        .map((coord) => parseFloat(coord.trim()));
+      if (isNaN(lat) || isNaN(lng)) {
+        return null;
+      }
+      return { latitude: lat, longitude: lng };
+    } catch (error) {
+      return null;
     }
   }
 
@@ -508,6 +558,7 @@ export class StudentDistributionComponent implements OnInit {
     industry: string,
     capacity: number,
     type: string,
+    coordinates: string,
   ): Promise<void> {
     // Reset error messages
     this.resetFormErrors();
@@ -537,6 +588,14 @@ export class StudentDistributionComponent implements OnInit {
       hasError = true;
     }
 
+    // Parse coordinates
+    const parsedCoordinates = this.parseCoordinates(coordinates);
+    if (!parsedCoordinates) {
+      this.coordinatesError =
+        'Invalid coordinates format. Please use format: latitude, longitude';
+      hasError = true;
+    }
+
     if (hasError) {
       return;
     }
@@ -556,9 +615,11 @@ export class StudentDistributionComponent implements OnInit {
         type,
         students: [],
         assignedStudents: 0,
-        isApproved: true, // Set to true to make it immediately available
+        isApproved: true,
         studentName: this.authService.currentUserValue?.firstName || 'Unknown',
         createdAt: Date.now(),
+        longitude: parsedCoordinates!.longitude,
+        latitude: parsedCoordinates!.latitude,
       };
 
       console.log('Submitting factory to Firebase:', firebaseFactory);
@@ -585,12 +646,14 @@ export class StudentDistributionComponent implements OnInit {
           type,
           students: [],
           assignedStudents: 0,
+          longitude: parsedCoordinates!.longitude,
+          latitude: parsedCoordinates!.latitude,
         };
 
         // Convert our local Factory to the service Factory type
         const serviceFactory = {
           ...newFactory,
-          id: timestamp, // Use the same numeric timestamp as ID
+          id: timestamp,
         };
 
         // Add to factory service to ensure it persists
@@ -701,5 +764,28 @@ export class StudentDistributionComponent implements OnInit {
       console.error('Error deleting factory:', error);
       alert('An error occurred while deleting the factory. Please try again.');
     }
+  }
+
+  private hasValidCoordinates(factory: Factory | null): boolean {
+    return (
+      factory !== null &&
+      factory.longitude !== undefined &&
+      factory.longitude !== null &&
+      factory.latitude !== undefined &&
+      factory.latitude !== null
+    );
+  }
+
+  openGoogleMaps(
+    longitude: number | undefined,
+    latitude: number | undefined,
+  ): void {
+    if (longitude === undefined || latitude === undefined) {
+      console.error('Invalid coordinates');
+      return;
+    }
+    const zoom = 19;
+    const url = `https://www.google.com/maps?q=${latitude},${longitude}&z=${zoom}`;
+    window.open(url, '_blank');
   }
 }

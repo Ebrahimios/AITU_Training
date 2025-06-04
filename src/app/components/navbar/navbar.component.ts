@@ -152,8 +152,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.showUserMenu = !this.showUserMenu;
     if (this.showNotifications) this.showNotifications = false;
   }
-  goToMap(long: number | undefined, lat: number | undefined) {
-    window.open(`https://www.google.com/maps/@${lat},${long},18z`, '_blank');
+  openGoogleMaps(
+    longitude: number | undefined,
+    latitude: number | undefined,
+  ): void {
+    if (longitude === undefined || latitude === undefined) {
+      console.error('Invalid coordinates');
+      return;
+    }
+    const zoom = 19;
+    const url = `https://www.google.com/maps?q=${latitude},${longitude}&z=${zoom}`;
+    window.open(url, '_blank');
   }
   // Track if the modal is currently open to prevent multiple instances
   private isUserProfileModalOpen = false;

@@ -198,12 +198,15 @@
             "
           >
             <button
-              class="btn btn-outline-primary"
+              class="btn btn-primary"
               (click)="
-                goToMap(selectedFactory.longitude, selectedFactory.latitude)
+                openGoogleMaps(
+                  selectedFactory.longitude!,
+                  selectedFactory.latitude!
+                )
               "
             >
-              {{ translationService.translate("address") }}
+              <i class="bi bi-map"></i> View on Map
             </button>
           </div>
         </div>

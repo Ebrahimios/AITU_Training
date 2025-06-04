@@ -61,19 +61,31 @@ export class FactoryService {
       );
 
       // Convert Firebase factories to our local Factory interface
-      const factories: Factory[] = approvedFactories.map((f) => ({
-        id: Number(f.id) || Date.now(),
-        name: f.name,
-        capacity: f.capacity,
-        assignedStudents: f.assignedStudents || 0,
-        students: f.students || [],
-        address: f.address,
-        phone: f.phone,
-        department: f.department,
-        contactName: f.contactName,
-        type: f.type || 'External',
-        industry: f.industry,
-      }));
+      const factories: Factory[] = approvedFactories.map((f) => {
+        console.log(
+          'Processing factory:',
+          f.name,
+          'with coordinates:',
+          f.longitude,
+          f.latitude,
+        );
+        return {
+          id: Number(f.id) || Date.now(),
+          name: f.name,
+          capacity: f.capacity,
+          assignedStudents: f.assignedStudents || 0,
+          students: f.students || [],
+          address: f.address,
+          phone: f.phone,
+          department: f.department,
+          contactName: f.contactName,
+          type: f.type || 'External',
+          industry: f.industry,
+          longitude:
+            f.longitude !== undefined ? Number(f.longitude) : undefined,
+          latitude: f.latitude !== undefined ? Number(f.latitude) : undefined,
+        };
+      });
 
       this.factories.next(factories);
       console.log(
@@ -142,6 +154,8 @@ export class FactoryService {
         contactName: f.contactName,
         type: f.type || 'External',
         industry: f.industry,
+        longitude: f.longitude,
+        latitude: f.latitude,
       }));
 
       this.factories.next(factories);
@@ -174,6 +188,8 @@ export class FactoryService {
         contactName: factory.contactName,
         type: factory.type,
         industry: factory.industry,
+        longitude: factory.longitude,
+        latitude: factory.latitude,
         isApproved: true,
         createdAt: Date.now(),
       };
@@ -206,6 +222,8 @@ export class FactoryService {
           contactName: updatedFactory.contactName,
           type: updatedFactory.type,
           industry: updatedFactory.industry,
+          longitude: updatedFactory.longitude,
+          latitude: updatedFactory.latitude,
           isApproved: true,
           createdAt: Date.now(),
         };

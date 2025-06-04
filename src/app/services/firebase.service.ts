@@ -558,7 +558,8 @@ export class AuthService {
 
           snapshot.forEach((doc) => {
             const data = doc.data();
-            factories.push({
+            console.log('Raw factory data from Firebase:', data);
+            const factory = {
               id: doc.id,
               name: data['name'] || 'Unknown Factory',
               capacity: data['capacity'] || 0,
@@ -573,7 +574,17 @@ export class AuthService {
               isApproved:
                 data['isApproved'] !== undefined ? data['isApproved'] : true,
               createdAt: data['createdAt'] || Date.now(),
-            });
+              longitude:
+                data['longitude'] !== undefined
+                  ? Number(data['longitude'])
+                  : undefined,
+              latitude:
+                data['latitude'] !== undefined
+                  ? Number(data['latitude'])
+                  : undefined,
+            };
+            console.log('Processed factory:', factory);
+            factories.push(factory);
           });
 
           // Update the BehaviorSubject with new data
@@ -817,14 +828,21 @@ export class AuthService {
       const factoryId = factoryData.id || `factory_${Date.now()}`;
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
 
-      // Preserve the isApproved status from the input or default to false
-      // This allows direct creation of approved factories when needed
+      // Ensure coordinates are numbers
       const factoryWithTimestamp = {
         ...factoryData,
         id: factoryId,
         isApproved:
           factoryData.isApproved !== undefined ? factoryData.isApproved : false,
         createdAt: factoryData.createdAt || Date.now(),
+        longitude:
+          factoryData.longitude !== undefined
+            ? Number(factoryData.longitude)
+            : undefined,
+        latitude:
+          factoryData.latitude !== undefined
+            ? Number(factoryData.latitude)
+            : undefined,
       };
 
       // Remove undefined values to prevent Firestore errors

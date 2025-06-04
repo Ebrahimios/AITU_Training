@@ -352,6 +352,23 @@
                 />
               </div>
               <div class="mb-3">
+                <label class="form-label"><strong>Location:</strong></label>
+                <div class="d-flex flex-column gap-2">
+                  <input
+                    type="text"
+                    class="form-control"
+                    #factoryCoordinates
+                    placeholder="Enter coordinates (e.g., 30.038884713950868, 30.999475145288976)"
+                  />
+                  <small class="text-muted"
+                    >Enter coordinates in format: latitude, longitude</small
+                  >
+                  <div class="text-danger" *ngIf="coordinatesError">
+                    {{ coordinatesError }}
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
                 <label for="factoryType" class="form-label">{{
                   translationService.translate("type")
                 }}</label>
@@ -388,7 +405,8 @@
                   factoryContactName.value,
                   factoryIndustry.value,
                   +factoryCapacity.value,
-                  factoryType.value
+                  factoryType.value,
+                  factoryCoordinates.value
                 )
               "
               data-bs-dismiss="modal"
@@ -534,6 +552,60 @@
                   min="1"
                   [readonly]="!isEditing"
                 />
+              </div>
+              <div class="mb-3">
+                <label class="form-label"><strong>Location:</strong></label>
+                <div class="d-flex flex-column gap-2">
+                  <div *ngIf="!isEditing">
+                    <div
+                      *ngIf="
+                        selectedFactory.longitude !== undefined &&
+                        selectedFactory.longitude !== null &&
+                        selectedFactory.latitude !== undefined &&
+                        selectedFactory.latitude !== null
+                      "
+                      class="d-flex gap-2 align-items-center"
+                    >
+                      <button
+                        class="btn btn-primary"
+                        (click)="
+                          openGoogleMaps(
+                            selectedFactory.longitude!,
+                            selectedFactory.latitude!
+                          )
+                        "
+                      >
+                        <i class="bi bi-map"></i> View on Map
+                      </button>
+                    </div>
+                    <div
+                      *ngIf="
+                        selectedFactory?.longitude === undefined ||
+                        selectedFactory?.longitude === null ||
+                        selectedFactory?.latitude === undefined ||
+                        selectedFactory?.latitude === null
+                      "
+                      class="text-danger"
+                    >
+                      No location coordinates available
+                    </div>
+                  </div>
+                  <div *ngIf="isEditing">
+                    <input
+                      type="text"
+                      class="form-control"
+                      [(ngModel)]="coordinatesInput"
+                      name="factoryCoordinates"
+                      placeholder="Enter coordinates (e.g., 30.038884713950868, 30.999475145288976)"
+                    />
+                    <small class="text-muted"
+                      >Enter coordinates in format: latitude, longitude</small
+                    >
+                    <div class="text-danger" *ngIf="coordinatesError">
+                      {{ coordinatesError }}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="mb-3">
                 <label class="form-label"
