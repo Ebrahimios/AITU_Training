@@ -1,14 +1,20 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/firebase.service';
 
 @Component({
-    selector: 'app-sign-up',
-    imports: [CommonModule, FormsModule, ReactiveFormsModule],
-    templateUrl: './sign-up.component.html',
-    styleUrls: ['./sign-up.component.css']
+  selector: 'app-sign-up',
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  templateUrl: './sign-up.component.html',
+  styleUrls: ['./sign-up.component.css'],
 })
 export class SignUpComponent {
   signupForm: FormGroup;
@@ -18,34 +24,49 @@ export class SignUpComponent {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
   ) {
     // Redirect if already logged in
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/home']);
     }
 
-    this.signupForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.minLength(2)]],
-      lastName: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern('^[0-9]{11}$')]],
-      password: ['', [Validators.required, Validators.minLength(8), Validators.pattern('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$')]],
-      confirmPassword: ['', [Validators.required]],
-      role: ['', [Validators.required]]
-    }, {
-      validator: this.passwordMatchValidator
-    });
+    this.signupForm = this.fb.group(
+      {
+        firstName: ['', [Validators.required, Validators.minLength(2)]],
+        lastName: ['', [Validators.required, Validators.minLength(2)]],
+        email: ['', [Validators.required, Validators.email]],
+        phone: ['', [Validators.required, Validators.pattern('^[0-9]{11}$')]],
+        password: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(8),
+            Validators.pattern(
+              '^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$',
+            ),
+          ],
+        ],
+        confirmPassword: ['', [Validators.required]],
+        role: ['', [Validators.required]],
+      },
+      {
+        validator: this.passwordMatchValidator,
+      },
+    );
   }
 
   // Custom validator for password matching
   passwordMatchValidator(g: FormGroup) {
     return g.get('password')?.value === g.get('confirmPassword')?.value
-      ? null : { 'mismatch': true };
+      ? null
+      : { mismatch: true };
   }
 
   // Getter methods for form controls
-  get f() { return this.signupForm.controls; }
+  get f() {
+    return this.signupForm.controls;
+  }
 
   async onSubmit() {
     if (this.signupForm.invalid) {
@@ -62,10 +83,14 @@ export class SignUpComponent {
         email: this.f['email'].value,
         phone: this.f['phone'].value,
         password: this.f['password'].value,
-        role: this.f['role'].value
+        role: this.f['role'].value,
       });
 
       if (success) {
+        await this.authService.login(
+          this.f['email'].value,
+          this.f['password'].value,
+        );
         this.router.navigate(['/login']);
       } else {
         this.error = 'Registration failed';
@@ -90,7 +115,8 @@ export class SignUpComponent {
     const errors = control.errors;
     if (errors['required']) return `${controlName} is required`;
     if (errors['email']) return 'Invalid email address';
-    if (errors['minlength']) return `${controlName} must be at least ${errors['minlength'].requiredLength} characters`;
+    if (errors['minlength'])
+      return `${controlName} must be at least ${errors['minlength'].requiredLength} characters`;
     if (errors['pattern']) {
       if (controlName === 'password') {
         return 'Password must contain at least one uppercase letter, one lowercase letter, and one number';

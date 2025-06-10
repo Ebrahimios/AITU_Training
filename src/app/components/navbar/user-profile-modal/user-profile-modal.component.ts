@@ -1,7 +1,11 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+  MatDialogModule,
+} from '@angular/material/dialog';
 import { TranslationService } from '../../../services/translation.service';
 import { AuthService, User } from '../../../services/firebase.service';
 
@@ -10,43 +14,26 @@ import { AuthService, User } from '../../../services/firebase.service';
   standalone: true,
   imports: [CommonModule, FormsModule, MatDialogModule],
   templateUrl: './user-profile-modal.component.html',
-  styleUrls: ['./user-profile-modal.component.css']
+  styleUrls: ['./user-profile-modal.component.css'],
 })
 export class UserProfileModalComponent {
   selectedFile: File | null = null;
   previewUrl: string | ArrayBuffer | null = null;
-  
+  isEditMode = false;
+  isUpdating = false;
+  updateError = '';
+  confirmPassword = '';
+  currentPassword = '';
+  userData: any = {};
+
   constructor(
     public dialogRef: MatDialogRef<UserProfileModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { user: User },
     public translationService: TranslationService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
-    // Configure the dialog to disable closing when clicking outside
+    this.userData = { ...data.user };
     this.dialogRef.disableClose = true;
-    
-    // Set the backdrop to be static (not clickable)
-    this.dialogRef.backdropClick().subscribe(() => {
-      // Add subtle animation to indicate the modal can't be closed by clicking outside
-      const modalElement = document.querySelector('.modal-content') as HTMLElement;
-      if (modalElement) {
-        modalElement.classList.add('shake-animation');
-        setTimeout(() => {
-          modalElement.classList.remove('shake-animation');
-        }, 500);
-      }
-    });
-    
-    // Prevent keyboard escape key from closing the dialog
-    this.dialogRef.keydownEvents().subscribe(event => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    });
-    
-    // Prevent scrolling of the background page when modal is open
-    document.body.style.overflow = 'hidden';
   }
 
   onFileSelected(event: Event): void {
@@ -58,40 +45,45 @@ export class UserProfileModalComponent {
   }
 
   previewImage(): void {
-    if (!this.selectedFile) {
-      return;
-    }
-    
+    if (!this.selectedFile) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      this.previewUrl = reader.result;
-    };
+    reader.onload = () => (this.previewUrl = reader.result);
     reader.readAsDataURL(this.selectedFile);
   }
 
-  uploadImage(): void {
-    if (this.selectedFile && this.data.user.id) {
-      // Here you would implement the actual upload to Firebase Storage
-      // For now, we'll just update the user profile with a placeholder URL
-      console.log('Uploading image:', this.selectedFile.name);
-      
-      // Update the user profile with the new image URL and timestamp
-      // In a real implementation, you would upload to Firebase Storage first
-      // and then update the user profile with the actual URL
-      const imageUrl = this.previewUrl as string;
-      const timestamp = Date.now(); // Current timestamp in milliseconds
-      
-      // Restore scrolling when modal is closed
-      document.body.style.overflow = '';
-      
-      // For demonstration, we'll just close the dialog
-      // In a real implementation, you would update the user profile in Firebase
-      this.dialogRef.close({ imageUrl, timestamp });
+  toggleEdit() {
+    this.isEditMode = true;
+  }
+
+  async save() {
+    this.isUpdating = true;
+    this.updateError = '';
+
+    try {
+      if (this.confirmPassword !== this.userData.password) {
+        this.updateError = 'Passwords do not match.';
+        this.isUpdating = false;
+        return;
+      }
+      // تحديث البيانات في فايرستور وفايربيز Auth
+      const success = await this.authService.updateUserProfileAndAuth(
+        this.userData.id,
+        this.userData,
+        this.data.user.password!,
+      );
+      if (success) {
+        this.isEditMode = false;
+        this.dialogRef.close({ updated: true, user: this.userData });
+      } else {
+        this.updateError = 'Faild updating profile';
+      }
+    } catch (err) {
+      this.updateError = 'Error updating profile.';
     }
+    this.isUpdating = false;
   }
 
   closeDialog(): void {
-    // Restore scrolling when modal is closed
     document.body.style.overflow = '';
     this.dialogRef.close();
   }

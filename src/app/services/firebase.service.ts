@@ -8,7 +8,12 @@ import {
   signOut,
   onAuthStateChanged,
   UserCredential,
+  reauthenticateWithCredential,
+  updateEmail,
+  EmailAuthProvider,
+  updatePassword,
 } from '@angular/fire/auth';
+
 import {
   Firestore,
   doc,
@@ -283,6 +288,7 @@ export class AuthService {
           email: userData['email'],
           phone: userData['phone'],
           role: userData['role'],
+          password: password,
           token: token,
         };
         // Save to localStorage and update BehaviorSubject
@@ -1026,5 +1032,56 @@ export class AuthService {
 
   public getFactoryRequests(): FirebaseFactory[] {
     return this.factoryRequestsSubject.value;
+  }
+  public async updateUserProfileAndAuth(
+    userId: string,
+    userData: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      password: string;
+    },
+    currentPassword: string,
+  ): Promise<boolean> {
+    try {
+      const currentUser = this.auth.currentUser;
+      if (!currentUser) throw new Error('No authenticated user found');
+
+      const credential = EmailAuthProvider.credential(
+        userData.email,
+        currentPassword,
+      );
+      await reauthenticateWithCredential(currentUser, credential);
+
+      if (userData.email && userData.email !== currentUser.email) {
+        await updateEmail(currentUser, userData.email);
+      }
+      if (userData.password) {
+        await updatePassword(currentUser, userData.password);
+      }
+
+      // تحديث بيانات المستخدم في Firestore
+      const userDocRef = doc(this.firestore, 'users', userId);
+      const updateData: any = {};
+      if (userData.firstName) updateData.firstName = userData.firstName;
+      if (userData.lastName) updateData.lastName = userData.lastName;
+      if (userData.email) updateData.email = userData.email;
+      if (userData.phone) updateData.phone = userData.phone;
+
+      updateData.timestamp = Date.now();
+
+      await updateDoc(userDocRef, updateData);
+      if (userData.password) updateData.password = userData.password;
+      // حدث بيانات المستخدم في localStorage أيضاً
+      const updatedUser = { ...this.currentUserValue, ...updateData };
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      this.currentUserSubject.next(updatedUser);
+
+      return true;
+    } catch (error) {
+      console.error('Error updating user profile and auth:', error);
+      return false;
+    }
   }
 }

@@ -1,60 +1,148 @@
 <!-- Modal Overlay -->
 <div class="modal-overlay">
   <!-- Bootstrap Modal -->
-  <div class="modal fade show" id="userProfileModal" tabindex="-1" role="dialog" aria-labelledby="userProfileModalLabel" aria-hidden="true" style="display: block;">
+  <div
+    class="modal fade show"
+    id="userProfileModal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="userProfileModalLabel"
+    aria-hidden="true"
+    style="display: block"
+  >
     <div class="modal-dialog" role="document">
       <div class="modal-content user-profile-modal">
         <div class="modal-header">
-          <h2>{{ translationService.translate('profile') }}</h2>
-          <button class="close-btn" (click)="closeDialog()">
+          <h2>{{ translationService.translate("profile") }}</h2>
+          <button
+            class="close-btn"
+            (click)="closeDialog()"
+            [disabled]="isUpdating"
+          >
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
-  
-  <div class="modal-body">
-    <div class="profile-image-container">
-      <div class="profile-image">
-        <img [src]="previewUrl || data.user.image || 'images/user-1.png'" alt="User Profile" class="profile-pic">
-        <div class="image-overlay">
-          <label for="profile-image-upload" class="upload-btn">
-            <i class="bi bi-camera"></i>
-          </label>
-          <input type="file" id="profile-image-upload" accept="image/*" (change)="onFileSelected($event)" hidden>
+        <div class="modal-body">
+          <div class="profile-image-container">
+            <div class="profile-image">
+              <img
+                [src]="previewUrl || userData.image || 'images/user-1.png'"
+                alt="User Profile"
+                class="profile-pic"
+              />
+              <div class="image-overlay" *ngIf="isEditMode">
+                <label for="profile-image-upload" class="upload-btn">
+                  <i class="bi bi-camera"></i>
+                </label>
+                <input
+                  type="file"
+                  id="profile-image-upload"
+                  accept="image/*"
+                  (change)="onFileSelected($event)"
+                  hidden
+                />
+              </div>
+            </div>
+          </div>
+          <form>
+            <div class="form-group mt-3">
+              <label>{{ "First name" }}</label>
+              <input
+                type="text"
+                [(ngModel)]="userData.firstName"
+                name="firstName"
+                class="form-control mt-1"
+                [readonly]="!isEditMode"
+              />
+            </div>
+            <div class="form-group mt-3">
+              <label>{{ "Last name" }}</label>
+              <input
+                type="text"
+                [(ngModel)]="userData.lastName"
+                name="lastName"
+                class="form-control mt-1"
+                [readonly]="!isEditMode"
+              />
+            </div>
+            <div class="form-group mt-3" *ngIf="!isEditMode">
+              <label>{{ translationService.translate("email") }}:</label>
+              <input
+                type="email"
+                [(ngModel)]="userData.email"
+                name="email"
+                class="form-control mt-1"
+                [readonly]="!isEditMode"
+              />
+            </div>
+            <div class="form-group mt-3">
+              <label>{{ translationService.translate("phone") }}</label>
+              <input
+                type="tel"
+                [(ngModel)]="userData.phone"
+                name="phone"
+                class="form-control mt-1"
+                [readonly]="!isEditMode"
+              />
+            </div>
+            <div class="form-group mt-3" *ngIf="isEditMode">
+              <label>{{ "Password" }}</label>
+              <input
+                type="password"
+                [(ngModel)]="userData.password"
+                name="password"
+                class="form-control mt-1"
+                placeholder="Leave blank to keep current password"
+              />
+            </div>
+            <div class="form-group mt-3" *ngIf="isEditMode">
+              <label>{{ "Confirm password" }}</label>
+              <input
+                type="password"
+                [(ngModel)]="this.confirmPassword"
+                name="password"
+                class="form-control mt-1"
+                placeholder="Confirm password"
+              />
+            </div>
+            <div class="info-row mt-3">
+              <label>{{ translationService.translate("role") }}:</label>
+              <span>{{ userData.role }}</span>
+            </div>
+            <div class="info-row" *ngIf="userData.timestamp">
+              <label>{{ "last Updated: " }}</label>
+              <span>{{ userData.timestamp | date: "medium" }}</span>
+            </div>
+            <div class="error-message" *ngIf="updateError">
+              {{ updateError }}
+            </div>
+          </form>
         </div>
-      </div>
-    </div>
-    
-    <div class="user-info-container">
-      <div class="info-row">
-        <label>{{ translationService.translate('name') }}:</label>
-        <span>{{ data.user.firstName }} {{ data.user.lastName }}</span>
-      </div>
-      <div class="info-row">
-        <label>{{ translationService.translate('email') }}:</label>
-        <span>{{ data.user.email }}</span>
-      </div>
-      <div class="info-row">
-        <label>{{ translationService.translate('phone') }}:</label>
-        <span>{{ data.user.phone }}</span>
-      </div>
-      <div class="info-row">
-        <label>{{ translationService.translate('role') }}:</label>
-        <span>{{ data.user.role }}</span>
-      </div>
-      <div class="info-row" *ngIf="data.user.timestamp">
-        <label>{{ translationService.translate('lastUpdated') }}:</label>
-        <span>{{ data.user.timestamp | date:'medium' }}</span>
-      </div>
-    </div>
-  </div>
-  
-  <div class="modal-footer">
-    <button class="btn-cancel" (click)="closeDialog()">
-      {{ translationService.translate('cancel') }}
-    </button>
-    <button class="btn-save" [disabled]="!selectedFile" (click)="uploadImage()">
-      {{ translationService.translate('save') }}
-    </button>
+        <div class="modal-footer">
+          <button
+            class="btn-cancel"
+            (click)="closeDialog()"
+            [disabled]="isUpdating"
+          >
+            {{ translationService.translate("cancel") }}
+          </button>
+          <button
+            class="btn-save"
+            *ngIf="isEditMode"
+            (click)="save()"
+            [disabled]="isUpdating"
+          >
+            {{ translationService.translate("save") }}
+          </button>
+          <button
+            class="btn-save"
+            *ngIf="!isEditMode"
+            (click)="toggleEdit()"
+            [disabled]="isUpdating"
+          >
+            {{ translationService.translate("edit") }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
