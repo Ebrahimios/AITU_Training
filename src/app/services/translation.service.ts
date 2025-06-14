@@ -38,6 +38,10 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     sort: 'Sort',
     sort_by: 'Sort by',
     all: 'All',
+    filter_by_department: 'Department',
+    filter_by_stage: 'Stage',
+    filter_by_batch: 'Batch',
+    filter_by_factory_type: 'Factory Type',
 
     // Actions
     export: 'Export',
@@ -110,6 +114,15 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     required_field: 'This field is required',
     invalid_phone: 'Invalid phone number format',
     invalid_capacity: 'Capacity must be a positive number',
+    factory_name_required: 'Factory name must be at least 3 characters long',
+    address_required: 'Address must be at least 5 characters long',
+    phone_validation_error: 'Phone number must be exactly 11 or 15 digits',
+    contact_name_required: 'Contact name must be at least 3 characters long',
+    industry_required: 'Please select an industry',
+    capacity_required: 'Capacity must be greater than 0',
+    type_required: 'Please select a factory type',
+    coordinates_validation_error: 'Invalid coordinates format. Please use format: latitude, longitude',
+
     //departments
     electrical: 'Electrical',
     mechanics: 'Mechanics',
@@ -188,6 +201,10 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     sort: 'ترتيب',
     sort_by: 'ترتيب حسب',
     all: 'الكل',
+    filter_by_department: 'القسم',
+    filter_by_stage: 'المرحلة',
+    filter_by_batch: 'الدفعة',
+    filter_by_factory_type: 'نوع المصنع',
 
     // Actions
     export: 'تصدير',
@@ -260,6 +277,15 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     required_field: 'هذا الحقل مطلوب',
     invalid_phone: 'صيغة رقم الهاتف غير صحيحة',
     invalid_capacity: 'يجب أن تكون السعة رقمًا موجبًا',
+    factory_name_required: 'يجب أن يكون اسم المصنع 3 أحرف على الأقل',
+    address_required: 'يجب أن يكون العنوان 5 أحرف على الأقل',
+    phone_validation_error: 'يجب أن يكون رقم الهاتف 11 أو 15 رقمًا بالضبط',
+    contact_name_required: 'يجب أن يكون اسم جهة الاتصال 3 أحرف على الأقل',
+    industry_required: 'الرجاء اختيار الصناعة',
+    capacity_required: 'يجب أن تكون السعة أكبر من 0',
+    type_required: 'الرجاء اختيار نوع المصنع',
+    coordinates_validation_error: 'صيغة الإحداثيات غير صحيحة. الرجاء استخدام الصيغة: خط العرض، خط الطول',
+
     //departments
     electrical: 'كهرباء',
     mechanics: 'ميكانيكا',

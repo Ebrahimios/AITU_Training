@@ -565,38 +565,84 @@ export class StudentDistributionComponent implements OnInit {
 
     // Validate inputs
     let hasError = false;
+    let errorMessages: string[] = [];
 
+    // Name validation
     if (!name || name.trim().length < 3) {
-      this.nameError = 'Factory name must be at least 3 characters long';
+      this.nameError = this.translationService.translate('factory_name_required');
+      errorMessages.push(this.nameError);
       hasError = true;
     }
 
+    // Address validation
     if (!address || address.trim().length < 5) {
-      this.addressError = 'Address must be at least 5 characters long';
+      this.addressError = this.translationService.translate('address_required');
+      errorMessages.push(this.addressError);
       hasError = true;
     }
 
-    // Phone validation
-    const phoneRegex = /^[0-9]{10,15}$/;
+    // Phone validation - must be exactly 11 or 15 digits
+    const phoneRegex = /^[0-9]{11}$|^[0-9]{15}$/;
     if (!phone || !phoneRegex.test(phone)) {
-      this.phoneError = 'Phone number must contain only numbers (10-15 digits)';
+      this.phoneError = this.translationService.translate('phone_validation_error');
+      errorMessages.push(this.phoneError);
       hasError = true;
     }
 
+    // Contact name validation
     if (!contactName || contactName.trim().length < 3) {
-      this.contactNameError = 'Contact name must be at least 3 characters long';
+      this.contactNameError = this.translationService.translate('contact_name_required');
+      errorMessages.push(this.contactNameError);
+      hasError = true;
+    }
+
+    // Industry validation
+    if (!industry) {
+      this.industryError = this.translationService.translate('industry_required');
+      errorMessages.push(this.industryError);
+      hasError = true;
+    }
+
+    // Capacity validation
+    if (!capacity || capacity <= 0) {
+      this.industryError = this.translationService.translate('capacity_required');
+      errorMessages.push(this.industryError);
+      hasError = true;
+    }
+
+    // Type validation
+    if (!type || type === 'All') {
+      this.industryError = this.translationService.translate('type_required');
+      errorMessages.push(this.industryError);
       hasError = true;
     }
 
     // Parse coordinates
     const parsedCoordinates = this.parseCoordinates(coordinates);
     if (!parsedCoordinates) {
-      this.coordinatesError =
-        'Invalid coordinates format. Please use format: latitude, longitude';
+      this.coordinatesError = this.translationService.translate('coordinates_validation_error');
+      errorMessages.push(this.coordinatesError);
       hasError = true;
     }
 
     if (hasError) {
+      // Show alert with all error messages
+      const errorMessage = errorMessages.join('\n');
+      alert(errorMessage);
+
+      // Keep modal open by preventing the default form submission
+      const modalElement = document.getElementById('addFactoryModal');
+      if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) {
+          // Ensure modal stays open
+          const newModal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+          });
+          newModal.show();
+        }
+      }
       return;
     }
 
@@ -625,14 +671,10 @@ export class StudentDistributionComponent implements OnInit {
       console.log('Submitting factory to Firebase:', firebaseFactory);
 
       // Save to Firebase directly
-      const success =
-        await this.authService.submitFactoryRequest(firebaseFactory);
+      const success = await this.authService.submitFactoryRequest(firebaseFactory);
 
       if (success) {
-        console.log(
-          'Factory saved to Firebase successfully with ID:',
-          factoryId,
-        );
+        console.log('Factory saved to Firebase successfully with ID:', factoryId);
 
         // Also add to the local factory service for immediate display
         const newFactory: Factory = {
@@ -660,63 +702,29 @@ export class StudentDistributionComponent implements OnInit {
         await this.factoryService.addFactory(serviceFactory);
         console.log('Factory added to FactoryService successfully');
 
-        // Reload factory requests to ensure the UI is updated
-        //await this.authService.loadFactoryRequests();
-
-        // Refresh factories from Firebase to ensure consistency
-        //await this.factoryService.loadFactoriesFromFirebase();
-        this.factoryService.factories$.subscribe((factories) => {
-          console.log('Received factories from service:', factories);
-
-          // Convert factory service factories to our local Factory interface
-          this.factories = factories.map((f) => ({
-            id: f.id.toString(),
-            name: f.name,
-            address: f.address,
-            phone: f.phone,
-            contactName: f.contactName,
-            industry: f.industry,
-            capacity: f.capacity,
-            type: f.type,
-            longitude: f.longitude,
-            latitude: f.latitude,
-            students: [],
-            assignedStudents: f.assignedStudents,
-          }));
-          this.factoryDropLists = this.factories.map((f) => `factory-${f.id}`);
-
-          // Load students after factories are loaded
-          this.loadStudentsFromFirebase();
-        });
         // Show success message
         alert('Factory added successfully');
+
+        // Close modal only on success
+        const modalElement = document.getElementById('addFactoryModal');
+        if (modalElement) {
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) {
+            modal.hide();
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+              backdrop.remove();
+            }
+          }
+        }
+
+        // Reset form errors
+        this.resetFormErrors();
       } else {
         console.error('Failed to save factory to Firebase');
         alert('Failed to add factory. Please try again.');
       }
-
-      // Add new industry to list if it's not already there
-      if (this.newIndustry && !this.industries.includes(this.newIndustry)) {
-        this.industries.push(this.newIndustry);
-        this.newIndustry = '';
-      }
-
-      // Close modal
-      const modalElement = document.getElementById('addFactoryModal');
-      if (modalElement) {
-        const modal = bootstrap.Modal.getInstance(modalElement);
-        if (modal) {
-          modal.hide();
-          document.body.classList.remove('modal-open');
-          const backdrop = document.querySelector('.modal-backdrop');
-          if (backdrop) {
-            backdrop.remove();
-          }
-        }
-      }
-
-      // Reset form errors
-      this.resetFormErrors();
     } catch (error) {
       console.error('Error adding factory:', error);
       alert('An error occurred while adding the factory. Please try again.');

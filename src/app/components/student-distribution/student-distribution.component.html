@@ -21,6 +21,35 @@
             placeholder="{{ translationService.translate('search_students') }}"
           />
         </div>
+        <div class="filters-row">
+          <select [(ngModel)]="selectedDepartment" class="form-select">
+            <option value="All">{{ translationService.translate('filter_by_department') }}</option>
+            <option *ngFor="let dept of departments" [value]="dept">
+              {{ dept }}
+            </option>
+          </select>
+
+          <select [(ngModel)]="selectedStage" class="form-select">
+            <option value="All">{{ translationService.translate('filter_by_stage') }}</option>
+            <option *ngFor="let stage of stages" [value]="stage">
+              {{ stage }}
+            </option>
+          </select>
+
+          <select [(ngModel)]="selectedBatch" class="form-select">
+            <option value="All">{{ translationService.translate('filter_by_batch') }}</option>
+            <option *ngFor="let batch of batches" [value]="batch">
+              {{ batch }}
+            </option>
+          </select>
+
+          <select [(ngModel)]="selectedFactoryType" class="form-select">
+            <option value="All">{{ translationService.translate('filter_by_factory_type') }}</option>
+            <option *ngFor="let type of factoryTypes" [value]="type">
+              {{ type }}
+            </option>
+          </select>
+        </div>
         <div class="add-factory-button">
           <button
             class="btn btn-primary"
@@ -30,29 +59,6 @@
             {{ translationService.translate("add_factory") }}
           </button>
         </div>
-        <select [(ngModel)]="selectedDepartment">
-          <option *ngFor="let dept of departments" [value]="dept">
-            {{ dept }} Department
-          </option>
-        </select>
-
-        <select [(ngModel)]="selectedStage">
-          <option *ngFor="let stage of stages" [value]="stage">
-            {{ stage }} Stage
-          </option>
-        </select>
-
-        <select [(ngModel)]="selectedBatch">
-          <option *ngFor="let batch of batches" [value]="batch">
-            {{ batch }} Batch
-          </option>
-        </select>
-
-        <select [(ngModel)]="selectedFactoryType">
-          <option *ngFor="let type of factoryTypes" [value]="type">
-            {{ type }} Factories
-          </option>
-        </select>
       </div>
     </div>
   </div>
