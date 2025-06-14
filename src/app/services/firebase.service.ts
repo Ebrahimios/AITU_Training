@@ -42,6 +42,7 @@ export interface User {
   token?: string;
   image?: string;
   timestamp?: number;
+  department: string;
 }
 
 export interface FirebaseFactory {
@@ -185,6 +186,7 @@ export class AuthService {
             phone: userData['phone'],
             role: userData['role'],
             token: token,
+            department: userData['department'],
           };
           // Save to localStorage and update BehaviorSubject
           localStorage.setItem('currentUser', JSON.stringify(fullUser));
@@ -290,6 +292,7 @@ export class AuthService {
           role: userData['role'],
           password: password,
           token: token,
+          department: userData['department'],
         };
         // Save to localStorage and update BehaviorSubject
         localStorage.setItem('currentUser', JSON.stringify(fullUser));
@@ -324,6 +327,7 @@ export class AuthService {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        department: user.department,
       });
 
       console.log('Registered user & saved to Firestore');
@@ -963,6 +967,7 @@ export class AuthService {
                 updatedAt: Date.now(),
                 students: updatedStudents,
                 assignedStudents: assignedStudents,
+                capacity: ++factoryData.capacity,
               });
 
               // Update the student's factory field

@@ -1,16 +1,23 @@
-<div class="analytics-container" [dir]="(translationService.currentLang$ | async) === 'ar' ? 'rtl' : 'ltr'">
+<div
+  class="analytics-container"
+  [dir]="(translationService.currentLang$ | async) === 'ar' ? 'rtl' : 'ltr'"
+>
   <!-- Header -->
   <div class="header">
     <div class="back-button">
       <button class="btn btn-light" (click)="navigateToDashboard()">
         <i class="bi bi-arrow-left"></i>
-        {{ translationService.translate('back_to_home') }}
+        {{ translationService.translate("back_to_home") }}
       </button>
     </div>
     <div class="header-content">
-      <h2>{{ translationService.translate('analytics') }}</h2>
+      <h2>{{ translationService.translate("analytics") }}</h2>
       <div class="filters">
-        <select [(ngModel)]="selectedYear" (change)="onYearChange()" class="form-select">
+        <select
+          [(ngModel)]="selectedYear"
+          (change)="onYearChange()"
+          class="form-select"
+        >
           <option *ngFor="let year of years" [value]="year">{{ year }}</option>
         </select>
       </div>
@@ -24,8 +31,8 @@
         <i class="bi bi-people-fill"></i>
       </div>
       <div class="kpi-content">
-        <h3>{{ translationService.translate('total_students') }}</h3>
-        <div class="kpi-value">{{ totalStudents }}</div>
+        <h3>{{ translationService.translate("total_students") }}</h3>
+        <div class="kpi-value">{{ studentsOfSelectedYear.length }}</div>
       </div>
     </div>
 
@@ -34,8 +41,8 @@
         <i class="bi bi-building-fill"></i>
       </div>
       <div class="kpi-content">
-        <h3>{{ translationService.translate('factories') }}</h3>
-        <div class="kpi-value">{{ totalFactories }}</div>
+        <h3>{{ translationService.translate("factories") }}</h3>
+        <div class="kpi-value">{{ factoriesOfSelectedYear.length }}</div>
       </div>
     </div>
 
@@ -44,18 +51,8 @@
         <i class="bi bi-person-badge-fill"></i>
       </div>
       <div class="kpi-content">
-        <h3>{{ translationService.translate('supervisors') }}</h3>
-        <div class="kpi-value">{{ totalSupervisors }}</div>
-      </div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-icon">
-        <i class="bi bi-graph-up-arrow"></i>
-      </div>
-      <div class="kpi-content">
-        <h3>{{ translationService.translate('growth') }}</h3>
-        <div class="kpi-value">+{{ growthRate }}%</div>
+        <h3>{{ translationService.translate("supervisors") }}</h3>
+        <div class="kpi-value">{{ supervisorsOfSelectedYear.length }}</div>
       </div>
     </div>
   </div>
@@ -66,7 +63,7 @@
     <div class="chart-row">
       <div class="chart-card">
         <div class="chart-header">
-          <h3>{{ translationService.translate('department_distribution') }}</h3>
+          <h3>{{ translationService.translate("department_distribution") }}</h3>
         </div>
         <div class="chart-body">
           <canvas id="departmentChart"></canvas>
@@ -75,7 +72,7 @@
 
       <div class="chart-card">
         <div class="chart-header">
-          <h3>{{ translationService.translate('students_distribution') }}</h3>
+          <h3>{{ translationService.translate("students_distribution") }}</h3>
         </div>
         <div class="chart-body">
           <canvas id="factoryDistributionChart"></canvas>
@@ -87,7 +84,7 @@
     <div class="chart-row">
       <div class="chart-card">
         <div class="chart-header">
-          <h3>{{ translationService.translate('year') }} {{ selectedYear }}</h3>
+          <h3>{{ translationService.translate("year") }} {{ selectedYear }}</h3>
         </div>
         <div class="chart-body">
           <canvas id="monthlyTrendsChart"></canvas>
@@ -96,7 +93,7 @@
 
       <div class="chart-card">
         <div class="chart-header">
-          <h3>{{ translationService.translate('capacity') }}</h3>
+          <h3>{{ translationService.translate("capacity") }}</h3>
         </div>
         <div class="chart-body">
           <canvas id="capacityUtilizationChart"></canvas>

@@ -4,26 +4,33 @@ import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslationService } from '../../services/translation.service';
 import { FactoryService, Factory } from '../../services/factory.service';
-import { DistributionService, Student } from '../../services/distribution.service';
+import {
+  DistributionService,
+  Student,
+} from '../../services/distribution.service';
 import { NavbarComponent } from '../navbar/navbar.component';
-import { AuthService, FirebaseFactory, FirebaseSupervisor } from '../../services/firebase.service';
+import {
+  AuthService,
+  FirebaseFactory,
+  FirebaseSupervisor,
+} from '../../services/firebase.service';
 import { Student as FirebaseStudent } from '../../interfaces/student';
 import { Subscription } from 'rxjs';
 import Chart from 'chart.js/auto';
 import { createSafeChart } from '../../utils/chart-utils';
-  interface ChartTypeRegistry {}
-  interface ChartType {}
-  interface ChartData {}
-  interface Plugin {}
-  interface ChartComponentLike {}
-  interface ChartComponent {}
-  interface ChartDatasetProperties {}
+interface ChartTypeRegistry {}
+interface ChartType {}
+interface ChartData {}
+interface Plugin {}
+interface ChartComponentLike {}
+interface ChartComponent {}
+interface ChartDatasetProperties {}
 
 @Component({
   selector: 'app-analytics',
   templateUrl: './analytics.component.html',
   styleUrls: ['./analytics.component.css'],
-  imports: [CommonModule, RouterModule, FormsModule]
+  imports: [CommonModule, RouterModule, FormsModule],
 })
 export class AnalyticsComponent implements OnInit, OnDestroy {
   // Charts
@@ -45,19 +52,42 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   factoryCapacities: number[] = [];
   supervisorNames: string[] = [];
   supervisorStudentCounts: number[] = [];
-  stageData: { name: string, count: number }[] = [];
-  batchData: { name: string, count: number }[] = [];
+  stageData: { name: string; count: number }[] = [];
+  batchData: { name: string; count: number }[] = [];
 
   // Monthly data
   monthlyData: number[] = [];
-  months: string[] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  months: string[] = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
 
   // Subscriptions
   private subscriptions: Subscription[] = [];
 
   // Filters
   selectedYear: string = '2025';
-  years: string[] = ['2023', '2024', '2025'];
+  years: string[] = [
+    '2017',
+    '2018',
+    '2019',
+    '2020',
+    '2021',
+    '2022',
+    '2023',
+    '2024',
+    '2025',
+  ];
 
   // KPIs
   totalStudents: number = 0;
@@ -71,7 +101,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     private factoryService: FactoryService,
     private distributionService: DistributionService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -80,7 +110,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
     // Also subscribe to service observables for real-time updates
     this.subscriptions.push(
-      this.factoryService.factories$.subscribe(factories => {
+      this.factoryService.factories$.subscribe((factories) => {
         this.factories = factories;
         this.totalFactories = factories.length;
         this.calculateKPIs();
@@ -88,23 +118,27 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
         // Only update existing charts, don't reinitialize
         // Charts should only be initialized once during loadAllData()
-        if (this.departmentChart && this.factoryDistributionChart &&
-            this.monthlyTrendsChart && this.capacityUtilizationChart) {
+        if (
+          this.departmentChart &&
+          this.factoryDistributionChart &&
+          this.monthlyTrendsChart &&
+          this.capacityUtilizationChart
+        ) {
           this.updateCharts();
         }
-      })
+      }),
     );
 
     this.subscriptions.push(
-      this.factoryService.supervisors$.subscribe(supervisors => {
+      this.factoryService.supervisors$.subscribe((supervisors) => {
         this.totalSupervisors = supervisors.length;
-      })
+      }),
     );
 
     this.subscriptions.push(
-      this.distributionService.students$.subscribe(students => {
+      this.distributionService.students$.subscribe((students) => {
         this.students = students;
-      })
+      }),
     );
   }
 
@@ -140,7 +174,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
    */
   ngOnDestroy(): void {
     // Unsubscribe from all subscriptions
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
 
     // Destroy all chart instances to prevent 'Canvas is already in use' errors
     this.destroyCharts();
@@ -179,43 +213,71 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
    * Prepare data for charts
    */
   prepareChartData(): void {
-    // Prepare department data from Firebase students
+    // فلترة الطلاب حسب السنة المختارة
+    const factoriesOfYear = this.factoriesOfSelectedYear;
+    const studentsOfYear = this.studentsOfSelectedYear;
+
+    // Prepare department data
     const departmentMap = new Map<string, number>();
-    this.firebaseStudents.forEach(student => {
+    studentsOfYear.forEach((student) => {
       if (student.department) {
-        departmentMap.set(student.department, (departmentMap.get(student.department) || 0) + 1);
+        departmentMap.set(
+          student.department,
+          (departmentMap.get(student.department) || 0) + 1,
+        );
       }
     });
-
     this.departments = Array.from(departmentMap.keys());
     this.departmentCounts = Array.from(departmentMap.values());
 
-    // Prepare factory data from Firebase factories
-    this.factoryNames = this.firebaseFactories.map(f => f.name);
-    this.factoryStudentCounts = this.firebaseFactories.map(f => f.assignedStudents);
-    this.factoryCapacities = this.firebaseFactories.map(f => f.capacity);
+    // Prepare factory data
+    // فقط الطلاب في السنة المختارة
+    const factoryMap = new Map<string, number>();
+    factoriesOfYear.forEach((f) => {
+      // عدد الطلاب في المصنع في السنة المختارة فقط
+      const count = studentsOfYear.filter((s) => s.factory === f.name).length;
+      factoryMap.set(f.name, count);
+    });
+
+    this.factoryNames = Array.from(factoryMap.keys());
+    this.factoryStudentCounts = Array.from(factoryMap.values());
+    this.factoryCapacities = factoriesOfYear.map((f) => f.capacity);
 
     // Prepare supervisor data
-    this.supervisorNames = this.supervisors.map(s => s.name);
-    this.supervisorStudentCounts = this.supervisors.map(s => s.assignedStudents);
+    const supervisorMap = new Map<string, number>();
+    this.supervisors.forEach((s) => {
+      // عدد الطلاب تحت كل مشرف في السنة المختارة فقط
+      const count = studentsOfYear.filter(
+        (stu) => stu.supervisor === s.name,
+      ).length;
+      supervisorMap.set(s.name, count);
+    });
+    this.supervisorNames = Array.from(supervisorMap.keys());
+    this.supervisorStudentCounts = Array.from(supervisorMap.values());
 
     // Prepare stage data
     const stageMap = new Map<string, number>();
-    this.firebaseStudents.forEach(student => {
+    studentsOfYear.forEach((student) => {
       if (student.stage) {
         stageMap.set(student.stage, (stageMap.get(student.stage) || 0) + 1);
       }
     });
-    this.stageData = Array.from(stageMap.entries()).map(([name, count]) => ({ name, count }));
+    this.stageData = Array.from(stageMap.entries()).map(([name, count]) => ({
+      name,
+      count,
+    }));
 
     // Prepare batch data
     const batchMap = new Map<string, number>();
-    this.firebaseStudents.forEach(student => {
+    studentsOfYear.forEach((student) => {
       if (student.batch) {
         batchMap.set(student.batch, (batchMap.get(student.batch) || 0) + 1);
       }
     });
-    this.batchData = Array.from(batchMap.entries()).map(([name, count]) => ({ name, count }));
+    this.batchData = Array.from(batchMap.entries()).map(([name, count]) => ({
+      name,
+      count,
+    }));
   }
 
   /**
@@ -224,9 +286,16 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   calculateKPIs(): void {
     // Calculate average utilization from Firebase factories
     if (this.firebaseFactories.length > 0) {
-      const totalCapacity = this.firebaseFactories.reduce((sum, factory) => sum + factory.capacity, 0);
-      const totalAssigned = this.firebaseFactories.reduce((sum, factory) => sum + factory.assignedStudents, 0);
-      this.averageUtilization = totalCapacity > 0 ? (totalAssigned / totalCapacity) * 100 : 0;
+      const totalCapacity = this.firebaseFactories.reduce(
+        (sum, factory) => sum + factory.capacity,
+        0,
+      );
+      const totalAssigned = this.firebaseFactories.reduce(
+        (sum, factory) => sum + factory.assignedStudents,
+        0,
+      );
+      this.averageUtilization =
+        totalCapacity > 0 ? (totalAssigned / totalCapacity) * 100 : 0;
     }
 
     // Calculate growth rate based on student creation dates
@@ -246,7 +315,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     let currentMonthCount = 0;
     let previousMonthCount = 0;
 
-    this.firebaseStudents.forEach(student => {
+    this.firebaseStudents.forEach((student) => {
       if (student.createOn) {
         const createDate = new Date(student.createOn);
         const createMonth = createDate.getMonth();
@@ -261,7 +330,8 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
     // Calculate growth rate
     if (previousMonthCount > 0) {
-      this.growthRate = ((currentMonthCount - previousMonthCount) / previousMonthCount) * 100;
+      this.growthRate =
+        ((currentMonthCount - previousMonthCount) / previousMonthCount) * 100;
     } else {
       this.growthRate = currentMonthCount > 0 ? 100 : 0;
     }
@@ -280,7 +350,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     // Count students created in each month of the selected year
     const selectedYearNum = parseInt(this.selectedYear);
 
-    this.firebaseStudents.forEach(student => {
+    this.firebaseStudents.forEach((student) => {
       if (student.createOn) {
         const createDate = new Date(student.createOn);
         const createYear = createDate.getFullYear();
@@ -314,14 +384,17 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
     if (this.factoryDistributionChart) {
       this.factoryDistributionChart.data.labels = this.factoryNames;
-      this.factoryDistributionChart.data.datasets[0].data = this.factoryStudentCounts;
+      this.factoryDistributionChart.data.datasets[0].data =
+        this.factoryStudentCounts;
       this.factoryDistributionChart.update();
     }
 
     if (this.capacityUtilizationChart) {
       this.capacityUtilizationChart.data.labels = this.factoryNames;
-      this.capacityUtilizationChart.data.datasets[0].data = this.factoryStudentCounts;
-      this.capacityUtilizationChart.data.datasets[1].data = this.factoryCapacities;
+      this.capacityUtilizationChart.data.datasets[0].data =
+        this.factoryStudentCounts;
+      this.capacityUtilizationChart.data.datasets[1].data =
+        this.factoryCapacities;
       this.capacityUtilizationChart.update();
     }
   }
@@ -332,13 +405,21 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
       type: 'pie',
       data: {
         labels: this.departments,
-        datasets: [{
-          data: this.departmentCounts,
-          backgroundColor: [
-            '#4CAF50', '#2196F3', '#FFC107', '#E91E63', '#9C27B0', '#FF5722', '#607D8B'
-          ],
-          borderWidth: 1
-        }]
+        datasets: [
+          {
+            data: this.departmentCounts,
+            backgroundColor: [
+              '#4CAF50',
+              '#2196F3',
+              '#FFC107',
+              '#E91E63',
+              '#9C27B0',
+              '#FF5722',
+              '#607D8B',
+            ],
+            borderWidth: 1,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -348,52 +429,57 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
           },
           title: {
             display: true,
-            text: this.translationService.translate('department_distribution')
-          }
-        }
-      }
+            text: this.translationService.translate('department_distribution'),
+          },
+        },
+      },
     });
   }
 
   initFactoryDistributionChart(): void {
     // Use our safe chart creation utility to handle destroying existing charts
-    this.factoryDistributionChart = createSafeChart('factoryDistributionChart', {
-      type: 'bar',
-      data: {
-        labels: this.factoryNames,
-        datasets: [{
-          label: this.translationService.translate('students'),
-          data: this.factoryStudentCounts,
-          backgroundColor: '#3B82F6',
-          borderColor: '#2563EB',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: this.translationService.translate('students')
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: this.translationService.translate('factories')
-            }
-          }
+    this.factoryDistributionChart = createSafeChart(
+      'factoryDistributionChart',
+      {
+        type: 'bar',
+        data: {
+          labels: this.factoryNames,
+          datasets: [
+            {
+              label: this.translationService.translate('students'),
+              data: this.factoryStudentCounts,
+              backgroundColor: '#3B82F6',
+              borderColor: '#2563EB',
+              borderWidth: 1,
+            },
+          ],
         },
-        plugins: {
-          title: {
-            display: true,
-            text: this.translationService.translate('students_distribution')
-          }
-        }
-      }
-    });
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: this.translationService.translate('students'),
+              },
+            },
+            x: {
+              title: {
+                display: true,
+                text: this.translationService.translate('factories'),
+              },
+            },
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: this.translationService.translate('students_distribution'),
+            },
+          },
+        },
+      },
+    );
   }
 
   initMonthlyTrendsChart(): void {
@@ -401,13 +487,15 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
       type: 'line',
       data: {
         labels: this.months,
-        datasets: [{
-          label: this.translationService.translate('students'),
-          data: this.monthlyData,
-          fill: false,
-          borderColor: '#10B981',
-          tension: 0.1
-        }]
+        datasets: [
+          {
+            label: this.translationService.translate('students'),
+            data: this.monthlyData,
+            fill: false,
+            borderColor: '#10B981',
+            tension: 0.1,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -416,87 +504,107 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
             beginAtZero: true,
             title: {
               display: true,
-              text: this.translationService.translate('students')
-            }
+              text: this.translationService.translate('students'),
+            },
           },
           x: {
             title: {
               display: true,
-              text: this.translationService.translate('month')
-            }
-          }
+              text: this.translationService.translate('month'),
+            },
+          },
         },
         plugins: {
           title: {
             display: true,
-            text: this.translationService.translate('year') + ' ' + this.selectedYear
-          }
-        }
-      }
+            text:
+              this.translationService.translate('year') +
+              ' ' +
+              this.selectedYear,
+          },
+        },
+      },
     });
   }
 
   initCapacityUtilizationChart(): void {
-    this.capacityUtilizationChart = createSafeChart('capacityUtilizationChart', {
-      type: 'bar',
-      data: {
-        labels: this.factoryNames,
-        datasets: [
-          {
-            label: this.translationService.translate('assigned_students'),
-            data: this.factoryStudentCounts,
-            backgroundColor: '#3B82F6',
-            borderColor: '#2563EB',
-            borderWidth: 1
-          },
-          {
-            label: this.translationService.translate('capacity'),
-            data: this.factoryCapacities,
-            backgroundColor: '#F59E0B',
-            borderColor: '#D97706',
-            borderWidth: 1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: this.translationService.translate('students')
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: this.translationService.translate('factories')
-            }
-          }
+    this.capacityUtilizationChart = createSafeChart(
+      'capacityUtilizationChart',
+      {
+        type: 'bar',
+        data: {
+          labels: this.factoryNames,
+          datasets: [
+            {
+              label: this.translationService.translate('assigned_students'),
+              data: this.factoryStudentCounts,
+              backgroundColor: '#3B82F6',
+              borderColor: '#2563EB',
+              borderWidth: 1,
+            },
+            {
+              label: this.translationService.translate('capacity'),
+              data: this.factoryCapacities,
+              backgroundColor: '#F59E0B',
+              borderColor: '#D97706',
+              borderWidth: 1,
+            },
+          ],
         },
-        plugins: {
-          title: {
-            display: true,
-            text: this.translationService.translate('capacity') + ' ' + this.translationService.translate('vs') + ' ' + this.translationService.translate('assigned_students')
-          }
-        }
-      }
-    });
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: this.translationService.translate('students'),
+              },
+            },
+            x: {
+              title: {
+                display: true,
+                text: this.translationService.translate('factories'),
+              },
+            },
+          },
+          plugins: {
+            title: {
+              display: true,
+              text:
+                this.translationService.translate('capacity') +
+                ' ' +
+                this.translationService.translate('vs') +
+                ' ' +
+                this.translationService.translate('assigned_students'),
+            },
+          },
+        },
+      },
+    );
   }
 
   /**
    * Handle year change for monthly trends chart
    */
   onYearChange(): void {
-    // Recalculate monthly data based on selected year
+    // أعد حساب البيانات حسب السنة المختارة
+    this.prepareChartData();
     this.calculateMonthlyData();
 
-    // Update monthly trends chart
+    // حدث جميع الرسوم البيانية
+    this.updateCharts();
+
+    // حدث عنوان الرسم البياني الشهري
     if (this.monthlyTrendsChart) {
       this.monthlyTrendsChart.data.datasets[0].data = this.monthlyData;
-      if (this.monthlyTrendsChart.options && this.monthlyTrendsChart.options.plugins && this.monthlyTrendsChart.options.plugins.title) {
-        this.monthlyTrendsChart.options.plugins.title.text = this.translationService.translate('year') + ' ' + this.selectedYear;
+      if (
+        this.monthlyTrendsChart.options &&
+        this.monthlyTrendsChart.options.plugins &&
+        this.monthlyTrendsChart.options.plugins.title
+      ) {
+        this.monthlyTrendsChart.options.plugins.title.text =
+          this.translationService.translate('year') + ' ' + this.selectedYear;
       }
       this.monthlyTrendsChart.update();
     }
@@ -507,5 +615,29 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
    */
   navigateToDashboard(): void {
     this.router.navigate(['/home']);
+  }
+
+  get factoriesOfSelectedYear(): FirebaseFactory[] {
+    const year = parseInt(this.selectedYear);
+    return this.firebaseFactories.filter((f) => {
+      if (!f.createdAt) return false;
+      const createDate = new Date(f.createdAt);
+      return createDate.getFullYear() === year;
+    });
+  }
+
+  get studentsOfSelectedYear(): FirebaseStudent[] {
+    const year = parseInt(this.selectedYear);
+    return this.firebaseStudents.filter((s) => {
+      if (!s.createOn) return false;
+      const createDate = new Date(s.createOn);
+      return createDate.getFullYear() === year;
+    });
+  }
+
+  // If supervisors have a createdAt field, filter by year as well. If not, use all.
+  get supervisorsOfSelectedYear(): FirebaseSupervisor[] {
+    // If you have createdAt for supervisors, filter here. Otherwise, return all.
+    return this.supervisors;
   }
 }

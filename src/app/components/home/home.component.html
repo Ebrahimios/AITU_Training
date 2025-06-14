@@ -1,34 +1,37 @@
-<div class="app-layout" [dir]="(translationService.currentLang$ | async) === 'ar' ? 'rtl' : 'ltr'">
+<div
+  class="app-layout"
+  [dir]="(translationService.currentLang$ | async) === 'ar' ? 'rtl' : 'ltr'"
+>
   <!-- Sidebar -->
   <aside class="sidebar" [class.open]="isSidebarOpen">
     <div class="logo-container mb-5">
-      <img src="images\logoAIUT.png" alt="Logo" class="logo img-fluid">
+      <img src="images\logoAIUT.png" alt="Logo" class="logo img-fluid" />
     </div>
 
     <nav class="nav-menu">
       <a routerLink="/home" routerLinkActive="active" class="nav-link">
         <i class="bi bi-grid-1x2-fill"></i>
-        <span>{{ translationService.translate('dashboard') }}</span>
+        <span>{{ translationService.translate("dashboard") }}</span>
       </a>
-      <a routerLink="/supervisor-distribution" routerLinkActive="active" class="nav-link">
+      <a
+        routerLink="/students-distribution"
+        routerLinkActive="active"
+        class="nav-link"
+      >
         <i class="bi bi-people-fill"></i>
-        <span>{{ translationService.translate('supervisor_distribution') }}</span>
-      </a>
-      <a routerLink="/students-distribution" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-people-fill"></i>
-        <span>{{ translationService.translate('students_distribution') }}</span>
+        <span>{{ translationService.translate("students_distribution") }}</span>
       </a>
       <a routerLink="/analytics" routerLinkActive="active" class="nav-link">
         <i class="bi bi-bar-chart-fill"></i>
-        <span>{{ translationService.translate('analytics') }}</span>
+        <span>{{ translationService.translate("analytics") }}</span>
       </a>
       <a routerLink="/settings" routerLinkActive="active" class="nav-link">
         <i class="bi bi-gear-fill"></i>
-        <span>{{ translationService.translate('settings') }}</span>
+        <span>{{ translationService.translate("settings") }}</span>
       </a>
       <a class="nav-link logout-link" (click)="logout()">
         <i class="bi bi-box-arrow-right"></i>
-        <span>{{ translationService.translate('logout') }}</span>
+        <span>{{ translationService.translate("logout") }}</span>
       </a>
     </nav>
   </aside>
@@ -45,50 +48,89 @@
       <header class="top-header">
         <div class="search-container">
           <i class="bi bi-search"></i>
-          <input type="text" [(ngModel)]="searchTerm" (input)="updateSearchTerm($event)"
-            placeholder="{{ translationService.translate('student') }}">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="updateSearchTerm($event)"
+            placeholder="{{ translationService.translate('student') }}"
+          />
         </div>
 
         <div class="header-actions">
           <!-- Action Buttons Group -->
-          <div class="btn-group" [ngClass]="{'flex-row-reverse': (translationService.currentLang$ | async) === 'ar'}">
-            <button class="btn btn-outline-primary"
-              [dir]="(translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'" (click)="toggleFilters()">
+          <div
+            class="btn-group"
+            [ngClass]="{
+              'flex-row-reverse':
+                (translationService.currentLang$ | async) === 'ar',
+            }"
+          >
+            <button
+              class="btn btn-outline-primary"
+              [dir]="
+                (translationService.currentLang$ | async) === 'ar'
+                  ? 'ltr'
+                  : 'rtl'
+              "
+              (click)="toggleFilters()"
+            >
               <i class="bi bi-funnel"></i>
-              {{ translationService.translate('filters') }}
+              {{ translationService.translate("filters") }}
             </button>
-            <button class="btn btn-outline-primary"
-              [dir]="(translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'" (click)="toggleSort()">
+            <button
+              class="btn btn-outline-primary"
+              [dir]="
+                (translationService.currentLang$ | async) === 'ar'
+                  ? 'ltr'
+                  : 'rtl'
+              "
+              (click)="toggleSort()"
+            >
               <i class="bi bi-sort-down"></i>
-              {{ translationService.translate('sort') }}
+              {{ translationService.translate("sort") }}
             </button>
           </div>
 
           <!-- Export Button -->
-          <button class="btn btn-outline-primary"
-            [dir]="(translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'" (click)="exportData()">
+          <button
+            class="btn btn-outline-primary"
+            [dir]="
+              (translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'
+            "
+            (click)="exportData()"
+          >
             <i class="bi bi-download"></i>
-            {{ translationService.translate('export') }}
+            {{ translationService.translate("export") }}
           </button>
 
           <!-- Add Student Button -->
-          <button class="btn btn-primary" [dir]="(translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'"
-            (click)="addStudent()">
+          <button
+            class="btn btn-primary"
+            [dir]="
+              (translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'
+            "
+            (click)="addStudent()"
+          >
             <i class="bi bi-plus-lg"></i>
-            {{ translationService.translate('add_student') }}
+            {{ translationService.translate("add_student") }}
           </button>
         </div>
       </header>
 
       <!-- Quick Stats -->
-      <div class="quick-stats" [dir]="(translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'">
+      <div
+        class="quick-stats"
+        [dir]="
+          (translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'
+        "
+      >
         <div class="stat-card">
           <div class="stat-icon">
             <i class="bi bi-people"></i>
           </div>
           <div class="stat-info">
-            <h4>{{ translationService.translate('total_students') }}</h4>
-            <h2>{{totalStudents}}</h2>
+            <h4>{{ translationService.translate("total_students") }}</h4>
+            <h2>{{ totalStudents }}</h2>
           </div>
         </div>
 
@@ -97,8 +139,8 @@
             <i class="bi bi-people"></i>
           </div>
           <div class="stat-info">
-            <h4>{{ translationService.translate('supervisor') }}</h4>
-            <h2>{{supervisors.length}}</h2>
+            <h4>{{ translationService.translate("supervisor") }}</h4>
+            <h2>{{ supervisors.length }}</h2>
           </div>
         </div>
 
@@ -107,8 +149,8 @@
             <i class="bi bi-building"></i>
           </div>
           <div class="stat-info">
-            <h4>{{ translationService.translate('factory') }}</h4>
-            <h2>{{totalFactories}}</h2>
+            <h4>{{ translationService.translate("factory") }}</h4>
+            <h2>{{ totalFactories }}</h2>
           </div>
         </div>
 
@@ -117,8 +159,8 @@
             <i class="bi bi-graph-up"></i>
           </div>
           <div class="stat-info">
-            <h4>{{ translationService.translate('growth') }}</h4>
-            <h2>+{{ growthRate | number:'1.0-0' }}%</h2>
+            <h4>{{ translationService.translate("growth") }}</h4>
+            <h2>+{{ growthRate | number: "1.0-0" }}%</h2>
           </div>
         </div>
       </div>
@@ -127,11 +169,15 @@
       <div class="sort-panel" [class.show]="showSort">
         <div class="sort-content">
           <div class="sort-options">
-            <h5>{{ translationService.translate('sort_by') }}</h5>
+            <h5>{{ translationService.translate("sort_by") }}</h5>
             <div class="sort-chips">
-              <div class="chip" *ngFor="let option of sortOptions" [class.active]="selectedSort === option.value"
-                (click)="applySorting(option.value)">
-                {{option.label}}
+              <div
+                class="chip"
+                *ngFor="let option of sortOptions"
+                [class.active]="selectedSort === option.value"
+                (click)="applySorting(option.value)"
+              >
+                {{ option.label }}
               </div>
             </div>
           </div>
@@ -141,86 +187,152 @@
       <!-- Filters Panel (Collapsible) -->
       <div class="filters-panel" [class.show]="showFilters">
         <div class="filters-content">
-
-
-
           <div class="col-filter">
-
             <div class="filter-section">
-              <h5>{{ translationService.translate('stage') }}</h5>
-              <select class="form-select" [(ngModel)]="selectedStage" (change)="filterByStage(selectedStage)">
-                <option value="">{{ translationService.translate('all') }}</option>
-                <option *ngFor="let stage of stages" [value]="stage">{{stage}}</option>
+              <h5>{{ translationService.translate("stage") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedStage"
+                (change)="filterByStage(selectedStage)"
+              >
+                <option value="">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option *ngFor="let stage of stages" [value]="stage">
+                  {{ stage }}
+                </option>
               </select>
             </div>
 
             <div class="filter-section">
-              <h5>{{ translationService.translate('batch') }}</h5>
-              <select class="form-select" [(ngModel)]="selectedBatch" (change)="filterByBatch(selectedBatch)"
-                [disabled]="!selectedStage">
-                <option value="">{{ translationService.translate('all') }}</option>
-                <option *ngFor="let batch of filteredBatches" [value]="batch">{{batch}}</option>
+              <h5>{{ translationService.translate("batch") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedBatch"
+                (change)="filterByBatch(selectedBatch)"
+                [disabled]="!selectedStage"
+              >
+                <option value="">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option *ngFor="let batch of filteredBatches" [value]="batch">
+                  {{ batch }}
+                </option>
               </select>
             </div>
 
             <div class="filter-section">
-              <h5>{{ translationService.translate('department') }}</h5>
-              <select class="form-select" [(ngModel)]="selectedDepartment"
-                (change)="filterByDepartment(selectedDepartment)">
-                <option value="">{{ translationService.translate('all') }}</option>
-                <option *ngFor="let dept of departments" [value]="dept">{{dept}}</option>
+              <h5>{{ translationService.translate("department") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedDepartment"
+                (change)="filterByDepartment(selectedDepartment)"
+              >
+                <option value="">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option *ngFor="let dept of departments" [value]="dept">
+                  {{ dept }}
+                </option>
               </select>
             </div>
 
             <div class="filter-section">
-              <h5>{{ translationService.translate('factory') }}</h5>
-              <select class="form-select" [(ngModel)]="selectedFactory" (change)="filterByFactory(selectedFactory)">
-                <option value="">{{ translationService.translate('all') }}</option>
-                <option *ngFor="let factory of factories" [value]="factory">{{factory}}</option>
+              <h5>{{ translationService.translate("factory") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedFactory"
+                (change)="filterByFactory(selectedFactory)"
+              >
+                <option value="">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option *ngFor="let factory of factories" [value]="factory">
+                  {{ factory }}
+                </option>
               </select>
             </div>
 
             <div class="filter-section">
-              <h5>{{ translationService.translate('supervisor') }}</h5>
-              <select class="form-select" [(ngModel)]="selectedSupervisor"
-                (change)="filterBySupervisor(selectedSupervisor)">
-                <option value="">{{ translationService.translate('all') }}</option>
-                <option *ngFor="let supervisor of supervisors" [value]="supervisor">{{supervisor}}</option>
+              <h5>{{ translationService.translate("supervisor") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedSupervisor"
+                (change)="filterBySupervisor(selectedSupervisor)"
+              >
+                <option value="">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option
+                  *ngFor="let supervisor of supervisors"
+                  [value]="supervisor"
+                >
+                  {{ supervisor }}
+                </option>
               </select>
             </div>
-
           </div>
           <!-- Date Filters -->
 
           <div class="date-filter">
             <div class="filter-section">
-              <h5>{{ translationService.translate('year') }}</h5>
-              <select class="form-select" [(ngModel)]="selectedYear" (change)="filterByYear(selectedYear)">
-                <option value="">{{ translationService.translate('all') }}</option>
-                <option *ngFor="let year of years" [value]="year">{{year}}</option>
+              <h5>{{ translationService.translate("year") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedYear"
+                (change)="filterByYear(selectedYear)"
+              >
+                <option value="">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option *ngFor="let year of years" [value]="year">
+                  {{ year }}
+                </option>
               </select>
             </div>
 
             <div class="filter-section">
-              <h5>{{ translationService.translate('month') }}</h5>
-              <select class="form-select" [(ngModel)]="selectedMonth" (change)="filterByMonth(selectedMonth)">
-                <option value="">{{ translationService.translate('all') }}</option>
-                <option *ngFor="let month of months" [value]="month.value">{{month.name}}</option>
+              <h5>{{ translationService.translate("month") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedMonth"
+                (change)="filterByMonth(selectedMonth)"
+              >
+                <option value="">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option *ngFor="let month of months" [value]="month.value">
+                  {{ month.name }}
+                </option>
               </select>
             </div>
 
             <div class="filter-section">
-              <h5>{{ translationService.translate('day') }}</h5>
-              <select class="form-select" [(ngModel)]="selectedDay" (change)="filterByDay(selectedDay)">
-                <option value="">{{ translationService.translate('all') }}</option>
-                <option *ngFor="let day of days" [value]="day.value">{{day.name}}</option>
+              <h5>{{ translationService.translate("day") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="selectedDay"
+                (change)="filterByDay(selectedDay)"
+              >
+                <option value="">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option *ngFor="let day of days" [value]="day.value">
+                  {{ day.name }}
+                </option>
               </select>
             </div>
             <div class="filter-section">
-              <h5>{{ translationService.translate('reset') }}</h5>
+              <h5>{{ translationService.translate("reset") }}</h5>
 
-              <button type="button" class="btn btn-primary px-4" style="width: 100%;" (click)="resetFilters()">{{
-                translationService.translate('reset') }}</button>
+              <button
+                type="button"
+                class="btn btn-primary px-4"
+                style="width: 100%"
+                (click)="resetFilters()"
+              >
+                {{ translationService.translate("reset") }}
+              </button>
             </div>
           </div>
         </div>
@@ -229,14 +341,14 @@
       <!-- Analytics Section -->
       <div class="analytics-section">
         <div class="chart-container">
-          <h4>{{ translationService.translate('department_distribution') }}</h4>
+          <h4>{{ translationService.translate("department_distribution") }}</h4>
           <div class="chart-wrapper">
             <div *ngFor="let stat of departmentStats" class="chart-bar">
-              <div class="bar-label">{{stat.name}}</div>
+              <div class="bar-label">{{ stat.name }}</div>
               <div class="bar-container">
                 <div class="bar" [style.width.%]="stat.percentage"></div>
               </div>
-              <span class="bar-value">{{stat.count}}</span>
+              <span class="bar-value">{{ stat.count }}</span>
             </div>
           </div>
         </div>
@@ -248,23 +360,34 @@
           <thead>
             <tr>
               <th>
-                <input type="checkbox" (change)="toggleAll($event)">
+                <input type="checkbox" (change)="toggleAll($event)" />
               </th>
-              <th>{{ translationService.translate('student') }}</th>
-              <th>{{ translationService.translate('stage') }}</th>
-              <th>{{ translationService.translate('batch') }}</th>
-              <th>{{ translationService.translate('department') }}</th>
-              <th>{{ translationService.translate('factory') }}</th>
-              <th>{{ translationService.translate('date') }}</th>
-              <th>{{ translationService.translate('supervisor') }}</th>
+              <th>{{ translationService.translate("student") }}</th>
+              <th>{{ translationService.translate("stage") }}</th>
+              <th>{{ translationService.translate("batch") }}</th>
+              <th>{{ translationService.translate("department") }}</th>
+              <th>{{ translationService.translate("factory") }}</th>
+              <th>{{ translationService.translate("date") }}</th>
+              <th>{{ translationService.translate("supervisor") }}</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              *ngFor="let student of filteredStudents | slice: (currentPage-1) * itemsPerPage : currentPage * itemsPerPage"
-              (click)="openStudentDetails(student)" class="student-row">
+              *ngFor="
+                let student of filteredStudents
+                  | slice
+                    : (currentPage - 1) * itemsPerPage
+                    : currentPage * itemsPerPage
+              "
+              (click)="openStudentDetails(student)"
+              class="student-row"
+            >
               <td>
-                <input type="checkbox" [(ngModel)]="student.selected" (click)="$event.stopPropagation()">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="student.selected"
+                  (click)="$event.stopPropagation()"
+                />
               </td>
               <td>
                 <div class="student-info">
@@ -276,9 +399,8 @@
               <td>{{ student.batch }}</td>
               <td>{{ student.department }}</td>
               <td>{{ student.factory }}</td>
-              <td>{{ student.createOn | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+              <td>{{ student.createOn | date: "yyyy-MM-dd HH:mm:ss" }}</td>
               <td>{{ student.supervisor }}</td>
-
             </tr>
           </tbody>
         </table>
@@ -287,25 +409,42 @@
         <div class="pagination-container">
           <div class="items-per-page">
             <select [(ngModel)]="itemsPerPage" (change)="currentPage = 1">
-              <option [value]="5">{{ translationService.translate('per_page_5') }}</option>
-              <option [value]="10">{{ translationService.translate('per_page_10') }}</option>
-              <option [value]="20">{{ translationService.translate('per_page_20') }}</option>
+              <option [value]="5">
+                {{ translationService.translate("per_page_5") }}
+              </option>
+              <option [value]="10">
+                {{ translationService.translate("per_page_10") }}
+              </option>
+              <option [value]="20">
+                {{ translationService.translate("per_page_20") }}
+              </option>
             </select>
           </div>
 
           <div class="pagination-info">
-            {{ translationService.translate('showing') }} {{(currentPage - 1) * itemsPerPage + 1}} {{
-            translationService.translate('to') }} {{Math.min(currentPage * itemsPerPage, filteredStudents.length)}} {{
-            translationService.translate('of') }} {{filteredStudents.length}} {{ translationService.translate('entries')
-            }}
+            {{ translationService.translate("showing") }}
+            {{ (currentPage - 1) * itemsPerPage + 1 }}
+            {{ translationService.translate("to") }}
+            {{ Math.min(currentPage * itemsPerPage, filteredStudents.length) }}
+            {{ translationService.translate("of") }}
+            {{ filteredStudents.length }}
+            {{ translationService.translate("entries") }}
           </div>
 
           <div class="pagination-controls">
-            <button class="btn-page" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1">
+            <button
+              class="btn-page"
+              [disabled]="currentPage === 1"
+              (click)="currentPage = currentPage - 1"
+            >
               <i class="bi bi-chevron-left"></i>
             </button>
-            <span class="page-number">{{currentPage}}</span>
-            <button class="btn-page" [disabled]="currentPage >= totalPages" (click)="currentPage = currentPage + 1">
+            <span class="page-number">{{ currentPage }}</span>
+            <button
+              class="btn-page"
+              [disabled]="currentPage >= totalPages"
+              (click)="currentPage = currentPage + 1"
+            >
               <i class="bi bi-chevron-right"></i>
             </button>
           </div>

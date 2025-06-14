@@ -35,6 +35,7 @@ export class SignUpComponent {
       {
         firstName: ['', [Validators.required, Validators.minLength(2)]],
         lastName: ['', [Validators.required, Validators.minLength(2)]],
+        department: ['', [Validators.required, Validators.minLength(2)]],
         email: ['', [Validators.required, Validators.email]],
         phone: ['', [Validators.required, Validators.pattern('^[0-9]{11}$')]],
         password: [
@@ -48,7 +49,6 @@ export class SignUpComponent {
           ],
         ],
         confirmPassword: ['', [Validators.required]],
-        role: ['', [Validators.required]],
       },
       {
         validator: this.passwordMatchValidator,
@@ -83,7 +83,8 @@ export class SignUpComponent {
         email: this.f['email'].value,
         phone: this.f['phone'].value,
         password: this.f['password'].value,
-        role: this.f['role'].value,
+        role: 'technical',
+        department: this.f['department'].value,
       });
 
       if (success) {
