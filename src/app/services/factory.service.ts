@@ -7,7 +7,7 @@ import {
 } from './firebase.service';
 
 export interface Factory {
-  id: number;
+  id: string;
   name: string;
   capacity: number;
   assignedStudents: number;
@@ -70,7 +70,7 @@ export class FactoryService {
           f.latitude,
         );
         return {
-          id: Number(f.id) || Date.now(),
+          id: f.id!,
           name: f.name,
           capacity: f.capacity,
           assignedStudents: f.assignedStudents || 0,
@@ -143,7 +143,7 @@ export class FactoryService {
 
       // Convert Firebase factories to our local Factory interface
       const factories: Factory[] = approvedFactories.map((f) => ({
-        id: Number(f.id) || Date.now(),
+        id: f.id!,
         name: f.name,
         capacity: f.capacity,
         assignedStudents: f.assignedStudents || 0,
@@ -235,7 +235,7 @@ export class FactoryService {
     }
   }
 
-  async deleteFactory(factoryId: number): Promise<void> {
+  async deleteFactory(factoryId: string): Promise<void> {
     // Delete from local state
     const currentFactories = this.factories.value;
     this.factories.next(currentFactories.filter((f) => f.id !== factoryId));

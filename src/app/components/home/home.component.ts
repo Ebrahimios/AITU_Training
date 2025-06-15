@@ -258,7 +258,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           // If createOn is a number (timestamp), convert to string in ISO format
           if (typeof processedStudent.createOn === 'string') {
             const date = new Date(processedStudent.createOn);
-            processedStudent.createOn = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+            processedStudent.createOn = date.toISOString(); // YYYY-MM-DD format
           }
           // If it's already a string, leave it as is
         }

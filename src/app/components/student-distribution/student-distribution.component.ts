@@ -12,8 +12,8 @@ import {
 } from '@angular/cdk/drag-drop';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
-import { FactoryService } from '../../services/factory.service';
-import { AuthService, FirebaseFactory } from '../../services/firebase.service';
+import { FactoryService, Supervisor } from '../../services/factory.service';
+import { AuthService, FirebaseFactory, User } from '../../services/firebase.service';
 import { DataUpdateService } from '../../services/data-update.service';
 import { Student } from '../../interfaces/student';
 import * as bootstrap from 'bootstrap';
@@ -30,7 +30,7 @@ interface Factory {
   type: string;
   students: Student[];
   assignedStudents: number;
-  longitude?: number; // <-- أضف هذا السطر
+  longitude?: number; // <-- أضف  السطر
   latitude?: number; // <-- أضف هذا السطر
 }
 
@@ -48,6 +48,8 @@ interface Factory {
 })
 export class StudentDistributionComponent implements OnInit {
   @ViewChildren(CdkDropList) dropLists!: QueryList<CdkDropList>;
+  activeTab: 'students' | 'supervisors' = 'students';
+  filteredSupervisors: User[] = [];
 
   factoryTypes: string[] = ['All', 'Internal', 'External'];
   selectedFactoryType: string = 'All';
@@ -69,7 +71,90 @@ export class StudentDistributionComponent implements OnInit {
     private factoryService: FactoryService,
     private authService: AuthService,
     private dataUpdateService: DataUpdateService,
-  ) {}
+  ) {
+    this.loadDummyData()
+  }
+
+  loadDummyData() {
+    // Dummy data for students
+
+    // Dummy data for supervisors
+    this.filteredSupervisors = [
+      {
+        id: "u1",
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.doe@university.com",
+        phone: "+12345678901",
+        role: "student",
+        department: "Computer Science",
+        image: "https://example.com/images/john-doe.jpg",
+        timestamp: 1623897600000 // June 17, 2021
+      },
+      {
+        id: "u2",
+        firstName: "Jane",
+        lastName: "Smith",
+        email: "jane.smith@university.com",
+        phone: "+12345678902",
+        role: "student",
+        department: "Mechanical Engineering"
+      },
+      {
+        id: "u3",
+        firstName: "Alice",
+        lastName: "Brown",
+        email: "alice.brown@university.com",
+        phone: "+12345678903",
+        role: "supervisor",
+        department: "Engineering Dept",
+        image: "https://example.com/images/alice-brown.jpg",
+        timestamp: 1626489600000 // July 17, 2021
+      },
+      {
+        id: "u4",
+        firstName: "Bob",
+        lastName: "Wilson",
+        email: "bob.wilson@university.com",
+        phone: "+12345678904",
+        role: "supervisor",
+        department: "Computer Science"
+      },
+      {
+        id: "u5",
+        firstName: "Emily",
+        lastName: "Davis",
+        email: "emily.davis@university.com",
+        phone: "+12345678905",
+        role: "student",
+        department: "Electrical Engineering",
+        timestamp: 1631664000000 // September 15, 2021
+      },
+      {
+        id: "u6",
+        firstName: "Michael",
+        lastName: "Chen",
+        email: "michael.chen@university.com",
+        phone: "+12345678906",
+        role: "student",
+        department: "Computer Science"
+      },
+      {
+        id: "u7",
+        firstName: "Sarah",
+        lastName: "Johnson",
+        email: "sarah.johnson@university.com",
+        phone: "+12345678907",
+        role: "supervisor",
+        department: "Mechanical Engineering",
+        image: "https://example.com/images/sarah-johnson.jpg"
+      }
+    ];
+  }
+
+  setActiveTab(tab: 'students' | 'supervisors') {
+    this.activeTab = tab;
+  }
 
   students: Student[] = [];
 
@@ -292,7 +377,6 @@ export class StudentDistributionComponent implements OnInit {
         // Convert our local Factory to the service Factory type
         const serviceFactory = {
           ...this.selectedFactory,
-          id: Number(this.selectedFactory.id),
         };
         console.log('Saving factory with coordinates:', serviceFactory);
         this.factoryService.updateFactory(serviceFactory);
@@ -695,7 +779,7 @@ export class StudentDistributionComponent implements OnInit {
         // Convert our local Factory to the service Factory type
         const serviceFactory = {
           ...newFactory,
-          id: timestamp,
+          id: timestamp.toString(),
         };
 
         // Add to factory service to ensure it persists
@@ -764,7 +848,7 @@ export class StudentDistributionComponent implements OnInit {
 
     try {
       // Delete factory from Firebase
-      await this.factoryService.deleteFactory(Number(this.selectedFactory.id));
+      await this.factoryService.deleteFactory(this.selectedFactory.id);
 
       // Remove from local factories array
       this.factories = this.factories.filter(

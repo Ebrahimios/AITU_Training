@@ -265,9 +265,9 @@ export class StudentDetailsModalComponent implements OnInit {
       comments: ['', [Validators.required, Validators.minLength(10)]],
     });
 
-    this.evaluationForm.valueChanges.subscribe(() => {
-      this.calculateOverallRating();
-    });
+    // this.evaluationForm.valueChanges.subscribe(() => {
+    //   this.calculateOverallRating();
+    // });
   }
 
   private calculateAverageRating(values: any) {
@@ -339,6 +339,7 @@ export class StudentDetailsModalComponent implements OnInit {
   }
 
   calculateOverallRating() {
+    console.log("hello world");
     const values = this.evaluationForm.value;
 
     // Personal and Ethical Aspects (9 points total)
@@ -759,7 +760,7 @@ export class StudentDetailsModalComponent implements OnInit {
     // Return formatted string based on requested format
     if (format === 'input') {
       // Format as YYYY-MM-DD for input[type=date]
-      return date.toISOString().split('T')[0];
+      return date.toISOString();
     } else {
       // Format for display with locale
       return date.toLocaleDateString();
@@ -815,8 +816,8 @@ export class StudentDetailsModalComponent implements OnInit {
       this.updateBirthDateFromString();
     }
 
-    if (this.isEditMode) {
-      this.isLoading = true;
+    if (!this.isEditMode) {
+      //this.isLoading = true;
 
       if (this.student) {
         const updatedStudent: Student = {
@@ -830,7 +831,7 @@ export class StudentDetailsModalComponent implements OnInit {
           birthDate:
             this.student.birthDate || new Date().toISOString().split('T')[0],
           createOn:
-            this.student.createOn || new Date().toISOString().split('T')[0],
+            this.student.createOn || new Date().toISOString(),
           gender: this.student.gender || 'غير محدد',
           department: this.student.department || '',
           birthAddress: this.student.birthAddress || '',
@@ -841,7 +842,6 @@ export class StudentDetailsModalComponent implements OnInit {
           selected: this.student.selected ?? false,
           supervisor: this.student.supervisor || '',
         };
-
         // Additional validation before sending
         if (!updatedStudent.code) {
           this.snackBar.open('Error: Missing student code!', 'Close', {
@@ -850,6 +850,7 @@ export class StudentDetailsModalComponent implements OnInit {
           this.isLoading = false;
           return;
         }
+        console.log(updatedStudent);
 
         // Update student
         this.authService

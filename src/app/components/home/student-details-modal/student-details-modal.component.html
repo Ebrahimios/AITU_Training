@@ -203,11 +203,11 @@
                     *ngIf="isEditMode"
                     [(ngModel)]="student.department"
                   >
-                    <option value="Information Technology">
+                    <option value="تكنولوجيا المعلومات">
                       Information Technology
                     </option>
-                    <option value="Mechanics">Mechanics</option>
-                    <option value="Electrical">Electrical</option>
+                    <option value="تكنولوجيا ميكانيكية">Mechanics</option>
+                    <option value="تكنولوجيا كهربائية">Electrical</option>
                   </select>
                 </div>
                 <div class="info-item">
@@ -905,515 +905,448 @@
                   <span class="overall-label">Overall Rating</span>
                   <div class="overall-value">
                     {{
-                      evaluationForm.get("overallRating")?.value ||
-                        calculateOverallRating()
+                      evaluationForm.get("overallRating")?.value || calculateOverallRating()
                     }}/60
                   </div>
                 </div>
               </div>
 
-              <!-- Personal and Ethical Aspects Section -->
-              <h4 class="evaluation-category-title">
-                First: Personal and Ethical Aspects of the Trainee
-              </h4>
-              <div class="modern-rating-grid">
-                <!-- Neat Appearance -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Has a neat appearance and high ethical standards</label
-                    >
-                    <span class="rating-value"
-                      >{{
+              <!-- Form for Evaluation -->
+              <form [formGroup]="evaluationForm" (ngSubmit)="submitEvaluation()">
+                <!-- Personal and Ethical Aspects Section -->
+                <h4 class="evaluation-category-title">
+                  First: Personal and Ethical Aspects of the Trainee
+                </h4>
+                <div class="modern-rating-grid">
+                  <!-- Neat Appearance -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label>Has a neat appearance and high ethical standards</label>
+                      <span class="rating-value">{{
                         evaluationForm.get("neatAppearance")?.value || 0
-                      }}/3</span
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'neatAppearance', 3)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'neatAppearance', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="neatAppearance"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('neatAppearance')?.value / 3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="neatAppearance"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('neatAppearance')?.value / 3) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Responsive Personality -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label>Has a responsive and reliable personality</label>
-                    <span class="rating-value"
-                      >{{
+                  <!-- Responsive Personality -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label>Has a responsive and reliable personality</label>
+                      <span class="rating-value">{{
                         evaluationForm.get("responsivePersonality")?.value || 0
-                      }}/3</span
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'responsivePersonality', 3)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'responsivePersonality', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="responsivePersonality"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('responsivePersonality')?.value /
-                            3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="responsivePersonality"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('responsivePersonality')?.value / 3) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Confident Relations -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Confident and maintains good relations with others</label
-                    >
-                    <span class="rating-value"
-                      >{{
+                  <!-- Confident Relations -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label>Confident and maintains good relations with others</label>
+                      <span class="rating-value">{{
                         evaluationForm.get("confidentRelations")?.value || 0
-                      }}/3</span
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'confidentRelations', 3)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'confidentRelations', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="confidentRelations"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('confidentRelations')?.value /
-                            3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="confidentRelations"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('confidentRelations')?.value / 3) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Practical and Professional Aspects Section -->
-              <h4 class="evaluation-category-title">
-                Second: Practical and Professional Aspects of the Trainee
-              </h4>
-              <div class="modern-rating-grid">
-                <!-- Attendance -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Regular attendance and punctuality during training</label
-                    >
-                    <span class="rating-value"
-                      >{{
+                <!-- Practical and Professional Aspects Section -->
+                <h4 class="evaluation-category-title">
+                  Second: Practical and Professional Aspects of the Trainee
+                </h4>
+                <div class="modern-rating-grid">
+                  <!-- Attendance -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label>Regular attendance and punctuality during training</label>
+                      <span class="rating-value">{{
                         evaluationForm.get("attendance")?.value || 0
-                      }}/15</span
+                      }}/15</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'attendance', 15)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'attendance', 15)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="15"
-                      step="1"
-                      formControlName="attendance"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('attendance')?.value / 15) * 100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="15"
+                        step="1"
+                        formControlName="attendance"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('attendance')?.value / 15) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Understanding Instructions -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Understanding and executing instructions within the
-                      training scope</label
+                  <!-- Understanding Instructions -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label
+                        >Understanding and executing instructions within the training
+                        scope</label
+                      >
+                      <span class="rating-value">{{
+                        evaluationForm.get("understandingInstructions")?.value || 0
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'understandingInstructions', 3)"
                     >
-                    <span class="rating-value"
-                      >{{
-                        evaluationForm.get("understandingInstructions")
-                          ?.value || 0
-                      }}/3</span
-                    >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="
-                      adjustRating($event, 'understandingInstructions', 3)
-                    "
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="understandingInstructions"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('understandingInstructions')
-                            ?.value /
-                            3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="understandingInstructions"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('understandingInstructions')?.value / 3) *
+                            100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Task Completion -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Level of completion of tasks assigned during
-                      training</label
-                    >
-                    <span class="rating-value"
-                      >{{
+                  <!-- Task Completion -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label>Level of completion of tasks assigned during training</label>
+                      <span class="rating-value">{{
                         evaluationForm.get("taskCompletion")?.value || 0
-                      }}/3</span
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'taskCompletion', 3)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'taskCompletion', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="taskCompletion"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('taskCompletion')?.value / 3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="taskCompletion"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('taskCompletion')?.value / 3) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Effective Interaction -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Effectiveness in dealing with colleagues and supervisors
-                      during training</label
-                    >
-                    <span class="rating-value"
-                      >{{
+                  <!-- Effective Interaction -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label
+                        >Effectiveness in dealing with colleagues and supervisors during
+                        training</label
+                      >
+                      <span class="rating-value">{{
                         evaluationForm.get("effectiveInteraction")?.value || 0
-                      }}/3</span
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'effectiveInteraction', 3)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'effectiveInteraction', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="effectiveInteraction"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('effectiveInteraction')?.value /
-                            3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="effectiveInteraction"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('effectiveInteraction')?.value / 3) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Follow Up With Supervisor -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Student's follow-up with the supervisor and seeking
-                      clarifications related to training</label
+                  <!-- Follow Up With Supervisor -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label
+                        >Student's follow-up with the supervisor and seeking clarifications
+                        related to training</label
+                      >
+                      <span class="rating-value">{{
+                        evaluationForm.get("followUpWithSupervisor")?.value || 0
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'followUpWithSupervisor', 3)"
                     >
-                    <span class="rating-value"
-                      >{{
-                        evaluationForm.get("followUpWithSupervisor")?.value ||
-                          0
-                      }}/3</span
-                    >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'followUpWithSupervisor', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="followUpWithSupervisor"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('followUpWithSupervisor')?.value /
-                            3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="followUpWithSupervisor"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('followUpWithSupervisor')?.value / 3) *
+                            100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Adherence To Instructions -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Student's commitment to applying the warnings and
-                      instructions given by the supervisor</label
+                  <!-- Adherence To Instructions -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label
+                        >Student's commitment to applying the warnings and instructions
+                        given by the supervisor</label
+                      >
+                      <span class="rating-value">{{
+                        evaluationForm.get("adherenceToInstructions")?.value || 0
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'adherenceToInstructions', 3)"
                     >
-                    <span class="rating-value"
-                      >{{
-                        evaluationForm.get("adherenceToInstructions")?.value ||
-                          0
-                      }}/3</span
-                    >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'adherenceToInstructions', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="adherenceToInstructions"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('adherenceToInstructions')
-                            ?.value /
-                            3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="adherenceToInstructions"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('adherenceToInstructions')?.value / 3) *
+                            100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Report Writing -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Effectiveness in writing reports and the final
-                      report</label
-                    >
-                    <span class="rating-value"
-                      >{{
+                  <!-- Report Writing -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label>Effectiveness in writing reports and the final report</label>
+                      <span class="rating-value">{{
                         evaluationForm.get("reportWriting")?.value || 0
-                      }}/10</span
+                      }}/10</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'reportWriting', 10)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'reportWriting', 10)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="10"
-                      step="1"
-                      formControlName="reportWriting"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('reportWriting')?.value / 10) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="10"
+                        step="1"
+                        formControlName="reportWriting"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('reportWriting')?.value / 10) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Information Gathering -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Ability to obtain information from various sources</label
-                    >
-                    <span class="rating-value"
-                      >{{
+                  <!-- Information Gathering -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label>Ability to obtain information from various sources</label>
+                      <span class="rating-value">{{
                         evaluationForm.get("informationGathering")?.value || 0
-                      }}/3</span
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'informationGathering', 3)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'informationGathering', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="informationGathering"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('informationGathering')?.value /
-                            3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="informationGathering"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('informationGathering')?.value / 3) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Adapt To Work Environment -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label
-                      >Ability to understand and adapt to the work environment
-                      and provide ideas and suggestions</label
+                  <!-- Adapt To Work Environment -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label
+                        >Ability to understand and adapt to the work environment and provide
+                        ideas and suggestions</label
+                      >
+                      <span class="rating-value">{{
+                        evaluationForm.get("adaptToWorkEnvironment")?.value || 0
+                      }}/5</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'adaptToWorkEnvironment', 5)"
                     >
-                    <span class="rating-value"
-                      >{{
-                        evaluationForm.get("adaptToWorkEnvironment")?.value ||
-                          0
-                      }}/5</span
-                    >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'adaptToWorkEnvironment', 5)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="5"
-                      step="1"
-                      formControlName="adaptToWorkEnvironment"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('adaptToWorkEnvironment')?.value /
-                            5) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="5"
+                        step="1"
+                        formControlName="adaptToWorkEnvironment"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('adaptToWorkEnvironment')?.value / 5) *
+                            100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Maintenance Skills -->
-                <div class="modern-rating-item">
-                  <div class="rating-header">
-                    <label>Proficient in maintenance skills</label>
-                    <span class="rating-value"
-                      >{{
+                  <!-- Maintenance Skills -->
+                  <div class="modern-rating-item">
+                    <div class="rating-header">
+                      <label>Proficient in maintenance skills</label>
+                      <span class="rating-value">{{
                         evaluationForm.get("maintenanceSkills")?.value || 0
-                      }}/3</span
+                      }}/3</span>
+                    </div>
+                    <div
+                      class="rating-slider"
+                      (click)="adjustRating($event, 'maintenanceSkills', 3)"
                     >
-                  </div>
-                  <div
-                    class="rating-slider"
-                    (click)="adjustRating($event, 'maintenanceSkills', 3)"
-                  >
-                    <input
-                      type="range"
-                      class="modern-range"
-                      min="0"
-                      max="3"
-                      step="1"
-                      formControlName="maintenanceSkills"
-                    />
-                    <div class="rating-track">
-                      <div
-                        class="rating-fill"
-                        [style.width.%]="
-                          (evaluationForm.get('maintenanceSkills')?.value / 3) *
-                          100
-                        "
-                      ></div>
+                      <input
+                        type="range"
+                        class="modern-range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        formControlName="maintenanceSkills"
+                      />
+                      <div class="rating-track">
+                        <div
+                          class="rating-fill"
+                          [style.width.%]="
+                            (evaluationForm.get('maintenanceSkills')?.value / 3) * 100
+                          "
+                        ></div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <form
-                [formGroup]="evaluationForm"
-                (ngSubmit)="submitEvaluation()"
-              >
                 <!-- Comments Section -->
                 <div class="modern-form-group">
                   <label for="comments">Additional Comments</label>
@@ -1425,6 +1358,7 @@
                   ></textarea>
                 </div>
 
+                <!-- Submit Button -->
                 <div class="modern-form-actions">
                   <button
                     type="submit"
@@ -1439,8 +1373,7 @@
                       aria-hidden="true"
                     ></span>
                     <span *ngIf="!isLoading"
-                      ><i class="bi bi-check-circle-fill"></i> Submit
-                      Evaluation</span
+                      ><i class="bi bi-check-circle-fill"></i> Submit Evaluation</span
                     >
                   </button>
                 </div>
