@@ -367,7 +367,6 @@ export class StudentDetailsModalComponent implements OnInit {
       ...personalEthicalRatings,
       ...practicalProfessionalRatings,
     ].reduce((a, b) => a + b, 0);
-
     this.evaluationForm.patchValue({ overallRating: totalPoints });
     return totalPoints;
   }
@@ -816,7 +815,7 @@ export class StudentDetailsModalComponent implements OnInit {
     }
 
     if (this.isEditMode) {
-      this.isLoading = true;
+      // this.isLoading = true;
 
       if (this.student) {
         const updatedStudent: Student = {
@@ -841,6 +840,8 @@ export class StudentDetailsModalComponent implements OnInit {
           selected: this.student.selected ?? false,
           supervisor: this.student.supervisor || '',
         };
+
+        console.log(updatedStudent)
 
         // Additional validation before sending
         if (!updatedStudent.code) {
