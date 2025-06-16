@@ -169,9 +169,45 @@ select {
   overflow: hidden;
 }
 
+.tabs-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-buttons {
+  display: flex;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 1rem;
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tab-button.active {
+  color: #1976d2;
+  border-bottom: 2px solid #1976d2;
+}
+
+.tab-button:hover {
+  color: #1976d2;
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+}
+
 .students-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 1rem;
 }

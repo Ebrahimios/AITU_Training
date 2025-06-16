@@ -276,7 +276,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (pendingFactory) {
       // Create a Factory object from the FirebaseFactory
       this.selectedFactory = {
-        id: -1, // Temporary ID for UI purposes
+        id: pendingFactory.id!, // Temporary ID for UI purposes
         name: pendingFactory.name,
         capacity: pendingFactory.capacity,
         assignedStudents: pendingFactory.assignedStudents,
@@ -320,7 +320,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       if (factoryNotification) {
         // Create a temporary factory object with available information
         this.selectedFactory = {
-          id: -1, // Temporary ID
+          id: "-1", // Temporary ID
           name: factoryName,
           capacity: 0,
           assignedStudents: 0,

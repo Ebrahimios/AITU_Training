@@ -66,68 +66,119 @@
   <!-- Main Content -->
   <div class="content">
     <!-- Students List -->
-    <div class="students-list">
-      <div class="students-header">
-        <h3>
-          {{ translationService.translate("students") }} ({{
-            filteredStudents.length
-          }})
-        </h3>
-        <div class="selection-controls">
-          <label class="select-all-checkbox">
-            <input
-              type="checkbox"
-              [checked]="selectAll"
-              (change)="toggleSelectAll()"
-            />
-            <span>{{ translationService.translate("select_all") }}</span>
-          </label>
-          <div class="selection-info" *ngIf="selectedStudents.length > 0">
-            {{ selectedStudents.length }}
-            {{ translationService.translate("students_selected") }}
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="students-container"
+    <div class="students-list"
         cdkDropList
         #studentList="cdkDropList"
         [cdkDropListData]="filteredStudents"
         [cdkDropListConnectedTo]="factoryDropLists"
         (cdkDropListDropped)="onDrop($event)"
       >
-        <div
-          class="student-card"
-          *ngFor="let student of filteredStudents"
-          cdkDrag
-          [cdkDragData]="student"
-          [class.selected]="student.selected"
-        >
-          <div class="checkbox-wrapper">
-            <input
-              type="checkbox"
-              [checked]="student.selected"
-              (click)="toggleSelection($event, student)"
-            />
+      <div class="tabs-container">
+        <div class="tab-buttons">
+          <button 
+            class="tab-button" 
+            [class.active]="activeTab === 'students'"
+            (click)="setActiveTab('students')"
+          >
+            {{ translationService.translate("students") }} ({{ filteredStudents.length }})
+          </button>
+          <button 
+            class="tab-button" 
+            [class.active]="activeTab === 'supervisors'"
+            (click)="setActiveTab('supervisors')"
+          >
+            {{ translationService.translate("supervisors") }} ({{ filteredSupervisors.length }})
+          </button>
+        </div>
+    
+        <!-- Students Tab Content -->
+        <div class="tab-content" *ngIf="activeTab === 'students'">
+          <div class="students-header">
+            <div class="selection-controls">
+              <label class="select-all-checkbox">
+                <input
+                  type="checkbox"
+                  [checked]="selectAll"
+                  (change)="toggleSelectAll()"
+                />
+                <span>{{ translationService.translate("select_all") }}</span>
+              </label>
+              <div class="selection-info" *ngIf="selectedStudents.length > 0">
+                {{ selectedStudents.length }}
+                {{ translationService.translate("students_selected") }}
+              </div>
+            </div>
           </div>
-          <div class="student-info" (click)="toggleSelection($event, student)">
-            <h4>{{ student.name }}</h4>
-            <p>
-              {{ student.department }} | {{ student.stage }} |
-              {{ student.batch }}
-            </p>
+    
+          <div
+            class="students-container"
+            
+          >
+            <div
+              class="student-card"
+              *ngFor="let student of filteredStudents"
+              cdkDrag
+              [cdkDragData]="student"
+              [class.selected]="student.selected"
+            >
+              <div class="checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  [checked]="student.selected"
+                  (click)="toggleSelection($event, student)"
+                />
+              </div>
+              <div class="student-info" (click)="toggleSelection($event, student)">
+                <h4>{{ student.name }}</h4>
+                <p>
+                  {{ student.department }} | {{ student.stage }} |
+                  {{ student.batch }}
+                </p>
+              </div>
+              <div class="student-factory">
+                <span *ngIf="student.factory" class="factory-badge">
+                  {{ student.factory }}
+                  <button
+                    class="remove-btn"
+                    (click)="removeFromFactory(student, $event)"
+                  >
+                    <i class="bi bi-x"></i>
+                  </button>
+                </span>
+              </div>
+            </div>
           </div>
-          <div class="student-factory">
-            <span *ngIf="student.factory" class="factory-badge">
-              {{ student.factory }}
-              <button
-                class="remove-btn"
-                (click)="removeFromFactory(student, $event)"
-              >
-                <i class="bi bi-x"></i>
-              </button>
-            </span>
+        </div>
+    
+        <!-- Supervisors Tab Content (Static) -->
+        <div class="tab-content" *ngIf="activeTab === 'supervisors'">
+          <div class="students-header">
+            <div class="selection-controls">
+              <label class="select-all-checkbox">
+                <input type="checkbox" />
+                <span>{{ translationService.translate("select_all") }}</span>
+              </label>
+              
+            </div>
+          </div>
+    
+          <div class="students-container">
+            <div
+              class="student-card"
+              *ngFor="let supervisor of filteredSupervisors"
+              [class.selected]="supervisor.selected"
+            >
+              <div class="checkbox-wrapper">
+                <input type="checkbox" [checked]="supervisor.selected" />
+              </div>
+              <div class="student-info">
+                <h4>{{ supervisor.firstName }} {{ supervisor.lastName }}</h4>
+                <p>{{ supervisor.department }} | {{ supervisor.role | titlecase }}</p>
+              </div>
+              <div class="student-factory">
+                
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -43,6 +43,7 @@ export interface User {
   image?: string;
   timestamp?: number;
   department: string;
+  selected?:boolean;
 }
 
 export interface FirebaseFactory {
