@@ -69,6 +69,7 @@
     <div class="students-list"
         cdkDropList
         #studentList="cdkDropList"
+        #supervisorList="cdkDropList"
         [cdkDropListData]="filteredStudents"
         [cdkDropListConnectedTo]="factoryDropLists"
         (cdkDropListDropped)="onDrop($event)"
@@ -155,7 +156,10 @@
           <div class="students-header">
             <div class="selection-controls">
               <label class="select-all-checkbox">
-                <input type="checkbox" />
+                <input type="checkbox" 
+                [checked]="selectAllSupervisors"
+                (change)="toggleSelectAllSupervisors()"
+                />
                 <span>{{ translationService.translate("select_all") }}</span>
               </label>
               
@@ -166,10 +170,16 @@
             <div
               class="student-card"
               *ngFor="let supervisor of filteredSupervisors"
+              cdkDrag
+              [cdkDragData]="supervisor"
               [class.selected]="supervisor.selected"
             >
               <div class="checkbox-wrapper">
-                <input type="checkbox" [checked]="supervisor.selected" />
+                <input 
+                type="checkbox" 
+                [checked]="supervisor.selected"
+                (click)="toggleSelectionSupervisor($event, supervisor)"
+                />
               </div>
               <div class="student-info">
                 <h4>{{ supervisor.firstName }} {{ supervisor.lastName }}</h4>
@@ -198,70 +208,115 @@
         </div>
       </div>
       <div class="factories-grid">
-        <div
-          class="factory-card"
-          *ngFor="let factory of filteredFactories"
-          [class.full]="factory.assignedStudents >= factory.capacity"
-          (click)="openFactoryDetails(factory)"
-        >
-          <div class="factory-header">
-            <h3>{{ factory.name }}</h3>
-            <span class="capacity"
-              >{{ factory.assignedStudents }}/{{ factory.capacity }}</span
-            >
-          </div>
-          <div class="progress-bar">
-            <div
-              class="progress"
-              [style.width.%]="
-                (factory.assignedStudents / factory.capacity) * 100
-              "
-              [ngClass]="{
-                empty: factory.assignedStudents === 0,
-                low:
-                  factory.assignedStudents > 0 &&
-                  factory.assignedStudents < factory.capacity * 0.5,
-                medium:
-                  factory.assignedStudents >= factory.capacity * 0.5 &&
-                  factory.assignedStudents < factory.capacity * 0.8,
-                high: factory.assignedStudents >= factory.capacity * 0.8,
-              }"
-            ></div>
-          </div>
+        <ng-template ngFor let-factory [ngForOf]="filteredFactories" let-i="index" [ngForTrackBy]="trackByFn">
           <div
-            class="factory-students"
+            class="factory-card"
+            [class.full]="factory.assignedStudents >= factory.capacity"
+            (click)="openFactoryDetails(factory)"
             cdkDropList
-            [id]="'factory-' + factory.id"
-            [cdkDropListData]="factory.students"
-            [cdkDropListConnectedTo]="[studentList]"
+            [id]="'supervisor-factory-' + factory.id"
+            [cdkDropListData]="factory.supervisors"
+            [cdkDropListConnectedTo]="[supervisorList]"
             (cdkDropListDropped)="onDrop($event, factory)"
           >
-            <div class="dropzone-content" *ngIf="factory.students.length === 0">
-              <i class="bi bi-plus-circle"></i>
-              <span *ngIf="factory.assignedStudents < factory.capacity">
-                {{ translationService.translate("drag_students_here") }}
-              </span>
-              <span *ngIf="factory.assignedStudents >= factory.capacity">
-                {{ translationService.translate("factory_is_full") }}
-              </span>
-            </div>
-
-            <div class="assigned-students">
-              <div
-                class="assigned-student"
-                *ngFor="let student of factory.students"
+            <div class="factory-header">
+              <h3>{{ factory.name }}</h3>
+              <span class="capacity"
+                >{{ factory.assignedStudents }}/{{ factory.capacity }}</span
               >
-                <span class="student-name">{{ student.name }}</span>
-                <button
-                  class="remove-btn"
-                  (click)="removeFromFactory(student, $event)"
+            </div>
+            <div class="progress-bar">
+              <div
+                class="progress"
+                [style.width.%]="
+                  (factory.assignedStudents / factory.capacity) * 100
+                "
+                [ngClass]="{
+                  empty: factory.assignedStudents === 0,
+                  low:
+                    factory.assignedStudents > 0 &&
+                    factory.assignedStudents < factory.capacity * 0.5,
+                  medium:
+                    factory.assignedStudents >= factory.capacity * 0.5 &&
+                    factory.assignedStudents < factory.capacity * 0.8,
+                  high: factory.assignedStudents >= factory.capacity * 0.8,
+                }"
+              ></div>
+            </div>
+            <div class="factory-supervisors"
+            >
+              <div class="supervisors-header">
+                <h4>Supervisors</h4>
+                <span class="supervisor-capacity"
+                  >{{ factory.assignedSupervisors }}/{{ factory.supervisorCapacity || 0 }}</span
                 >
-                  <i class="bi bi-x"></i>
-                </button>
+              </div>
+              <div
+                class="supervisor-dropzone"
+                
+              >
+                <div class="dropzone-content" *ngIf="factory.supervisors.length === 0">
+                  <i class="bi bi-person-plus"></i>
+                  <span *ngIf="factory.assignedSupervisors < (factory.supervisorCapacity || 0)">
+                    Drag supervisors here
+                  </span>
+                  <span *ngIf="factory.assignedSupervisors >= (factory.supervisorCapacity || 0)">
+                    Supervisor capacity full
+                  </span>
+                </div>
+
+                <div class="assigned-supervisors">
+                  <div
+                    class="assigned-supervisor"
+                    *ngFor="let supervisor of factory.supervisors"
+                  >
+                    <span class="supervisor-name">{{ supervisor.firstName }} {{ supervisor.lastName }}</span>
+                    <button
+                      class="remove-btn"
+                      (click)="removeSupervisorFromFactory(supervisor,factory.id, $event)"
+                    >
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="factory-students"
+              cdkDropList
+              [id]="'factory-' + factory.id"
+              [cdkDropListData]="factory.students"
+              [cdkDropListConnectedTo]="[studentList]"
+              (cdkDropListDropped)="onDrop($event, factory)"
+            >
+              <div class="dropzone-content" *ngIf="factory.students.length === 0">
+                <i class="bi bi-plus-circle"></i>
+                <span *ngIf="factory.assignedStudents < factory.capacity">
+                  {{ translationService.translate("drag_students_here") }}
+                </span>
+                <span *ngIf="factory.assignedStudents >= factory.capacity">
+                  {{ translationService.translate("factory_is_full") }}
+                </span>
+              </div>
+
+              <div class="assigned-students">
+                <div
+                  class="assigned-student"
+                  *ngFor="let student of factory.students"
+                >
+                  <span class="student-name">{{ student.name }}</span>
+                  <button
+                    class="remove-btn"
+                    (click)="removeFromFactory(student, $event)"
+                  >
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ng-template>
+        
       </div>
     </div>
 
@@ -686,6 +741,32 @@
               </div>
               <div class="mb-3">
                 <label class="form-label"
+                  ><strong>Assigned SuperVisors:</strong></label
+                >
+                <ul class="list-group">
+                  <li
+                    class="list-group-item d-flex justify-content-between align-items-center"
+                    *ngFor="let supervisor of selectedFactory.supervisors"
+                  >
+                    {{ `${supervisor.firstName} ${supervisor.lastName}` }} - {{ supervisor.department }} -
+                    
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="removeSupervisorFromFactory(supervisor,selectedFactory.id,$event)"
+                    >
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </li>
+                  <li
+                    class="list-group-item text-muted"
+                    *ngIf="selectedFactory.supervisors.length === 0"
+                  >
+                    No students assigned
+                  </li>
+                </ul>
+              </div>
+              <div class="mb-3">
+                <label class="form-label"
                   ><strong>Assigned Students:</strong></label
                 >
                 <ul class="list-group">
@@ -710,6 +791,7 @@
                   </li>
                 </ul>
               </div>
+              
             </form>
           </div>
           <div class="modal-footer">

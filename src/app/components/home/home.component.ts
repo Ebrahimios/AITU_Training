@@ -73,6 +73,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private dataUpdateSubscription: Subscription | null = null;
   private languageSubscription: Subscription | null = null;
+  private SuperVisorsSubscription: Subscription | null = null;
 
   constructor(
     public translationService: TranslationService,
@@ -81,6 +82,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private factoryService: FactoryService,
     private dataUpdateService: DataUpdateService
+    
   ) {
     // Initialize with empty array, total will be updated after loading
     this.students = [];
@@ -186,6 +188,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       await this.loadStudents();
       this.applyFilters(); // Apply any active filters after reloading
     });
+
+  
   }
 
   ngOnDestroy(): void {

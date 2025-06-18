@@ -20,6 +20,8 @@ export interface Factory {
   contactName?: string;
   type: string;
   industry?: string;
+  supervisors: any[],
+  assignedSupervisors: number,
 }
 
 export interface Supervisor {
@@ -32,6 +34,8 @@ export interface Supervisor {
   phone?: string;
   department?: string;
   type: string;
+  supervisors: any[];
+  assignedSupervisors: number;
 }
 
 @Injectable({
@@ -62,13 +66,13 @@ export class FactoryService {
 
       // Convert Firebase factories to our local Factory interface
       const factories: Factory[] = approvedFactories.map((f) => {
-        console.log(
-          'Processing factory:',
-          f.name,
-          'with coordinates:',
-          f.longitude,
-          f.latitude,
-        );
+        // console.log(
+        //   'Processing factory:',
+        //   f.name,
+        //   'with coordinates:',
+        //   f.longitude,
+        //   f.latitude,
+        // );
         return {
           id: f.id!,
           name: f.name,
@@ -81,6 +85,8 @@ export class FactoryService {
           contactName: f.contactName,
           type: f.type || 'External',
           industry: f.industry,
+          supervisors: f.supervisors || [],
+          assignedSupervisors: f.assignedSupervisors || 0,
           longitude:
             f.longitude !== undefined ? Number(f.longitude) : undefined,
           latitude: f.latitude !== undefined ? Number(f.latitude) : undefined,
@@ -117,6 +123,8 @@ export class FactoryService {
         phone: s.phone,
         department: s.department,
         type: s.type || 'Administrative Supervisor',
+        supervisors: s.supervisors || [],
+        assignedSupervisors: s.assignedSupervisors || 0,
       }));
 
       this.supervisors.next(supervisors);
@@ -156,6 +164,8 @@ export class FactoryService {
         industry: f.industry,
         longitude: f.longitude,
         latitude: f.latitude,
+        supervisors: f.supervisors || [],
+        assignedSupervisors: f.assignedSupervisors || 0,
       }));
 
       this.factories.next(factories);
@@ -192,6 +202,8 @@ export class FactoryService {
         latitude: factory.latitude,
         isApproved: true,
         createdAt: Date.now(),
+        supervisors: factory.supervisors || [],
+        assignedSupervisors: factory.assignedSupervisors || 0,
       };
 
       await this.authService.updateFactory(firebaseFactory);
@@ -226,6 +238,8 @@ export class FactoryService {
           latitude: updatedFactory.latitude,
           isApproved: true,
           createdAt: Date.now(),
+          supervisors: updatedFactory.supervisors || [],
+          assignedSupervisors: updatedFactory.assignedSupervisors || 0,
         };
 
         await this.authService.updateFactory(firebaseFactory);
@@ -272,6 +286,8 @@ export class FactoryService {
         phone: s.phone,
         department: s.department,
         type: s.type || 'Administrative Supervisor',
+        supervisors: s.supervisors || [],
+        assignedSupervisors: s.assignedSupervisors || 0,
       }));
 
       this.supervisors.next(supervisors);
@@ -286,15 +302,15 @@ export class FactoryService {
     return this.supervisors.value;
   }
 
-  async addSupervisor(supervisor: Supervisor): Promise<void> {
+  async addSupervisor(supervisor: FirebaseSupervisor): Promise<void> {
     // Add to local state
     const currentSupervisors = this.supervisors.value;
-    this.supervisors.next([...currentSupervisors, supervisor]);
+    this.supervisors.next([...currentSupervisors, supervisor as unknown as Supervisor]);
 
     // Save to Firebase
     try {
       const firebaseSupervisor: FirebaseSupervisor = {
-        id: supervisor.id.toString(),
+        id: supervisor?.id?.toString(),
         name: supervisor.name,
         capacity: supervisor.capacity,
         assignedStudents: supervisor.assignedStudents,
@@ -305,6 +321,8 @@ export class FactoryService {
         type: supervisor.type,
         isApproved: true,
         createdAt: Date.now(),
+        supervisors: supervisor.supervisors || [],
+        assignedSupervisors: supervisor.assignedSupervisors || 0,
       };
 
       await this.authService.updateSupervisor(firebaseSupervisor);
@@ -337,6 +355,8 @@ export class FactoryService {
           type: updatedSupervisor.type,
           isApproved: true,
           createdAt: Date.now(),
+          supervisors: updatedSupervisor.supervisors || [],
+          assignedSupervisors: updatedSupervisor.assignedSupervisors || 0,
         };
 
         await this.authService.updateSupervisor(firebaseSupervisor);

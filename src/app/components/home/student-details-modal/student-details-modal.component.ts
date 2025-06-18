@@ -368,7 +368,6 @@ export class StudentDetailsModalComponent implements OnInit {
       ...personalEthicalRatings,
       ...practicalProfessionalRatings,
     ].reduce((a, b) => a + b, 0);
-
     this.evaluationForm.patchValue({ overallRating: totalPoints });
     return totalPoints;
   }
