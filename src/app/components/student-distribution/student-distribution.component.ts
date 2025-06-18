@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChildren, QueryList } from '@angular/core';
+import { Component, OnInit, ViewChildren, QueryList, model } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -12,14 +12,14 @@ import {
 } from '@angular/cdk/drag-drop';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { TranslationService } from '../../services/translation.service';
-import { FactoryService, Supervisor } from '../../services/factory.service';
-import { AuthService, FirebaseFactory, User } from '../../services/firebase.service';
+import { FactoryService } from '../../services/factory.service';
+import { AuthService, FirebaseFactory, FirebaseSupervisor, Supervisor } from '../../services/firebase.service';
 import { DataUpdateService } from '../../services/data-update.service';
 import { Student } from '../../interfaces/student';
 import * as bootstrap from 'bootstrap';
 
 // Define Factory interface locally to work with Student from interfaces directory
-interface Factory {
+export interface Factory {
   id: string;
   name: string;
   address?: string;
@@ -27,11 +27,14 @@ interface Factory {
   contactName?: string;
   industry?: string;
   capacity: number;
+  supervisorCapacity?: number;
   type: string;
   students: Student[];
+  supervisors: Supervisor[];
   assignedStudents: number;
-  longitude?: number; // <-- أضف  السطر
-  latitude?: number; // <-- أضف هذا السطر
+  assignedSupervisors: number;
+  longitude?: number; 
+  latitude?: number; 
 }
 
 @Component({
@@ -49,7 +52,7 @@ interface Factory {
 export class StudentDistributionComponent implements OnInit {
   @ViewChildren(CdkDropList) dropLists!: QueryList<CdkDropList>;
   activeTab: 'students' | 'supervisors' = 'students';
-  filteredSupervisors: User[] = [];
+  filteredSupervisors: Supervisor[] = [];
 
   factoryTypes: string[] = ['All', 'Internal', 'External'];
   selectedFactoryType: string = 'All';
@@ -72,84 +75,11 @@ export class StudentDistributionComponent implements OnInit {
     private authService: AuthService,
     private dataUpdateService: DataUpdateService,
   ) {
-    this.loadDummyData()
+    this.loadSuperVisorsData()
   }
 
-  loadDummyData() {
-    // Dummy data for students
-
-    // Dummy data for supervisors
-    this.filteredSupervisors = [
-      {
-        id: "u1",
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@university.com",
-        phone: "+12345678901",
-        role: "student",
-        department: "Computer Science",
-        image: "https://example.com/images/john-doe.jpg",
-        timestamp: 1623897600000 // June 17, 2021
-      },
-      {
-        id: "u2",
-        firstName: "Jane",
-        lastName: "Smith",
-        email: "jane.smith@university.com",
-        phone: "+12345678902",
-        role: "student",
-        department: "Mechanical Engineering"
-      },
-      {
-        id: "u3",
-        firstName: "Alice",
-        lastName: "Brown",
-        email: "alice.brown@university.com",
-        phone: "+12345678903",
-        role: "supervisor",
-        department: "Engineering Dept",
-        image: "https://example.com/images/alice-brown.jpg",
-        timestamp: 1626489600000 // July 17, 2021
-      },
-      {
-        id: "u4",
-        firstName: "Bob",
-        lastName: "Wilson",
-        email: "bob.wilson@university.com",
-        phone: "+12345678904",
-        role: "supervisor",
-        department: "Computer Science"
-      },
-      {
-        id: "u5",
-        firstName: "Emily",
-        lastName: "Davis",
-        email: "emily.davis@university.com",
-        phone: "+12345678905",
-        role: "student",
-        department: "Electrical Engineering",
-        timestamp: 1631664000000 // September 15, 2021
-      },
-      {
-        id: "u6",
-        firstName: "Michael",
-        lastName: "Chen",
-        email: "michael.chen@university.com",
-        phone: "+12345678906",
-        role: "student",
-        department: "Computer Science"
-      },
-      {
-        id: "u7",
-        firstName: "Sarah",
-        lastName: "Johnson",
-        email: "sarah.johnson@university.com",
-        phone: "+12345678907",
-        role: "supervisor",
-        department: "Mechanical Engineering",
-        image: "https://example.com/images/sarah-johnson.jpg"
-      }
-    ];
+  async loadSuperVisorsData() {
+    this.filteredSupervisors = await this.authService.getAllSupervisorsUsers()
   }
 
   setActiveTab(tab: 'students' | 'supervisors') {
@@ -170,6 +100,7 @@ export class StudentDistributionComponent implements OnInit {
   searchTerm: string = '';
   factorySearchTerm: string = '';
   selectAll: boolean = false;
+  selectAllSupervisors: boolean = false;
   selectedFactory: Factory | null = null;
 
   industries: string[] = [
@@ -223,33 +154,47 @@ export class StudentDistributionComponent implements OnInit {
   get selectedStudents(): Student[] {
     return this.students.filter((student) => student.selected);
   }
+
+  get selectedSupervisors(): Supervisor[] {
+    return this.filteredSupervisors.filter((supervisor) => supervisor.selected);
+  }
+
   async ngOnInit(): Promise<void> {
     try {
       console.log('Initializing student-distribution component');
 
       // Subscribe to factories
       this.factoryService.factories$.subscribe((factories) => {
-        console.log('Received factories from service:', factories);
 
         // Convert factory service factories to our local Factory interface
-        this.factories = factories.map((f) => ({
-          id: f.id.toString(),
-          name: f.name,
-          address: f.address,
-          phone: f.phone,
-          contactName: f.contactName,
-          industry: f.industry,
-          capacity: f.capacity,
-          type: f.type,
-          longitude: f.longitude,
-          latitude: f.latitude,
-          students: [],
-          assignedStudents: f.assignedStudents,
-        }));
-        this.factoryDropLists = this.factories.map((f) => `factory-${f.id}`);
+        this.factories = factories.map((f : Factory) => {
+          return {
+            id: f.id.toString(),
+            name: f.name,
+            address: f.address,
+            phone: f.phone,
+            contactName: f.contactName,
+            industry: f.industry,
+            capacity: f.capacity,
+            type: f.type,
+            longitude: f.longitude,
+            latitude: f.latitude,
+            students: [],
+            assignedStudents: f.assignedStudents,
+            assignedSupervisors: f.assignedSupervisors,
+            supervisors: f.supervisors,
+            supervisorCapacity: f.supervisorCapacity,
+          }
+        });
+        this.factoryDropLists = this.factories.map((f) => `supervisor-factory-${f.id}`);
 
         // Load students after factories are loaded
         this.loadStudentsFromFirebase();
+        
+        this.dataUpdateService.selectedFactoryUpdated$.subscribe((_factory:Factory)=>{
+          this.selectedFactory = _factory
+        })
+        
       });
     } catch (error) {
       console.error('Error in ngOnInit:', error);
@@ -310,7 +255,8 @@ export class StudentDistributionComponent implements OnInit {
 
   ngAfterViewInit(): void {
     this.dropLists.changes.subscribe(() => {
-      this.factoryDropLists = this.factories.map((f) => `factory-${f.id}`);
+      this.factoryDropLists = this.factories.map((f) => `supervisor-factory-${f.id}`);
+      
     });
   }
 
@@ -332,7 +278,23 @@ export class StudentDistributionComponent implements OnInit {
     if (modalElement) {
       const modal = new bootstrap.Modal(modalElement);
       modal.show();
+      
     }
+  }
+
+  closeFactoryDetails():void{
+    const modalElement = document.getElementById('factoryDetailsModal');
+        if (modalElement) {
+          const modal = bootstrap.Modal.getInstance(modalElement);
+          if (modal) {
+            modal.hide();
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+              backdrop.remove();
+            }
+          }
+      }
   }
 
   startEditing(): void {
@@ -342,7 +304,6 @@ export class StudentDistributionComponent implements OnInit {
       this.originalFactoryData = { ...this.selectedFactory };
       // Set the coordinates input with current values
       this.coordinatesInput = `${this.selectedFactory.latitude}, ${this.selectedFactory.longitude}`;
-      console.log('Starting edit with coordinates:', this.coordinatesInput);
     }
   }
 
@@ -357,7 +318,6 @@ export class StudentDistributionComponent implements OnInit {
 
   saveChanges(): void {
     if (this.selectedFactory) {
-      console.log('Current coordinates input:', this.coordinatesInput);
       // Parse coordinates
       const parsedCoordinates = this.parseCoordinates(this.coordinatesInput);
       console.log('Parsed coordinates:', parsedCoordinates);
@@ -385,18 +345,7 @@ export class StudentDistributionComponent implements OnInit {
         this.coordinatesError = '';
 
         // Close the modal
-        const modalElement = document.getElementById('factoryDetailsModal');
-        if (modalElement) {
-          const modal = bootstrap.Modal.getInstance(modalElement);
-          if (modal) {
-            modal.hide();
-            document.body.classList.remove('modal-open');
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-              backdrop.remove();
-            }
-          }
-        }
+        this.closeFactoryDetails();
         alert('Changes saved successfully');
       }
     }
@@ -425,6 +374,13 @@ export class StudentDistributionComponent implements OnInit {
     });
   }
 
+  toggleSelectAllSupervisors(): void {
+    this.selectAll = !this.selectAll;
+    this.filteredSupervisors.forEach((supervisor) => {
+      supervisor.selected = this.selectAll;
+    });
+  }
+
   toggleSelection(event: MouseEvent, student: Student): void {
     if (event.ctrlKey || event.metaKey) {
       student.selected = !student.selected;
@@ -444,7 +400,27 @@ export class StudentDistributionComponent implements OnInit {
     this.updateSelectAllState();
   }
 
+
+  toggleSelectionSupervisor(event: MouseEvent, supervisor: Supervisor): void {
+    if (event.ctrlKey || event.metaKey) {
+      supervisor.selected = !supervisor.selected;
+    } else if (event.shiftKey && this.lastSelectedSupervisor) {
+      const currentIndex = this.filteredSupervisors.indexOf(supervisor);
+      const lastIndex = this.filteredSupervisors.indexOf(this.lastSelectedSupervisor);
+      const start = Math.min(currentIndex, lastIndex);
+      const end = Math.max(currentIndex, lastIndex);
+
+      for (let i = start; i <= end; i++) {
+        this.filteredSupervisors[i].selected = true;
+      }
+    } else {
+      supervisor.selected = !supervisor.selected;
+    }
+
+  }
+
   private lastSelectedStudent: Student | null = null;
+  private lastSelectedSupervisor: Supervisor | null = null;
 
   private updateSelectAllState(): void {
     const filteredStudents = this.filteredStudents;
@@ -453,7 +429,13 @@ export class StudentDistributionComponent implements OnInit {
       filteredStudents.every((student) => student.selected);
   }
 
-  onDrop(event: CdkDragDrop<Student[]>, factory?: Factory): void {
+  trackByFn(index: number, item: Factory): any {
+    return item.id; 
+  }
+  
+
+  onDrop(event: CdkDragDrop<any[]>, factory?: Factory): void {
+    console.log("fired!")
     if (event.previousContainer === event.container) {
       moveItemInArray(
         event.container.data,
@@ -462,6 +444,7 @@ export class StudentDistributionComponent implements OnInit {
       );
     } else {
       const selectedStudents = this.selectedStudents;
+      const selectedSupervisors = this.selectedSupervisors;
 
       if (selectedStudents.length > 0) {
         // Handle multiple students drop
@@ -501,8 +484,8 @@ export class StudentDistributionComponent implements OnInit {
       } else {
         // Handle single student drop
         const student = event.item.data as Student;
-
-        if (factory) {
+        console.log(student)
+        if (student.isStudent && factory) {
           // Check if factory has enough capacity
           if (factory.assignedStudents >= factory.capacity) {
             alert(`Factory ${factory.name} is already at full capacity`);
@@ -528,6 +511,38 @@ export class StudentDistributionComponent implements OnInit {
           this.assignToFactory(student, factory);
         }
       }
+
+      if (this.selectedSupervisors.length > 0) {
+         // Handle multiple supervisors drop
+        if (factory) {
+            // Check if factory has enough supervisor capacity
+            // if (
+            //     factory.assignedSupervisors + selectedSupervisors.length >
+            //     (factory?.supervisorCapacity || 0)
+            // ) {
+            //     alert(
+            //         `Factory ${factory.name} doesn't have enough supervisor capacity for ${selectedSupervisors.length} supervisors`,
+            //     );
+            //     return;
+            // }
+
+            this.assignToFactorySupervisors(selectedSupervisors,factory);
+        }
+      } else {
+        // Handle single supervisor drop
+          const supervisor = event.item.data as Supervisor;
+
+          if (factory) {
+            // Check if factory has enough supervisor capacity
+            // if (factory.assignedSupervisors >= (factory.supervisorCapacity || 0)) {
+            //   alert(`Factory ${factory.name} is already at full supervisor capacity`);
+            //   return;
+            // }
+
+
+            this.assignToFactorySupervisor(supervisor, factory);
+        }
+      }
     }
   }
 
@@ -551,6 +566,49 @@ export class StudentDistributionComponent implements OnInit {
     }
   }
 
+  assignToFactorySupervisor(supervisor: Supervisor, factory: Factory): void {
+    // Update supervisor's factory assignment
+    const index = this.filteredSupervisors.findIndex((s) => s.id === supervisor.id);
+    if (index !== -1) {
+      // Update in local array
+      this.filteredSupervisors[index].factory = factory.name;
+      supervisor.factory = factory.name;
+      supervisor.selected = false;
+
+      // Update in service (Firebase)
+      this.updateSupervisorFactory(supervisor, factory.name,factory.id);
+
+      // Update factory supervisors list
+      if (!factory.supervisors.some((s) => s.id === supervisor.id)) {
+        factory.supervisors.push(supervisor);
+        factory.assignedSupervisors = factory.supervisors.length;
+      }
+    }
+  }
+
+
+  assignToFactorySupervisors(supervisors: Supervisor[], factory: Factory): void {
+    // Update supervisors' factory assignment
+    supervisors.forEach(supervisor => {
+      const index = this.filteredSupervisors.findIndex((s) => s.id === supervisor.id);
+      if (index !== -1) {
+        // Update in local array
+        this.filteredSupervisors[index].factory = factory.name;
+        supervisor.factory = factory.name;
+        supervisor.selected = false;
+
+        // Update factory supervisors list
+        if (!factory.supervisors.some((s) => s.id === supervisor.id)) {
+          factory.supervisors.push(supervisor);
+          factory.assignedSupervisors = factory.supervisors.length;
+        }
+      }
+    });
+
+    // Update in service (Firebase) - using addSupervisorsToFactory for bulk operation
+    this.updateSupervisorsFactory(supervisors, factory.name, factory.id);
+  }
+
   private async updateStudentFactory(
     student: Student,
     factoryName: string | null,
@@ -570,8 +628,57 @@ export class StudentDistributionComponent implements OnInit {
 
       // Notify that student data has been updated
       this.dataUpdateService.notifyStudentDataUpdated();
+      
     } catch (error) {
       console.error('Error updating student factory:', error);
+    }
+  }
+
+  
+
+
+  private async updateSupervisorFactory(
+    supervisor: Supervisor,
+    factoryName: string | null,
+    factoryId : string | null
+  ): Promise<void> {
+    try {
+      // Create a copy of the supervisor with the factory updated
+      const updatedSupervisor = {
+        ...supervisor,
+        factory: factoryName,
+      };
+
+      // Update the supervisor in Firebase
+      // await this.authService.updateSupervisorUser(updatedSupervisor as unknown as FirebaseSupervisor);
+      await this.authService.addSuperVisorToFactory(factoryId!,supervisor)
+      console.log(
+        `Supervisor ${supervisor.firstName} ${supervisor.lastName} assigned to factory ${factoryName || 'None'}`,
+      );
+
+      // Notify that supervisor data has been updated
+      this.dataUpdateService.notifySupervisorDataUpdated();
+    } catch (error) {
+      console.error('Error updating supervisor factory:', error);
+    }
+  }
+
+  private async updateSupervisorsFactory(
+    supervisors: Supervisor[],
+    factoryName: string | null,
+    factoryId : string | null
+  ): Promise<void> {
+    try {
+      // Add supervisors to factory using the service
+      await this.authService.addSupervisorsToFactory(factoryId!, supervisors);
+      console.log(
+        `${supervisors.length} supervisors assigned to factory ${factoryName || 'None'}`,
+      );
+
+      // Notify that supervisor data has been updated
+      this.dataUpdateService.notifySupervisorDataUpdated();
+    } catch (error) {
+      console.error('Error updating supervisors factory:', error);
     }
   }
 
@@ -599,6 +706,51 @@ export class StudentDistributionComponent implements OnInit {
 
       // Update in service (Firebase)
       this.updateStudentFactory(student, null);
+      this.dataUpdateService.notifySelectedFactoryDataUpdatet(factory!);
+
+    }
+  }
+
+  async removeSupervisorFromFactory(supervisor: Supervisor, factoryId: string, event: MouseEvent): Promise<void> {
+    event.stopPropagation();
+
+    try {
+      // Remove supervisor from factory using the service
+      const success = await this.authService.removeSupervisorFromFactory(factoryId, supervisor);
+      
+      if (success) {
+        // Find the factory and remove supervisor from local array
+        const factory = this.factories.find((f) => f.id === factoryId);
+        const selectedFactorySupervisor = this.selectedFactory?.supervisors.find((f)=>f.id === factoryId);
+        if (factory) {
+          const supervisorIndex = factory.supervisors.findIndex((s: any) => s.id === supervisor.id);
+          if (supervisorIndex !== -1) {
+            factory.supervisors.splice(supervisorIndex, 1);
+            factory.assignedSupervisors = factory.supervisors.length;
+          }
+        }
+
+        
+        const superVisorSelectedIndex = this.selectedFactory?.supervisors.findIndex((s:any)=> s.id === supervisor.id);
+        if(superVisorSelectedIndex !== -1){
+          this.selectedFactory?.supervisors.splice(superVisorSelectedIndex!,1);
+          console.log(this.selectedFactory)
+        }
+
+
+
+        console.log(`Supervisor ${supervisor.firstName} ${supervisor.lastName} removed from factory`);
+        
+        // Notify that supervisor data has been updated
+        this.dataUpdateService.notifySupervisorDataUpdated();
+        this.dataUpdateService.notifySelectedFactoryDataUpdatet(factory!);
+      } else {
+        console.error('Failed to remove supervisor from factory');
+        alert('Failed to remove supervisor from factory. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error removing supervisor from factory:', error);
+      alert('An error occurred while removing the supervisor. Please try again.');
     }
   }
 
@@ -630,6 +782,7 @@ export class StudentDistributionComponent implements OnInit {
         name: f.name,
         count: f.assignedStudents,
         students: f.students.length > 0 ? f.students.map((s) => s.name) : [],
+        supervisors:f.supervisors
       })),
     );
   }
@@ -750,6 +903,8 @@ export class StudentDistributionComponent implements OnInit {
         createdAt: Date.now(),
         longitude: parsedCoordinates!.longitude,
         latitude: parsedCoordinates!.latitude,
+        supervisors: [],
+        assignedSupervisors: 0,
       };
 
       console.log('Submitting factory to Firebase:', firebaseFactory);
@@ -772,6 +927,8 @@ export class StudentDistributionComponent implements OnInit {
           type,
           students: [],
           assignedStudents: 0,
+          assignedSupervisors:0,
+          supervisors:[],
           longitude: parsedCoordinates!.longitude,
           latitude: parsedCoordinates!.latitude,
         };

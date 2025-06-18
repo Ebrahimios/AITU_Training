@@ -29,4 +29,5 @@ export interface Student {
     batch?: string;
     supervisor?: string | null;
     report?: StudentReport;
+    isStudent?: boolean
   }

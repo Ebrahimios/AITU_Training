@@ -289,6 +289,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         contactName: pendingFactory.contactName || pendingFactory.studentName,
         type: 'Pending Approval',
         industry: pendingFactory.industry,
+        supervisors: pendingFactory.supervisors || [],
+        assignedSupervisors: pendingFactory.assignedSupervisors || 0,
       };
 
       // Show the modal
@@ -328,6 +330,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
           type: 'Pending Approval',
           // Add any other information from the notification if available
           contactName: factoryNotification.studentName,
+          supervisors: [],
+          assignedSupervisors: 0,
         };
 
         // Show the modal
