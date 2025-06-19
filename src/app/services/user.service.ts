@@ -9,32 +9,28 @@ import { AuthService, User } from './firebase.service';
 })
 
 export class userSerivce{
-    constructor(
-        public authService: AuthService,
-    ){}
+    constructor(public authService: AuthService) {
+        this.authService.currentUser.subscribe((user) => {
+            // Update internal state when user changes
+            this._currentUserData = user;
+            this._userRole = user?.role ?? null;
+            this._isAdmin = user?.role?.toLowerCase() === 'administrative';
+        });
+    }
 
-    private _userRole : string | null = null;
-    private _isAdmin : boolean | null = null;
-    private _currentUserData : User | null = null;
+    private _userRole: string | null = null;
+    private _isAdmin: boolean | null = null;
+    private _currentUserData: User |null = null;
 
-    get currentUserRole() {
-        if (this._userRole === null) {
-            this._userRole = this.authService.currentUserValue?.role ?? null;
-        }
+    get currentUserRole(): string | null {
         return this._userRole;
     }
 
-    get isAdmin() {
-        if (this._isAdmin === null) {
-            this._isAdmin = this.currentUserRole?.toLocaleLowerCase() === "administrative";
-        }
-        return this._isAdmin;
+    get isAdmin(): boolean {
+        return this._isAdmin ?? false; // Default to false if null
     }
 
-    get userData(): User {
-        if (!this._currentUserData) {
-            this._currentUserData = this.authService.currentUserValue;
-        }
-        return this._currentUserData!;
+    get userData(): User | null  {
+        return this?._currentUserData;
     }
 }

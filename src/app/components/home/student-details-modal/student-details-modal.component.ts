@@ -18,7 +18,7 @@ import { EditStudentModalComponent } from '../edit-student-modal/edit-student-mo
 import { Student, StudentReport } from '../../../interfaces/student';
 import { AuthService } from '../../../services/firebase.service';
 import { FactoryService, Supervisor } from '../../../services/factory.service';
-import { doc, setDoc, getDoc } from '@angular/fire/firestore';
+import { doc, setDoc, getDoc, updateDoc } from '@angular/fire/firestore';
 import { userSerivce } from '../../../services/user.service';
 
 // Extended student type with performance metrics
@@ -209,11 +209,9 @@ export class StudentDetailsModalComponent implements OnInit {
     this.evaluationForm = this.fb.group({
       // Personal and Ethical Aspects (9 points total)
       neatAppearance: [
-        {
-          value:0,
-          disabled:!this.userService.isAdmin
-        },
-        
+    
+        0,
+
         [Validators.required, Validators.min(0), Validators.max(3)],
       ],
       responsivePersonality: [
@@ -273,7 +271,7 @@ export class StudentDetailsModalComponent implements OnInit {
 
     if (!this.userService.isAdmin) {
       Object.keys(this.evaluationForm.controls).forEach(key => {
-        if(key !== "attendance"){
+        if(key == "attendance"){
           this.evaluationForm.get(key)?.disable();
         }
       });
@@ -690,7 +688,7 @@ export class StudentDetailsModalComponent implements OnInit {
       );
 
       // Save the evaluation data
-      await setDoc(evaluationRef, {
+      await updateDoc(evaluationRef, {
         ...evaluation,
         updatedBy: this.authService.currentUserValue?.id || 'unknown',
         updatedAt: new Date().getTime(),

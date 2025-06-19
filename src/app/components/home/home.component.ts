@@ -274,9 +274,16 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.students = [];
       let studentsData;
       console.log(this.userService)
-      if (!this.userService.isAdmin && this.userService.userData.firstName && this.userService.userData.lastName ) {
-        const supervisorName = `${this.userService.userData.firstName}${this.userService.userData.lastName}`.trim();
-        studentsData = await this.authService.getAllStudents(supervisorName);
+      const userData = this.userService?.userData;
+      if (
+        !this.userService.isAdmin &&
+        userData &&
+        userData.firstName &&
+        userData.lastName
+      ) {
+        const supervisorId = userData.id;
+        const superName = `${userData.firstName} ${userData.lastName}`;
+        studentsData = await this.authService.getAllStudents(supervisorId,superName);
       } else {
         studentsData = await this.authService.getAllStudents();
       }
@@ -322,9 +329,16 @@ export class HomeComponent implements OnInit, OnDestroy {
   async loadAllData(): Promise<void> {
     try {
       // Get all students from Firebase
-      if (!this.userService.isAdmin && this.userService.userData.firstName && this.userService.userData.lastName ) {
-        const supervisorName = `${this.userService.userData.firstName}${this.userService.userData.lastName}`.trim();
-        const students : Student[] = await this.authService.getAllStudents(supervisorName);
+      const userData = this.userService.userData;
+      if (
+        !this.userService.isAdmin &&
+        userData &&
+        userData.firstName &&
+        userData.lastName
+      ) {
+        const supervisorId = userData.id;
+        const superName = `${userData.firstName} ${userData.lastName}`;
+        const students: Student[] = await this.authService.getAllStudents(supervisorId,superName);
         this.students = students;
         this.filteredStudents = students;
         this.totalStudents = students.length;
