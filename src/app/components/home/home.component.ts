@@ -21,6 +21,7 @@ import { DataUpdateService } from '../../services/data-update.service';
 import { Subscription } from 'rxjs';
 
 import { Student } from '../../interfaces/student';
+import { userSerivce } from '../../services/user.service';
 
 // Using imported TranslationKeys from translation service
 
@@ -85,6 +86,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   constructor(
     public translationService: TranslationService,
+    public userService: userSerivce,
     private dialog: MatDialog,
     private router: Router,
     private authService: AuthService,
@@ -270,7 +272,21 @@ export class HomeComponent implements OnInit, OnDestroy {
   async loadStudents() {
     try {
       this.students = [];
-      const studentsData = await this.authService.getAllStudents();
+      let studentsData;
+      console.log(this.userService)
+      const userData = this.userService?.userData;
+      if (
+        !this.userService.isAdmin &&
+        userData &&
+        userData.firstName &&
+        userData.lastName
+      ) {
+        const supervisorId = userData.id;
+        const superName = `${userData.firstName} ${userData.lastName}`;
+        studentsData = await this.authService.getAllStudents(supervisorId,superName);
+      } else {
+        studentsData = await this.authService.getAllStudents();
+      }
 
       // Process each student to ensure dates are handled correctly
       this.students = studentsData.map((student) => {
@@ -299,7 +315,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         return processedStudent;
       });
-
       this.filteredStudents = [...this.students];
       this.totalStudents = this.students.length;
     } catch (error) {
@@ -314,10 +329,25 @@ export class HomeComponent implements OnInit, OnDestroy {
   async loadAllData(): Promise<void> {
     try {
       // Get all students from Firebase
-      const students = await this.authService.getAllStudents();
-      this.students = students;
-      this.filteredStudents = students;
-      this.totalStudents = students.length;
+      const userData = this.userService.userData;
+      if (
+        !this.userService.isAdmin &&
+        userData &&
+        userData.firstName &&
+        userData.lastName
+      ) {
+        const supervisorId = userData.id;
+        const superName = `${userData.firstName} ${userData.lastName}`;
+        const students: Student[] = await this.authService.getAllStudents(supervisorId,superName);
+        this.students = students;
+        this.filteredStudents = students;
+        this.totalStudents = students.length;
+      } else {
+        const students : Student[] = await this.authService.getAllStudents();
+        this.students = students;
+        this.filteredStudents = students;
+        this.totalStudents = students.length;
+      }
 
       // Get all factories from Firebase
       const factories = await this.authService.getAllFactories();
@@ -742,6 +772,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     link.click();
     document.body.removeChild(link);
   }
+
+
+  
 
   get departmentStats() {
     const stats = this.departments.map((dept) => {

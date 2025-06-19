@@ -349,9 +349,9 @@ export class AuthService {
   }
 
   async logout() {
+    localStorage.removeItem('currentUser');
     await signOut(this.auth);
     // Clear from localStorage and update BehaviorSubject
-    localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
@@ -442,10 +442,126 @@ export class AuthService {
   /**
    * Get all students (one-time fetch, kept for backward compatibility)
    */
-  public async getAllStudents(): Promise<Student[]> {
+  public async getAllStudents(supervisorId?: string,supervisorName?:string): Promise<Student[]> {
     try {
-      const studentsCollection = collection(this.firestore, 'StudentsTable');
-      const querySnapshot = await getDocs(studentsCollection);
+      let students: Student[] = [];
+
+      if (supervisorId && supervisorId.trim() !== "") {
+        // Query factories where supervisorId is in supervisorIdsArray
+        const factoriesQuery = query(
+          collection(this.firestore, 'Factories'),
+          where('supervisorIdsArray', 'array-contains', supervisorId)
+        );
+        const factoriesSnapshot = await getDocs(factoriesQuery);
+
+        // Collect factory names
+        const factoryNames: string[] = [];
+        factoriesSnapshot.forEach((doc) => {
+          const factoryData = doc.data();
+          if (factoryData['name']) {
+            factoryNames.push(factoryData['name']);
+          }
+        });
+
+        if (factoryNames.length === 0) {
+          console.log('No factories found for supervisor ID:', supervisorId);
+          return [];
+        }
+
+        // Query students for each factory
+        const studentPromises = factoryNames.map(async (factoryName) => {
+          const studentsQuery = query(
+            collection(this.firestore, 'StudentsTable'),
+            where('factory', '==', factoryName)
+          );
+          const studentsSnapshot = await getDocs(studentsQuery);
+          const factoryStudents: Student[] = [];
+
+          studentsSnapshot.forEach((doc) => {
+            const data = doc.data();
+            const student: Student = {
+              code: data['code'],
+              name: data['name'],
+              phone: data['phone'],
+              state: data['state'],
+              address: data['address'],
+              nationalID: data['nationalID'],
+              email: data['email'],
+              birthDate: data['birthDate'],
+              createOn: data['createOn'],
+              gender: data['gender'],
+              department: data['department'],
+              birthAddress: data['birthAddress'],
+              factory: data['factory'],
+              batch: data['batch'],
+              stage: data['stage'],
+              selected: data['selected'],
+              supervisor: supervisorName,
+              isStudent: true,
+            };
+            factoryStudents.push(student);
+          });
+
+          return factoryStudents;
+        });
+
+        // Wait for all student queries and combine results
+        const studentsArrays = await Promise.all(studentPromises);
+        students = studentsArrays.flat();
+      } else {
+        // If supervisorId is not provided, get all students
+        const studentsCollection = collection(this.firestore, 'StudentsTable');
+        const querySnapshot = await getDocs(studentsCollection);
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const student: Student = {
+            code: data['code'],
+            name: data['name'],
+            phone: data['phone'],
+            state: data['state'],
+            address: data['address'],
+            nationalID: data['nationalID'],
+            email: data['email'],
+            birthDate: data['birthDate'],
+            createOn: data['createOn'],
+            gender: data['gender'],
+            department: data['department'],
+            birthAddress: data['birthAddress'],
+            factory: data['factory'],
+            batch: data['batch'],
+            stage: data['stage'],
+            selected: data['selected'],
+            supervisor: data['supervisor'],
+            isStudent: true,
+          };
+          students.push(student);
+        });
+      }
+
+      return students;
+    } catch (error) {
+      console.error('Error getting students:', error);
+      return [];
+    }
+  }
+
+
+  public async getAllSupersisorStudents(supervisorName?:string): Promise<Student[]> {
+    try {
+      let querySnapshot;
+      if (supervisorName && supervisorName.trim() !== "") {
+        // If supervisorName is provided, filter by supervisor field
+        const studentsQuery = query(
+          collection(this.firestore, 'StudentsTable'),
+          where('supervisor', '==', supervisorName)
+        );
+        querySnapshot = await getDocs(studentsQuery);
+      } else {
+        // If supervisorName is not provided, get all students
+        const studentsCollection = collection(this.firestore, 'StudentsTable');
+        querySnapshot = await getDocs(studentsCollection);
+      }
       const students: Student[] = [];
 
       querySnapshot.forEach((doc) => {
@@ -491,6 +607,7 @@ export class AuthService {
             new Date().toISOString().split('T')[0];
 
       const userDocRef = doc(this.firestore, 'StudentsTable', student.code);
+      console.log(student)
       await updateDoc(userDocRef, {
         name: student.name,
         phone: student.phone,
@@ -503,7 +620,7 @@ export class AuthService {
         department: student.department,
         birthAddress: student.birthAddress,
         factory: student.factory,
-        batch: student.batch,
+        batch: student.batch || new Date().getFullYear(),
         stage: student.stage,
         selected: student.selected,
         supervisor: student.supervisor, // Add supervisor field to update
@@ -565,65 +682,79 @@ export class AuthService {
   public subscribeToFactories(): void {
     // Unsubscribe from any existing subscription
     if (this.unsubscribeFactories) {
-      this.unsubscribeFactories();
+        this.unsubscribeFactories();
     }
 
     try {
-      const factoriesCollection = collection(this.firestore, 'Factories');
+        const factoriesCollection = collection(this.firestore, 'Factories');
 
-      // Set up real-time listener
-      this.unsubscribeFactories = onSnapshot(
-        factoriesCollection,
-        (snapshot) => {
-          const factories: FirebaseFactory[] = [];
+        // Set up real-time listener for factories
+        this.unsubscribeFactories = onSnapshot(
+            factoriesCollection,
+            async (snapshot) => {
+                const factories: FirebaseFactory[] = [];
+                const supervisorPromises: Promise<void>[] = [];
 
-          snapshot.forEach((doc) => {
-            const data = doc.data();
+                // Process each factory document
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const factory: FirebaseFactory = {
+                        id: doc.id,
+                        name: data['name'] || 'Unknown Factory',
+                        capacity: data['capacity'] || 0,
+                        assignedStudents: data['assignedStudents'] || 0,
+                        students: data['students'] || [],
+                        address: data['address'],
+                        phone: data['phone'],
+                        department: data['department'],
+                        contactName: data['contactName'],
+                        type: data['type'],
+                        industry: data['industry'],
+                        isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
+                        createdAt: data['createdAt'] || Date.now(),
+                        longitude: data['longitude'] !== undefined ? Number(data['longitude']) : undefined,
+                        latitude: data['latitude'] !== undefined ? Number(data['latitude']) : undefined,
+                        supervisors: [], // Initialize as empty, will be populated by subcollection query
+                        assignedSupervisors: data['assignedSupervisors'] || 0,
+                    };
 
-            const factory = {
-              id: doc.id,
-              name: data['name'] || 'Unknown Factory',
-              capacity: data['capacity'] || 0,
-              assignedStudents: data['assignedStudents'] || 0,
-              students: data['students'] || [],
-              address: data['address'],
-              phone: data['phone'],
-              department: data['department'],
-              contactName: data['contactName'],
-              type: data['type'],
-              industry: data['industry'],
-              isApproved:
-                data['isApproved'] !== undefined ? data['isApproved'] : true,
-              createdAt: data['createdAt'] || Date.now(),
-              longitude:
-                data['longitude'] !== undefined
-                  ? Number(data['longitude'])
-                  : undefined,
-              latitude:
-                data['latitude'] !== undefined
-                  ? Number(data['latitude'])
-                  : undefined,
-              supervisors: data['supervisors'] || [],
-              assignedSupervisors: data['assignedSupervisors'] || 0,
-            };
-            // console.log('Processed factory:', factory);
-            factories.push(factory);
-          });
+                    factories.push(factory);
 
-          // Update the BehaviorSubject with new data
-          this.factoriesSubject.next(factories);
-          console.log(
-            'Real-time factories data updated:',
-            factories.length,
-            'factories',
-          );
-        },
-        (error) => {
-          console.error('Error getting real-time factories:', error);
-        },
-      );
+                    // Fetch supervisors from subcollection (one-time query)
+                    const supervisorsCollection = collection(this.firestore, `Factories/${doc.id}/supervisors`);
+                    supervisorPromises.push(
+                        getDocs(supervisorsCollection)
+                            .then((supervisorsSnapshot) => {
+                                const supervisors = supervisorsSnapshot.docs.map(supervisorDoc => ({
+                                    id: supervisorDoc.id,
+                                    ...supervisorDoc.data()
+                                }));
+                                const factoryIndex = factories.findIndex(f => f.id === doc.id);
+                                if (factoryIndex !== -1) {
+                                    factories[factoryIndex].supervisors = supervisors;
+                                }
+                            })
+                            .catch((error) => {
+                                console.error(`Error fetching supervisors for factory ${doc.id}:`, error);
+                            })
+                    );
+                });
+
+                // Wait for all supervisor queries to complete
+                await Promise.all(supervisorPromises);
+
+                // Update the BehaviorSubject with the complete data
+                this.factoriesSubject.next(factories);
+                console.log('Real-time factories data updated:', factories.length, 'factories');
+            },
+            (error) => {
+                console.error('Error getting real-time factories:', error);
+                this.factoriesSubject.next([]);
+            }
+        );
     } catch (error) {
-      console.error('Error setting up factories listener:', error);
+        console.error('Error setting up factories listener:', error);
+        this.factoriesSubject.next([]);
     }
   }
 
@@ -631,37 +762,50 @@ export class AuthService {
    * Get all factories (one-time fetch, kept for backward compatibility)
    */
   public async getAllFactories(): Promise<FirebaseFactory[]> {
+    console.log("fired here !!")
     try {
-      const factoriesCollection = collection(this.firestore, 'Factories');
-      const querySnapshot = await getDocs(factoriesCollection);
-      const factories: FirebaseFactory[] = [];
+        // Fetch all factories
+        const factoriesCollection = collection(this.firestore, 'Factories');
+        const factoriesSnapshot = await getDocs(factoriesCollection);
+        
+        // Prepare to fetch all supervisors subcollections in parallel
+        const factoryPromises = factoriesSnapshot.docs.map(async (factoryDoc) => {
+            const data = factoryDoc.data();
+            // Reference to the supervisors subcollection
+            const supervisorsCollection = collection(this.firestore, `Factories/${factoryDoc.id}/supervisors`);
+            const supervisorsSnapshot = await getDocs(supervisorsCollection);
+            
+            // Map supervisors data
+            const supervisors = supervisorsSnapshot.docs.map(supervisorDoc => ({
+                id: supervisorDoc.id,
+                ...supervisorDoc.data()
+            }));
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        factories.push({
-          id: doc.id,
-          name: data['name'] || 'Unknown Factory',
-          capacity: data['capacity'] || 0,
-          assignedStudents: data['assignedStudents'] || 0,
-          students: data['students'] || [],
-          address: data['address'],
-          phone: data['phone'],
-          department: data['department'],
-          contactName: data['contactName'],
-          type: data['type'],
-          industry: data['industry'],
-          isApproved:
-            data['isApproved'] !== undefined ? data['isApproved'] : true,
-          createdAt: data['createdAt'] || Date.now(),
-          supervisors: data['supervisors'] || [],
-          assignedSupervisors: data['assignedSupervisors'] || 0,
+            return {
+                id: factoryDoc.id,
+                name: data['name'] || 'Unknown Factory',
+                capacity: data['capacity'] || 0,
+                assignedStudents: data['assignedStudents'] || 0,
+                students: data['students'] || [],
+                address: data['address'],
+                phone: data['phone'],
+                department: data['department'],
+                contactName: data['contactName'],
+                type: data['type'],
+                industry: data['industry'],
+                isApproved: data['isApproved'] !== undefined ? data['isApproved'] : true,
+                createdAt: data['createdAt'] || Date.now(),
+                supervisors: supervisors,
+                assignedSupervisors: data['assignedSupervisors'] || 0,
+            } as FirebaseFactory;
         });
-      });
 
-      return factories;
+        // Execute all factory and supervisor queries concurrently
+        const factories = await Promise.all(factoryPromises);
+        return factories;
     } catch (error) {
-      console.error('Error getting factories:', error);
-      return [];
+        console.error('Error getting factories:', error);
+        return [];
     }
   }
 
@@ -897,115 +1041,127 @@ export class AuthService {
     supervisor: Supervisor,
   ): Promise<boolean> {
     try {
-      // Get the factory document reference
-      const factoryRef = doc(this.firestore, 'Factories', factoryId);
+        // Get the factory document reference
+        const factoryRef = doc(this.firestore, 'Factories', factoryId);
 
-      // Get the current factory data
-      const factoryDoc = await getDoc(factoryRef);
-      if (!factoryDoc.exists()) {
-        console.error('Factory not found with ID:', factoryId);
-        return false;
-      }
+        // Get the current factory data
+        const factoryDoc = await getDoc(factoryRef);
+        if (!factoryDoc.exists()) {
+            console.error('Factory not found with ID:', factoryId);
+            return false;
+        }
 
-      const factoryData = factoryDoc.data();
-      const currentSupervisors = factoryData['supervisors'] || [];
-      const currentAssignedSupervisors =
-        factoryData['assignedSupervisors'] || 0;
+        const factoryData = factoryDoc.data();
 
-      // Check if supervisor is already assigned to this factory
-      const isAlreadyAssigned = currentSupervisors.some(
-        (s: any) => s.id === supervisor.id,
-      );
-      if (isAlreadyAssigned) {
-        console.log('Supervisor is already assigned to this factory');
+        // Reference to the supervisor subcollection
+        const supervisorRef = doc(this.firestore, `Factories/${factoryId}/supervisors`, supervisor.id!);
+
+        // Check if supervisor is already assigned
+        const supervisorDoc = await getDoc(supervisorRef);
+        if (supervisorDoc.exists()) {
+            console.log('Supervisor is already assigned to this factory');
+            return true;
+        }
+
+        // Add supervisor to the subcollection
+        await setDoc(supervisorRef, {
+            ...supervisor,
+            factory: factoryData['name'],
+            createdAt: Date.now()
+        });
+
+        // Update factory's assignedSupervisors count and supervisorIdsArray
+        await updateDoc(factoryRef, {
+            assignedSupervisors: (factoryData['assignedSupervisors'] || 0) + 1,
+            supervisorIdsArray: [...(factoryData['supervisorIdsArray'] || []), supervisor.id!]
+        });
+
+        // Update the supervisor's factory assignment in users collection
+        const userRef = doc(this.firestore, 'users', supervisor.id!);
+        await updateDoc(userRef, {
+            factory: factoryData['name']
+        });
+
+        console.log(
+            `Supervisor ${supervisor.firstName} ${supervisor.lastName} added to factory ${factoryData['name']}`
+        );
         return true;
-      }
-
-      // Add supervisor to factory's supervisors array
-      const updatedSupervisors = [...currentSupervisors, supervisor];
-      const updatedAssignedSupervisors = currentAssignedSupervisors + 1;
-
-      // Update the factory document
-      await updateDoc(factoryRef, {
-        supervisors: updatedSupervisors,
-        assignedSupervisors: updatedAssignedSupervisors,
-      });
-
-      // Update the supervisor's factory assignment
-      const supervisorRef = doc(this.firestore, 'users', supervisor.id!);
-      await updateDoc(supervisorRef, {
-        factory: factoryData['name'],
-      });
-
-      console.log(
-        `Supervisor ${supervisor.firstName} ${supervisor.lastName} added to factory ${factoryData['name']}`,
-      );
-      return true;
     } catch (error) {
-      console.error('Error adding supervisor to factory:', error);
-      return false;
+        console.error('Error adding supervisor to factory:', error);
+        return false;
     }
   }
 
   public async addSupervisorsToFactory(
-    factoryId: string,
-    supervisors: Supervisor[],
+      factoryId: string,
+      supervisors: Supervisor[],
   ): Promise<boolean> {
     try {
-      // Get the factory document reference
-      const factoryRef = doc(this.firestore, 'Factories', factoryId);
+        // Get the factory document reference
+        const factoryRef = doc(this.firestore, 'Factories', factoryId);
 
-      // Get the current factory data
-      const factoryDoc = await getDoc(factoryRef);
-      if (!factoryDoc.exists()) {
-        console.error('Factory not found with ID:', factoryId);
-        return false;
-      }
+        // Get the current factory data
+        const factoryDoc = await getDoc(factoryRef);
+        if (!factoryDoc.exists()) {
+            console.error('Factory not found with ID:', factoryId);
+            return false;
+        }
 
-      const factoryData = factoryDoc.data();
-      const currentSupervisors = factoryData['supervisors'] || [];
-      const currentAssignedSupervisors =
-        factoryData['assignedSupervisors'] || 0;
+        const factoryData = factoryDoc.data();
+        const supervisorsCollection = collection(this.firestore, `Factories/${factoryId}/supervisors`);
 
-      // Filter out supervisors that are already assigned to this factory
-      const newSupervisors = supervisors.filter(
-        (supervisor) =>
-          !currentSupervisors.some((s: any) => s.id === supervisor.id),
-      );
-
-      if (newSupervisors.length === 0) {
-        console.log('All supervisors are already assigned to this factory');
-        return true;
-      }
-
-      // Add new supervisors to factory's supervisors array
-      const updatedSupervisors = [...currentSupervisors, ...newSupervisors];
-      const updatedAssignedSupervisors =
-        currentAssignedSupervisors + newSupervisors.length;
-
-      // Update the factory document
-      await updateDoc(factoryRef, {
-        supervisors: updatedSupervisors,
-        assignedSupervisors: updatedAssignedSupervisors,
-      });
-
-      // Update each supervisor's factory assignment
-      const updatePromises = newSupervisors.map(async (supervisor) => {
-        const supervisorRef = doc(this.firestore, 'users', supervisor.id!);
-        return updateDoc(supervisorRef, {
-          factory: factoryData['name'],
+        // Filter out already assigned supervisors
+        const newSupervisors: Supervisor[] = [];
+        const checkPromises = supervisors.map(async (supervisor) => {
+            const supervisorRef = doc(supervisorsCollection, supervisor.id!);
+            const supervisorDoc = await getDoc(supervisorRef);
+            if (!supervisorDoc.exists()) {
+                newSupervisors.push(supervisor);
+            }
         });
-      });
 
-      await Promise.all(updatePromises);
+        await Promise.all(checkPromises);
 
-      console.log(
-        `${newSupervisors.length} supervisors added to factory ${factoryData['name']}`,
-      );
-      return true;
+        if (newSupervisors.length === 0) {
+            console.log('All supervisors are already assigned to this factory');
+            return true;
+        }
+
+        // Add new supervisors to subcollection and update user documents
+        const updatePromises = newSupervisors.map(async (supervisor) => {
+            const supervisorRef = doc(supervisorsCollection, supervisor.id!);
+            const userRef = doc(this.firestore, 'users', supervisor.id!);
+
+            return Promise.all([
+                setDoc(supervisorRef, {
+                    ...supervisor,
+                    factory: factoryData['name'],
+                    createdAt: Date.now()
+                }),
+                updateDoc(userRef, {
+                    factory: factoryData['name']
+                })
+            ]);
+        });
+
+        await Promise.all(updatePromises);
+
+        // Update factory's assignedSupervisors count and supervisorIdsArray
+        await updateDoc(factoryRef, {
+            assignedSupervisors: (factoryData['assignedSupervisors'] || 0) + newSupervisors.length,
+            supervisorIdsArray: [
+                ...(factoryData['supervisorIdsArray'] || []),
+                ...newSupervisors.map(s => s.id!)
+            ]
+        });
+
+        console.log(
+            `${newSupervisors.length} supervisors added to factory ${factoryData['name']}`
+        );
+        return true;
     } catch (error) {
-      console.error('Error adding supervisors to factory:', error);
-      return false;
+        console.error('Error adding supervisors to factory:', error);
+        return false;
     }
   }
 
@@ -1014,55 +1170,54 @@ export class AuthService {
     supervisor: Supervisor,
   ): Promise<boolean> {
     try {
-      // Get the factory document reference
-      const factoryRef = doc(this.firestore, 'Factories', factoryId);
+        // Get the factory document reference
+        const factoryRef = doc(this.firestore, 'Factories', factoryId);
 
-      // Get the current factory data
-      const factoryDoc = await getDoc(factoryRef);
-      if (!factoryDoc.exists()) {
-        console.error('Factory not found with ID:', factoryId);
-        return false;
-      }
+        // Get the current factory data
+        const factoryDoc = await getDoc(factoryRef);
+        if (!factoryDoc.exists()) {
+            console.error('Factory not found with ID:', factoryId);
+            return false;
+        }
 
-      const factoryData = factoryDoc.data();
-      const currentSupervisors = factoryData['supervisors'] || [];
-      const currentAssignedSupervisors =
-        factoryData['assignedSupervisors'] || 0;
+        const factoryData = factoryDoc.data();
 
-      // Check if supervisor is assigned to this factory
-      const supervisorIndex = currentSupervisors.findIndex(
-        (s: any) => s.id === supervisor.id,
-      );
-      if (supervisorIndex === -1) {
-        console.log('Supervisor is not assigned to this factory');
+        // Reference to the supervisor document in the subcollection
+        const supervisorRef = doc(this.firestore, `Factories/${factoryId}/supervisors`, supervisor.id!);
+
+        // Check if supervisor is assigned to this factory
+        const supervisorDoc = await getDoc(supervisorRef);
+        if (!supervisorDoc.exists()) {
+            console.log('Supervisor is not assigned to this factory');
+            return true;
+        }
+
+        // Remove supervisor from the subcollection
+        await deleteDoc(supervisorRef);
+
+        // Update the factory's assignedSupervisors count and supervisorIdsArray
+        const currentAssignedSupervisors = factoryData['assignedSupervisors'] || 0;
+        const currentSupervisorIds = factoryData['supervisorIdsArray'] || [];
+        await updateDoc(factoryRef, {
+            assignedSupervisors: Math.max(currentAssignedSupervisors - 1, 0),
+            supervisorIdsArray: currentSupervisorIds.filter((id: string) => id !== supervisor.id!)
+        });
+
+        // Update the supervisor's factory assignment to null in the users collection
+        const userRef = doc(this.firestore, 'users', supervisor.id!);
+        await updateDoc(userRef, {
+            factory: null,
+        });
+
+        // Notify subscribers of the change
+        this.supervisorsSubject.next(this.supervisorsSubject.value);
+        console.log(
+            `Supervisor ${supervisor.firstName} ${supervisor.lastName} removed from factory ${factoryData['name']}`
+        );
         return true;
-      }
-
-      // Remove supervisor from factory's supervisors array
-      const updatedSupervisors = currentSupervisors.filter(
-        (s: any) => s.id !== supervisor.id,
-      );
-      const updatedAssignedSupervisors = currentAssignedSupervisors - 1;
-
-      // Update the factory document
-      await updateDoc(factoryRef, {
-        supervisors: updatedSupervisors,
-        assignedSupervisors: updatedAssignedSupervisors,
-      });
-
-      // Update the supervisor's factory assignment to null
-      const supervisorRef = doc(this.firestore, 'users', supervisor.id!);
-      await updateDoc(supervisorRef, {
-        factory: null,
-      });
-      this.supervisorsSubject.next(this.supervisorsSubject.value);
-      console.log(
-        `Supervisor ${supervisor.firstName} ${supervisor.lastName} removed from factory ${factoryData['name']}`,
-      );
-      return true;
     } catch (error) {
-      console.error('Error removing supervisor from factory:', error);
-      return false;
+        console.error('Error removing supervisor from factory:', error);
+        return false;
     }
   }
 
@@ -1345,4 +1500,6 @@ export class AuthService {
       return false;
     }
   }
+
+  
 }

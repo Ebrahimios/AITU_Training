@@ -17,11 +17,17 @@
         routerLink="/students-distribution"
         routerLinkActive="active"
         class="nav-link"
+        *ngIf="this.userService.isAdmin"
       >
         <i class="bi bi-people-fill"></i>
         <span>{{ translationService.translate("students_distribution") }}</span>
       </a>
-      <a routerLink="/analytics" routerLinkActive="active" class="nav-link">
+      <a 
+        routerLink="/analytics" 
+        routerLinkActive="active" 
+        class="nav-link" 
+        *ngIf="this.userService.isAdmin"
+      >
         <i class="bi bi-bar-chart-fill"></i>
         <span>{{ translationService.translate("analytics") }}</span>
       </a>
@@ -105,6 +111,7 @@
           <label
             class="btn btn-outline-success mb-0"
             style="margin-left: 8px; cursor: pointer"
+            *ngIf="this.userService.isAdmin"
           >
             <i class="bi bi-upload"></i>
             {{ translationService.translate("import_csv") || "Import CSV" }}
@@ -113,6 +120,7 @@
               accept=".csv"
               (change)="onCsvFileSelected($event)"
               hidden
+              
             />
           </label>
           <!-- Add Student Button -->
@@ -122,6 +130,7 @@
               (translationService.currentLang$ | async) === 'ar' ? 'ltr' : 'rtl'
             "
             (click)="addStudent()"
+            *ngIf="this.userService.isAdmin"
           >
             <i class="bi bi-plus-lg"></i>
             {{ translationService.translate("add_student") }}
