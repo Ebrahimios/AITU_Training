@@ -5,33 +5,38 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
-import { TranslationService, TranslationKeys } from '../../services/translation.service';
+import {
+  TranslationService,
+  TranslationKeys,
+} from '../../services/translation.service';
 import { AuthService } from '../../services/firebase.service';
 import { EditStudentModalComponent } from './edit-student-modal/edit-student-modal.component';
 import { StudentDetailsModalComponent } from './student-details-modal/student-details-modal.component';
-import { FactoryService, Factory, Supervisor } from '../../services/factory.service';
+import {
+  FactoryService,
+  Factory,
+  Supervisor,
+} from '../../services/factory.service';
 import { DataUpdateService } from '../../services/data-update.service';
 import { Subscription } from 'rxjs';
 
 import { Student } from '../../interfaces/student';
 import { userSerivce } from '../../services/user.service';
 
-
-
 // Using imported TranslationKeys from translation service
 
 @Component({
-    selector: 'app-home',
-    imports: [
-        CommonModule,
-        FormsModule,
-        MatDialogModule,
-        MatIconModule,
-        RouterModule,
-        NavbarComponent
-    ],
-    templateUrl: './home.component.html',
-    styleUrls: ['./home.component.css']
+  selector: 'app-home',
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatIconModule,
+    RouterModule,
+    NavbarComponent,
+  ],
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
   Math = Math;
@@ -68,7 +73,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Date filter options
   years: string[] = this.generateYearsArray(2017, new Date().getFullYear() + 1);
   months: { value: string; name: string }[] = [];
-  days = Array.from({ length: 30 }, (_, i) => ({ value: (i + 1).toString(), name: (i + 1).toString() }));
+  days = Array.from({ length: 30 }, (_, i) => ({
+    value: (i + 1).toString(),
+    name: (i + 1).toString(),
+  }));
   sortOptions: { value: string; label: string }[] = [];
   selectedSort: string = '';
 
@@ -83,8 +91,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     private router: Router,
     private authService: AuthService,
     private factoryService: FactoryService,
-    private dataUpdateService: DataUpdateService
-    
+    private dataUpdateService: DataUpdateService,
   ) {
     // Initialize with empty array, total will be updated after loading
     this.students = [];
@@ -96,17 +103,19 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.initializeTranslatedContent();
 
     // Subscribe to language changes
-    this.languageSubscription = this.translationService.currentLang$.subscribe(() => {
-      this.initializeTranslatedContent();
-    });
+    this.languageSubscription = this.translationService.currentLang$.subscribe(
+      () => {
+        this.initializeTranslatedContent();
+      },
+    );
 
     // Get supervisors from factory service
-    this.factoryService.supervisors$.subscribe(supervisors => {
-      this.supervisors = supervisors.map(s => s.name);
+    this.factoryService.supervisors$.subscribe((supervisors) => {
+      this.supervisors = supervisors.map((s) => s.name);
     });
 
     // Get factories count
-    this.factoryService.factories$.subscribe(factories => {
+    this.factoryService.factories$.subscribe((factories) => {
       this.totalFactories = factories.length;
     });
   }
@@ -116,21 +125,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.departments = [
       this.translationService.translate('information_technology'),
       this.translationService.translate('mechanics'),
-      this.translationService.translate('electrical')
+      this.translationService.translate('electrical'),
     ];
 
     // Initialize factories
     this.factories = [
       this.translationService.translate('factory_a'),
       this.translationService.translate('factory_b'),
-      this.translationService.translate('factory_c')
+      this.translationService.translate('factory_c'),
     ];
 
     // Initialize supervisors
     this.supervisors = [
       this.translationService.translate('supervisor_a'),
       this.translationService.translate('supervisor_b'),
-      this.translationService.translate('supervisor_c')
+      this.translationService.translate('supervisor_c'),
     ];
 
     // Initialize batches
@@ -138,7 +147,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.translationService.translate('batch_1'),
       this.translationService.translate('batch_2'),
       this.translationService.translate('batch_3'),
-      this.translationService.translate('batch_4')
+      this.translationService.translate('batch_4'),
     ];
     this.batches = this.allBatches;
 
@@ -146,7 +155,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.stages = [
       this.translationService.translate('school'),
       this.translationService.translate('institute'),
-      this.translationService.translate('faculty')
+      this.translationService.translate('faculty'),
     ];
 
     // Initialize months
@@ -162,15 +171,27 @@ export class HomeComponent implements OnInit, OnDestroy {
       { value: '8', name: this.translationService.translate('september') },
       { value: '9', name: this.translationService.translate('october') },
       { value: '10', name: this.translationService.translate('november') },
-      { value: '11', name: this.translationService.translate('december') }
+      { value: '11', name: this.translationService.translate('december') },
     ];
 
     // Initialize sort options
     this.sortOptions = [
-      { value: 'name_asc', label: this.translationService.translate('name_asc') },
-      { value: 'name_desc', label: this.translationService.translate('name_desc') },
-      { value: 'date_new', label: this.translationService.translate('date_new') },
-      { value: 'date_old', label: this.translationService.translate('date_old') }
+      {
+        value: 'name_asc',
+        label: this.translationService.translate('name_asc'),
+      },
+      {
+        value: 'name_desc',
+        label: this.translationService.translate('name_desc'),
+      },
+      {
+        value: 'date_new',
+        label: this.translationService.translate('date_new'),
+      },
+      {
+        value: 'date_old',
+        label: this.translationService.translate('date_old'),
+      },
     ];
   }
 
@@ -180,18 +201,17 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.filteredStudents = [...this.students];
 
     // Get the total number of factories from factory service
-    this.factoryService.factories$.subscribe(factories => {
+    this.factoryService.factories$.subscribe((factories) => {
       this.totalFactories = factories.length;
     });
 
     // Subscribe to student data updates
-    this.dataUpdateSubscription = this.dataUpdateService.studentDataUpdated$.subscribe(async () => {
-      console.log('Student data updated, refreshing dashboard...');
-      await this.loadStudents();
-      this.applyFilters(); // Apply any active filters after reloading
-    });
-
-  
+    this.dataUpdateSubscription =
+      this.dataUpdateService.studentDataUpdated$.subscribe(async () => {
+        console.log('Student data updated, refreshing dashboard...');
+        await this.loadStudents();
+        this.applyFilters(); // Apply any active filters after reloading
+      });
   }
 
   ngOnDestroy(): void {
@@ -262,7 +282,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
 
       // Process each student to ensure dates are handled correctly
-      this.students = studentsData.map(student => {
+      this.students = studentsData.map((student) => {
         // Make a copy of the student object
         const processedStudent = { ...student };
 
@@ -342,7 +362,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   extractUniqueValues(): void {
     // Extract unique departments
     const departmentsSet = new Set<string>();
-    this.students.forEach(student => {
+    this.students.forEach((student) => {
       if (student.department) {
         departmentsSet.add(student.department);
       }
@@ -351,7 +371,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     // Extract unique stages
     const stagesSet = new Set<string>();
-    this.students.forEach(student => {
+    this.students.forEach((student) => {
       if (student.stage) {
         stagesSet.add(student.stage);
       }
@@ -360,7 +380,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     // Extract unique batches
     const batchesSet = new Set<string>();
-    this.students.forEach(student => {
+    this.students.forEach((student) => {
       if (student.batch) {
         batchesSet.add(student.batch);
       }
@@ -368,7 +388,67 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.allBatches = Array.from(batchesSet);
     this.batches = this.allBatches;
   }
+  async onCsvFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
 
+    const file = input.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // Send file to Supabase function
+      const response = await fetch(
+        'https://notvzcfdvyebmjwafocg.supabase.co/functions/v1/csv-to-object',
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        alert('Failed to parse CSV file.');
+        return;
+      }
+
+      const studentsToAdd = await response.json();
+      console.log('Parsed students:', studentsToAdd);
+      // studentsToAdd should be an array of objects with the correct fields
+      if (!Array.isArray(studentsToAdd['data'])) {
+        alert('CSV parsing failed: returned data is not a list of students.');
+        console.error('studentsToAdd is not an array:', studentsToAdd);
+        return;
+      }
+      let addedCount = 0;
+      for (const student of studentsToAdd['data']) {
+        // Ensure required fields exist
+        if (student['Student Code'] && student['Student Name']) {
+          try {
+            await this.authService.sendStudentData({
+              code: student['Student Code'],
+              name: student['Student Name'],
+              address: student['Student Address'],
+              nationalID: student['National ID'],
+              phone: student['Phone Number'],
+              state: student['Student Status'],
+              selected: false,
+              createOn: Date.now().toString(), // Set current date as createOn
+            });
+            addedCount++;
+          } catch (err) {
+            console.error('Error adding student:', student, err);
+          }
+        }
+      }
+
+      alert(`${addedCount} students imported successfully!`);
+      await this.loadStudents();
+      this.applyFilters();
+    } catch (error) {
+      alert('Error uploading or processing CSV file.');
+      console.error(error);
+    }
+  }
   /**
    * Calculate growth rate based on student creation dates
    */
@@ -382,7 +462,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     let currentMonthCount = 0;
     let previousMonthCount = 0;
 
-    this.students.forEach(student => {
+    this.students.forEach((student) => {
       if (student.createOn) {
         const createDate = new Date(student.createOn);
         const createMonth = createDate.getMonth();
@@ -397,7 +477,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     // Calculate growth rate
     if (previousMonthCount > 0) {
-      this.growthRate = ((currentMonthCount - previousMonthCount) / previousMonthCount) * 100;
+      this.growthRate =
+        ((currentMonthCount - previousMonthCount) / previousMonthCount) * 100;
     } else {
       this.growthRate = currentMonthCount > 0 ? 100 : 0;
     }
@@ -436,12 +517,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   editStudent(student: Student) {
     const dialogRef = this.dialog.open(EditStudentModalComponent, {
       width: '500px',
-      data: { student, isEdit: true }
+      data: { student, isEdit: true },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        const index = this.students.findIndex(s => s.code === result.code);
+        const index = this.students.findIndex((s) => s.code === result.code);
         if (index !== -1) {
           this.students[index] = result;
           this.filteredStudents = [...this.students];
@@ -454,10 +535,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   addStudent() {
     const dialogRef = this.dialog.open(EditStudentModalComponent, {
       width: '500px',
-      data: { isEdit: false }
+      data: { isEdit: false },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         // Generate a new code for the student
         result.birthDate = new Date(); // Set current date for new students
@@ -472,7 +553,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   toggleAll(event: any) {
     const checked = event.target.checked;
-    this.filteredStudents.forEach(student => student.selected = checked);
+    this.filteredStudents.forEach((student) => (student.selected = checked));
   }
 
   updateSearchTerm(event: any) {
@@ -503,7 +584,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  filterByBatch(batch: string) { // Changed from filterByGroup
+  filterByBatch(batch: string) {
+    // Changed from filterByGroup
     this.selectedBatch = batch;
     this.applyFilters();
   }
@@ -530,17 +612,26 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   applyFilters() {
-    this.filteredStudents = this.students.filter(student => {
+    this.filteredStudents = this.students.filter((student) => {
       // Basic info filtering
-      const matchesSearch = this.searchTerm ? student.name?.toLowerCase().includes(this.searchTerm.toLowerCase()) : true;
-      const matchesDepartment = !this.selectedDepartment || student.department === this.selectedDepartment;
-      const matchesFactory = !this.selectedFactory || student.factory === this.selectedFactory;
-      const matchesSupervisor = !this.selectedSupervisor || student.supervisor === this.selectedSupervisor;
+      const matchesSearch = this.searchTerm
+        ? student.name?.toLowerCase().includes(this.searchTerm.toLowerCase())
+        : true;
+      const matchesDepartment =
+        !this.selectedDepartment ||
+        student.department === this.selectedDepartment;
+      const matchesFactory =
+        !this.selectedFactory || student.factory === this.selectedFactory;
+      const matchesSupervisor =
+        !this.selectedSupervisor ||
+        student.supervisor === this.selectedSupervisor;
 
       // Batch filtering - check if student.batch matches selectedBatch
-      const matchesBatch = !this.selectedBatch || student.batch === this.selectedBatch;
+      const matchesBatch =
+        !this.selectedBatch || student.batch === this.selectedBatch;
 
-      const matchesStage = !this.selectedStage || student.stage === this.selectedStage;
+      const matchesStage =
+        !this.selectedStage || student.stage === this.selectedStage;
 
       // Date filtering using createOn timestamp
       let matchesYear = true;
@@ -565,9 +656,17 @@ export class HomeComponent implements OnInit, OnDestroy {
         matchesDay = date.getDate().toString() === this.selectedDay;
       }
 
-      return matchesSearch && matchesDepartment && matchesFactory &&
-             matchesSupervisor && matchesBatch && matchesStage &&
-             matchesYear && matchesMonth && matchesDay;
+      return (
+        matchesSearch &&
+        matchesDepartment &&
+        matchesFactory &&
+        matchesSupervisor &&
+        matchesBatch &&
+        matchesStage &&
+        matchesYear &&
+        matchesMonth &&
+        matchesDay
+      );
     });
 
     // Reset to first page when filters change
@@ -579,10 +678,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     switch (sortValue) {
       case 'name_asc':
-        this.filteredStudents.sort((a, b) => a.name?.localeCompare(b.name || '') || 0);
+        this.filteredStudents.sort(
+          (a, b) => a.name?.localeCompare(b.name || '') || 0,
+        );
         break;
       case 'name_desc':
-        this.filteredStudents.sort((a, b) => b.name?.localeCompare(a.name || '') || 0);
+        this.filteredStudents.sort(
+          (a, b) => b.name?.localeCompare(a.name || '') || 0,
+        );
         break;
       case 'date_new':
         // Sort by createOn timestamp (newest first)
@@ -609,7 +712,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (!confirm('Are you sure you want to delete this student?')) {
       return;
     }
-    const index = this.students.findIndex(s => s.code === student.code);
+    const index = this.students.findIndex((s) => s.code === student.code);
     if (index !== -1) {
       this.students.splice(index, 1);
       this.filteredStudents = [...this.students];
@@ -619,8 +722,17 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   exportData() {
-    const headers = ['ID', 'Student', 'Department', 'Factory', 'Batch', 'Stage', 'Date', 'Supervisor'];
-    const csvData = this.filteredStudents.map(student => [
+    const headers = [
+      'ID',
+      'Student',
+      'Department',
+      'Factory',
+      'Batch',
+      'Stage',
+      'Date',
+      'Supervisor',
+    ];
+    const csvData = this.filteredStudents.map((student) => [
       student.code || '',
       student.name || '',
       student.department || '',
@@ -628,12 +740,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       student.batch || '',
       student.stage || '',
       student.createOn ? new Date(student.createOn).toLocaleDateString() : '',
-      student.supervisor || ''
+      student.supervisor || '',
     ]);
 
     const csvContent = [
       headers.join(','),
-      ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...csvData.map((row) => row.map((cell) => `"${cell}"`).join(',')),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -651,12 +763,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   
 
   get departmentStats() {
-    const stats = this.departments.map(dept => {
-      const count = this.students.filter(s => s.department === dept).length;
+    const stats = this.departments.map((dept) => {
+      const count = this.students.filter((s) => s.department === dept).length;
       return {
         name: dept,
         count,
-        percentage: (count / this.students.length) * 100
+        percentage: (count / this.students.length) * 100,
       };
     });
     return stats;
@@ -664,10 +776,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   get filteredBatches(): string[] {
     switch (this.selectedStage) {
-      case 'School': return ['Batch 1', 'Batch 2', 'Batch 3'];
-      case 'Institute': return ['Batch 1', 'Batch 2'];
-      case 'Faculty': return ['Batch 3', 'Batch 4'];
-      default: return this.allBatches;
+      case 'School':
+        return ['Batch 1', 'Batch 2', 'Batch 3'];
+      case 'Institute':
+        return ['Batch 1', 'Batch 2'];
+      case 'Faculty':
+        return ['Batch 3', 'Batch 4'];
+      default:
+        return this.allBatches;
     }
   }
 
@@ -690,10 +806,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   openStudentDetails(student: Student) {
     const dialogRef = this.dialog.open(StudentDetailsModalComponent, {
       width: '800px',
-      data: { student: student }
+      data: { student: student },
     });
 
-    dialogRef.afterClosed().subscribe(async result => {
+    dialogRef.afterClosed().subscribe(async (result) => {
       await this.loadStudents();
       if (result) {
         // Reload students from Firebase after any change
@@ -708,11 +824,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   getStudentStatus(student: Student): 'student_returning' | 'student_new' {
-    return this.isReturningStudent(student) ? 'student_returning' : 'student_new';
+    return this.isReturningStudent(student)
+      ? 'student_returning'
+      : 'student_new';
   }
 
   getStudentStatusText(student: Student): string {
     return student.state || 'Inactive';
   }
 }
-

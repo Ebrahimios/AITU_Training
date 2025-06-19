@@ -11,7 +11,7 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     settings: 'Settings',
     profile: 'Profile',
     logout: 'Logout',
-
+    import_csv: 'Import CSV',
     // Dashboard
     dashboard: 'Dashboard',
     students_distribution: 'Students Distribution',
@@ -121,7 +121,8 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     industry_required: 'Please select an industry',
     capacity_required: 'Capacity must be greater than 0',
     type_required: 'Please select a factory type',
-    coordinates_validation_error: 'Invalid coordinates format. Please use format: latitude, longitude',
+    coordinates_validation_error:
+      'Invalid coordinates format. Please use format: latitude, longitude',
 
     //departments
     electrical: 'Electrical',
@@ -174,6 +175,7 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     settings: 'الإعدادات',
     profile: 'الملف الشخصي',
     logout: 'تسجيل الخروج',
+    import_csv: 'Import CSV',
 
     // Dashboard
     dashboard: 'لوحة التحكم',
@@ -284,7 +286,8 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     industry_required: 'الرجاء اختيار الصناعة',
     capacity_required: 'يجب أن تكون السعة أكبر من 0',
     type_required: 'الرجاء اختيار نوع المصنع',
-    coordinates_validation_error: 'صيغة الإحداثيات غير صحيحة. الرجاء استخدام الصيغة: خط العرض، خط الطول',
+    coordinates_validation_error:
+      'صيغة الإحداثيات غير صحيحة. الرجاء استخدام الصيغة: خط العرض، خط الطول',
 
     //departments
     electrical: 'كهرباء',

@@ -54,13 +54,7 @@
           >
             <i class="bi bi-person"></i> Basic Info
           </button>
-          <button
-            class="tab-button"
-            [class.active]="activeTab === 'progress'"
-            (click)="activeTab = 'progress'"
-          >
-            <i class="bi bi-graph-up"></i> Progress & Performance
-          </button>
+
           <button
             class="tab-button"
             [class.active]="activeTab === 'evaluation'"
@@ -68,6 +62,13 @@
             *ngIf="isSupervisor"
           >
             <i class="bi bi-clipboard-check"></i> Evaluation
+          </button>
+          <button
+            class="tab-button"
+            [class.active]="activeTab === 'progress'"
+            (click)="activeTab = 'progress'"
+          >
+            <i class="bi bi-graph-up"></i> Progress & Performance
           </button>
           <button
             class="tab-button"
@@ -905,14 +906,18 @@
                   <span class="overall-label">Overall Rating</span>
                   <div class="overall-value">
                     {{
-                      evaluationForm.get("overallRating")?.value || calculateOverallRating()
+                      evaluationForm.get("overallRating")?.value ||
+                        calculateOverallRating()
                     }}/60
                   </div>
                 </div>
               </div>
 
               <!-- Form for Evaluation -->
-              <form [formGroup]="evaluationForm" (ngSubmit)="submitEvaluation()">
+              <form
+                [formGroup]="evaluationForm"
+                (ngSubmit)="submitEvaluation()"
+              >
                 <!-- Personal and Ethical Aspects Section -->
                 <h4 class="evaluation-category-title">
                   First: Personal and Ethical Aspects of the Trainee
@@ -921,10 +926,14 @@
                   <!-- Neat Appearance -->
                   <div class="modern-rating-item">
                     <div class="rating-header">
-                      <label>Has a neat appearance and high ethical standards</label>
-                      <span class="rating-value">{{
-                        evaluationForm.get("neatAppearance")?.value || 0
-                      }}/3</span>
+                      <label
+                        >Has a neat appearance and high ethical standards</label
+                      >
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("neatAppearance")?.value || 0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -943,7 +952,8 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('neatAppearance')?.value / 3) * 100
+                            (evaluationForm.get('neatAppearance')?.value / 3) *
+                            100
                           "
                         ></div>
                       </div>
@@ -954,9 +964,12 @@
                   <div class="modern-rating-item">
                     <div class="rating-header">
                       <label>Has a responsive and reliable personality</label>
-                      <span class="rating-value">{{
-                        evaluationForm.get("responsivePersonality")?.value || 0
-                      }}/3</span>
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("responsivePersonality")?.value ||
+                            0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -975,7 +988,10 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('responsivePersonality')?.value / 3) * 100
+                            (evaluationForm.get('responsivePersonality')
+                              ?.value /
+                              3) *
+                            100
                           "
                         ></div>
                       </div>
@@ -985,10 +1001,15 @@
                   <!-- Confident Relations -->
                   <div class="modern-rating-item">
                     <div class="rating-header">
-                      <label>Confident and maintains good relations with others</label>
-                      <span class="rating-value">{{
-                        evaluationForm.get("confidentRelations")?.value || 0
-                      }}/3</span>
+                      <label
+                        >Confident and maintains good relations with
+                        others</label
+                      >
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("confidentRelations")?.value || 0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -1007,7 +1028,9 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('confidentRelations')?.value / 3) * 100
+                            (evaluationForm.get('confidentRelations')?.value /
+                              3) *
+                            100
                           "
                         ></div>
                       </div>
@@ -1023,10 +1046,15 @@
                   <!-- Attendance -->
                   <div class="modern-rating-item">
                     <div class="rating-header">
-                      <label>Regular attendance and punctuality during training</label>
-                      <span class="rating-value">{{
-                        evaluationForm.get("attendance")?.value || 0
-                      }}/15</span>
+                      <label
+                        >Regular attendance and punctuality during
+                        training</label
+                      >
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("attendance")?.value || 0
+                        }}/15</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -1056,16 +1084,21 @@
                   <div class="modern-rating-item">
                     <div class="rating-header">
                       <label
-                        >Understanding and executing instructions within the training
-                        scope</label
+                        >Understanding and executing instructions within the
+                        training scope</label
                       >
-                      <span class="rating-value">{{
-                        evaluationForm.get("understandingInstructions")?.value || 0
-                      }}/3</span>
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("understandingInstructions")
+                            ?.value || 0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
-                      (click)="adjustRating($event, 'understandingInstructions', 3)"
+                      (click)="
+                        adjustRating($event, 'understandingInstructions', 3)
+                      "
                     >
                       <input
                         type="range"
@@ -1080,7 +1113,9 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('understandingInstructions')?.value / 3) *
+                            (evaluationForm.get('understandingInstructions')
+                              ?.value /
+                              3) *
                             100
                           "
                         ></div>
@@ -1091,10 +1126,15 @@
                   <!-- Task Completion -->
                   <div class="modern-rating-item">
                     <div class="rating-header">
-                      <label>Level of completion of tasks assigned during training</label>
-                      <span class="rating-value">{{
-                        evaluationForm.get("taskCompletion")?.value || 0
-                      }}/3</span>
+                      <label
+                        >Level of completion of tasks assigned during
+                        training</label
+                      >
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("taskCompletion")?.value || 0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -1113,7 +1153,8 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('taskCompletion')?.value / 3) * 100
+                            (evaluationForm.get('taskCompletion')?.value / 3) *
+                            100
                           "
                         ></div>
                       </div>
@@ -1124,12 +1165,15 @@
                   <div class="modern-rating-item">
                     <div class="rating-header">
                       <label
-                        >Effectiveness in dealing with colleagues and supervisors during
-                        training</label
+                        >Effectiveness in dealing with colleagues and
+                        supervisors during training</label
                       >
-                      <span class="rating-value">{{
-                        evaluationForm.get("effectiveInteraction")?.value || 0
-                      }}/3</span>
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("effectiveInteraction")?.value ||
+                            0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -1148,7 +1192,9 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('effectiveInteraction')?.value / 3) * 100
+                            (evaluationForm.get('effectiveInteraction')?.value /
+                              3) *
+                            100
                           "
                         ></div>
                       </div>
@@ -1159,16 +1205,21 @@
                   <div class="modern-rating-item">
                     <div class="rating-header">
                       <label
-                        >Student's follow-up with the supervisor and seeking clarifications
-                        related to training</label
+                        >Student's follow-up with the supervisor and seeking
+                        clarifications related to training</label
                       >
-                      <span class="rating-value">{{
-                        evaluationForm.get("followUpWithSupervisor")?.value || 0
-                      }}/3</span>
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("followUpWithSupervisor")?.value ||
+                            0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
-                      (click)="adjustRating($event, 'followUpWithSupervisor', 3)"
+                      (click)="
+                        adjustRating($event, 'followUpWithSupervisor', 3)
+                      "
                     >
                       <input
                         type="range"
@@ -1183,7 +1234,9 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('followUpWithSupervisor')?.value / 3) *
+                            (evaluationForm.get('followUpWithSupervisor')
+                              ?.value /
+                              3) *
                             100
                           "
                         ></div>
@@ -1195,16 +1248,21 @@
                   <div class="modern-rating-item">
                     <div class="rating-header">
                       <label
-                        >Student's commitment to applying the warnings and instructions
-                        given by the supervisor</label
+                        >Student's commitment to applying the warnings and
+                        instructions given by the supervisor</label
                       >
-                      <span class="rating-value">{{
-                        evaluationForm.get("adherenceToInstructions")?.value || 0
-                      }}/3</span>
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("adherenceToInstructions")
+                            ?.value || 0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
-                      (click)="adjustRating($event, 'adherenceToInstructions', 3)"
+                      (click)="
+                        adjustRating($event, 'adherenceToInstructions', 3)
+                      "
                     >
                       <input
                         type="range"
@@ -1219,7 +1277,9 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('adherenceToInstructions')?.value / 3) *
+                            (evaluationForm.get('adherenceToInstructions')
+                              ?.value /
+                              3) *
                             100
                           "
                         ></div>
@@ -1230,10 +1290,15 @@
                   <!-- Report Writing -->
                   <div class="modern-rating-item">
                     <div class="rating-header">
-                      <label>Effectiveness in writing reports and the final report</label>
-                      <span class="rating-value">{{
-                        evaluationForm.get("reportWriting")?.value || 0
-                      }}/10</span>
+                      <label
+                        >Effectiveness in writing reports and the final
+                        report</label
+                      >
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("reportWriting")?.value || 0
+                        }}/10</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -1252,7 +1317,8 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('reportWriting')?.value / 10) * 100
+                            (evaluationForm.get('reportWriting')?.value / 10) *
+                            100
                           "
                         ></div>
                       </div>
@@ -1262,10 +1328,16 @@
                   <!-- Information Gathering -->
                   <div class="modern-rating-item">
                     <div class="rating-header">
-                      <label>Ability to obtain information from various sources</label>
-                      <span class="rating-value">{{
-                        evaluationForm.get("informationGathering")?.value || 0
-                      }}/3</span>
+                      <label
+                        >Ability to obtain information from various
+                        sources</label
+                      >
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("informationGathering")?.value ||
+                            0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -1284,7 +1356,9 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('informationGathering')?.value / 3) * 100
+                            (evaluationForm.get('informationGathering')?.value /
+                              3) *
+                            100
                           "
                         ></div>
                       </div>
@@ -1295,16 +1369,21 @@
                   <div class="modern-rating-item">
                     <div class="rating-header">
                       <label
-                        >Ability to understand and adapt to the work environment and provide
-                        ideas and suggestions</label
+                        >Ability to understand and adapt to the work environment
+                        and provide ideas and suggestions</label
                       >
-                      <span class="rating-value">{{
-                        evaluationForm.get("adaptToWorkEnvironment")?.value || 0
-                      }}/5</span>
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("adaptToWorkEnvironment")?.value ||
+                            0
+                        }}/5</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
-                      (click)="adjustRating($event, 'adaptToWorkEnvironment', 5)"
+                      (click)="
+                        adjustRating($event, 'adaptToWorkEnvironment', 5)
+                      "
                     >
                       <input
                         type="range"
@@ -1319,7 +1398,9 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('adaptToWorkEnvironment')?.value / 5) *
+                            (evaluationForm.get('adaptToWorkEnvironment')
+                              ?.value /
+                              5) *
                             100
                           "
                         ></div>
@@ -1331,9 +1412,11 @@
                   <div class="modern-rating-item">
                     <div class="rating-header">
                       <label>Proficient in maintenance skills</label>
-                      <span class="rating-value">{{
-                        evaluationForm.get("maintenanceSkills")?.value || 0
-                      }}/3</span>
+                      <span class="rating-value"
+                        >{{
+                          evaluationForm.get("maintenanceSkills")?.value || 0
+                        }}/3</span
+                      >
                     </div>
                     <div
                       class="rating-slider"
@@ -1352,7 +1435,9 @@
                         <div
                           class="rating-fill"
                           [style.width.%]="
-                            (evaluationForm.get('maintenanceSkills')?.value / 3) * 100
+                            (evaluationForm.get('maintenanceSkills')?.value /
+                              3) *
+                            100
                           "
                         ></div>
                       </div>
@@ -1388,7 +1473,8 @@
                       aria-hidden="true"
                     ></span>
                     <span *ngIf="!isLoading"
-                      ><i class="bi bi-check-circle-fill"></i> Submit Evaluation</span
+                      ><i class="bi bi-check-circle-fill"></i> Submit
+                      Evaluation</span
                     >
                   </button>
                 </div>

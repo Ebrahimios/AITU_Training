@@ -45,10 +45,9 @@ export interface User {
   department: string;
 }
 
-
-export interface Supervisor extends User{
-  selected?:boolean;
-  factory?: string | null
+export interface Supervisor extends User {
+  selected?: boolean;
+  factory?: string | null;
 }
 
 export interface FirebaseFactory {
@@ -232,7 +231,7 @@ export class AuthService {
         address: student.address,
         nationalID: student.nationalID,
         selected: student.selected,
-        createOn: new Date().toISOString().split('T')[0], // Set to current date in YYYY-MM-DD format
+        createOn: new Date().toISOString(), // Set to current date in YYYY-MM-DD format
         factory: '',
         department: '',
         birthAddress: '',
@@ -273,7 +272,7 @@ export class AuthService {
         stage: data.stage,
         factoryType: data.factoryType,
         supervisor: data.supervisor, // Add supervisor field
-        isStudent:true
+        isStudent: true,
       };
     } else {
       console.error('No such document in Firestore!');
@@ -480,7 +479,7 @@ export class AuthService {
           stage: data['stage'],
           selected: data['selected'],
           supervisor: data['supervisor'], // Add supervisor field
-          isStudent:true
+          isStudent: true,
         };
         students.push(student);
       });
@@ -591,7 +590,7 @@ export class AuthService {
 
           snapshot.forEach((doc) => {
             const data = doc.data();
-            
+
             const factory = {
               id: doc.id,
               name: data['name'] || 'Unknown Factory',
@@ -813,10 +812,13 @@ export class AuthService {
     }
   }
 
-  public async getAllSupervisorsUsers(): Promise<Supervisor[]>{
+  public async getAllSupervisorsUsers(): Promise<Supervisor[]> {
     try {
       const supervisorsCollection = collection(this.firestore, 'users');
-      const supervisorsQuery = query(supervisorsCollection, where('role', '==', 'technical'));
+      const supervisorsQuery = query(
+        supervisorsCollection,
+        where('role', '==', 'technical'),
+      );
       const supervisorsSnapshot = await getDocs(supervisorsQuery);
       const supervisors: Supervisor[] = [];
 
@@ -830,7 +832,7 @@ export class AuthService {
           phone: data['phone'] || '',
           role: data['role'] || '',
           department: data['department'] || '',
-          selected:false,
+          selected: false,
         });
       });
 
@@ -901,12 +903,14 @@ export class AuthService {
     }
   }
 
-
-  public async addSuperVisorToFactory(factoryId: string, supervisor: Supervisor): Promise<boolean> {
+  public async addSuperVisorToFactory(
+    factoryId: string,
+    supervisor: Supervisor,
+  ): Promise<boolean> {
     try {
       // Get the factory document reference
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
-      
+
       // Get the current factory data
       const factoryDoc = await getDoc(factoryRef);
       if (!factoryDoc.exists()) {
@@ -915,11 +919,14 @@ export class AuthService {
       }
 
       const factoryData = factoryDoc.data();
-      const currentSupervisors = factoryData["supervisors"] || [];
-      const currentAssignedSupervisors = factoryData["assignedSupervisors"] || 0;
+      const currentSupervisors = factoryData['supervisors'] || [];
+      const currentAssignedSupervisors =
+        factoryData['assignedSupervisors'] || 0;
 
       // Check if supervisor is already assigned to this factory
-      const isAlreadyAssigned = currentSupervisors.some((s: any) => s.id === supervisor.id);
+      const isAlreadyAssigned = currentSupervisors.some(
+        (s: any) => s.id === supervisor.id,
+      );
       if (isAlreadyAssigned) {
         console.log('Supervisor is already assigned to this factory');
         return true;
@@ -932,16 +939,18 @@ export class AuthService {
       // Update the factory document
       await updateDoc(factoryRef, {
         supervisors: updatedSupervisors,
-        assignedSupervisors: updatedAssignedSupervisors
+        assignedSupervisors: updatedAssignedSupervisors,
       });
 
       // Update the supervisor's factory assignment
       const supervisorRef = doc(this.firestore, 'users', supervisor.id!);
       await updateDoc(supervisorRef, {
-        factory: factoryData["name"]
+        factory: factoryData['name'],
       });
 
-      console.log(`Supervisor ${supervisor.firstName} ${supervisor.lastName} added to factory ${factoryData["name"]}`);
+      console.log(
+        `Supervisor ${supervisor.firstName} ${supervisor.lastName} added to factory ${factoryData['name']}`,
+      );
       return true;
     } catch (error) {
       console.error('Error adding supervisor to factory:', error);
@@ -949,11 +958,14 @@ export class AuthService {
     }
   }
 
-  public async addSupervisorsToFactory(factoryId: string, supervisors: Supervisor[]): Promise<boolean> {
+  public async addSupervisorsToFactory(
+    factoryId: string,
+    supervisors: Supervisor[],
+  ): Promise<boolean> {
     try {
       // Get the factory document reference
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
-      
+
       // Get the current factory data
       const factoryDoc = await getDoc(factoryRef);
       if (!factoryDoc.exists()) {
@@ -962,12 +974,14 @@ export class AuthService {
       }
 
       const factoryData = factoryDoc.data();
-      const currentSupervisors = factoryData["supervisors"] || [];
-      const currentAssignedSupervisors = factoryData["assignedSupervisors"] || 0;
+      const currentSupervisors = factoryData['supervisors'] || [];
+      const currentAssignedSupervisors =
+        factoryData['assignedSupervisors'] || 0;
 
       // Filter out supervisors that are already assigned to this factory
-      const newSupervisors = supervisors.filter(supervisor => 
-        !currentSupervisors.some((s: any) => s.id === supervisor.id)
+      const newSupervisors = supervisors.filter(
+        (supervisor) =>
+          !currentSupervisors.some((s: any) => s.id === supervisor.id),
       );
 
       if (newSupervisors.length === 0) {
@@ -977,25 +991,28 @@ export class AuthService {
 
       // Add new supervisors to factory's supervisors array
       const updatedSupervisors = [...currentSupervisors, ...newSupervisors];
-      const updatedAssignedSupervisors = currentAssignedSupervisors + newSupervisors.length;
+      const updatedAssignedSupervisors =
+        currentAssignedSupervisors + newSupervisors.length;
 
       // Update the factory document
       await updateDoc(factoryRef, {
         supervisors: updatedSupervisors,
-        assignedSupervisors: updatedAssignedSupervisors
+        assignedSupervisors: updatedAssignedSupervisors,
       });
 
       // Update each supervisor's factory assignment
       const updatePromises = newSupervisors.map(async (supervisor) => {
         const supervisorRef = doc(this.firestore, 'users', supervisor.id!);
         return updateDoc(supervisorRef, {
-          factory: factoryData["name"]
+          factory: factoryData['name'],
         });
       });
 
       await Promise.all(updatePromises);
 
-      console.log(`${newSupervisors.length} supervisors added to factory ${factoryData["name"]}`);
+      console.log(
+        `${newSupervisors.length} supervisors added to factory ${factoryData['name']}`,
+      );
       return true;
     } catch (error) {
       console.error('Error adding supervisors to factory:', error);
@@ -1003,11 +1020,14 @@ export class AuthService {
     }
   }
 
-  async removeSupervisorFromFactory(factoryId: string, supervisor: Supervisor): Promise<boolean> {
+  async removeSupervisorFromFactory(
+    factoryId: string,
+    supervisor: Supervisor,
+  ): Promise<boolean> {
     try {
       // Get the factory document reference
       const factoryRef = doc(this.firestore, 'Factories', factoryId);
-      
+
       // Get the current factory data
       const factoryDoc = await getDoc(factoryRef);
       if (!factoryDoc.exists()) {
@@ -1016,33 +1036,40 @@ export class AuthService {
       }
 
       const factoryData = factoryDoc.data();
-      const currentSupervisors = factoryData["supervisors"] || [];
-      const currentAssignedSupervisors = factoryData["assignedSupervisors"] || 0;
+      const currentSupervisors = factoryData['supervisors'] || [];
+      const currentAssignedSupervisors =
+        factoryData['assignedSupervisors'] || 0;
 
       // Check if supervisor is assigned to this factory
-      const supervisorIndex = currentSupervisors.findIndex((s: any) => s.id === supervisor.id);
+      const supervisorIndex = currentSupervisors.findIndex(
+        (s: any) => s.id === supervisor.id,
+      );
       if (supervisorIndex === -1) {
         console.log('Supervisor is not assigned to this factory');
         return true;
       }
 
       // Remove supervisor from factory's supervisors array
-      const updatedSupervisors = currentSupervisors.filter((s: any) => s.id !== supervisor.id);
+      const updatedSupervisors = currentSupervisors.filter(
+        (s: any) => s.id !== supervisor.id,
+      );
       const updatedAssignedSupervisors = currentAssignedSupervisors - 1;
 
       // Update the factory document
       await updateDoc(factoryRef, {
         supervisors: updatedSupervisors,
-        assignedSupervisors: updatedAssignedSupervisors
+        assignedSupervisors: updatedAssignedSupervisors,
       });
 
       // Update the supervisor's factory assignment to null
       const supervisorRef = doc(this.firestore, 'users', supervisor.id!);
       await updateDoc(supervisorRef, {
-        factory: null
+        factory: null,
       });
       this.supervisorsSubject.next(this.supervisorsSubject.value);
-      console.log(`Supervisor ${supervisor.firstName} ${supervisor.lastName} removed from factory ${factoryData["name"]}`);
+      console.log(
+        `Supervisor ${supervisor.firstName} ${supervisor.lastName} removed from factory ${factoryData['name']}`,
+      );
       return true;
     } catch (error) {
       console.error('Error removing supervisor from factory:', error);
