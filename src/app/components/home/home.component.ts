@@ -819,7 +819,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
   openStudentDetails(student: Student) {
     const dialogRef = this.dialog.open(StudentDetailsModalComponent, {
-      width: '800px',
+      width: '1500px',
       data: { student: student },
     });
 

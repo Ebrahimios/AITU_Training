@@ -1485,10 +1485,25 @@
           <!-- Report Tab -->
           <div class="tab-content" [class.active]="activeTab === 'report'">
             <div class="report-section">
-              <div class="report-header">
+              <div
+                class="report-header d-flex align-items-center justify-content-between"
+              >
                 <h3>Student Reports</h3>
+                <div>
+                  <button
+                    class="btn btn-outline-danger me-2"
+                    (click)="downloadAllReportsPdf()"
+                  >
+                    <i class="bi bi-download"></i> Download All as PDF
+                  </button>
+                  <button
+                    class="btn btn-outline-primary"
+                    (click)="downloadAllReportsWord()"
+                  >
+                    <i class="bi bi-file-earmark-word"></i> Download All as Word
+                  </button>
+                </div>
               </div>
-
               <!-- Loading State -->
               <div class="loading-container" *ngIf="isLoadingReports">
                 <div class="spinner"></div>
@@ -1500,41 +1515,219 @@
                 class="reports-list"
                 *ngIf="studentReports.length > 0 && !isLoadingReports"
               >
-                <div class="report-item" *ngFor="let report of studentReports">
-                  <div class="report-item-icon">
-                    <i class="bi bi-file-earmark-text"></i>
-                  </div>
-                  <div class="report-item-details">
-                    <div class="report-item-name">{{ report.name }}</div>
-                    <div class="report-item-date">
-                      {{ report.date | date: "medium" }}
-                    </div>
-                    <div class="report-item-status" *ngIf="report.status">
-                      Status: {{ report.status }}
-                    </div>
-                    <div class="report-item-feedback" *ngIf="report.feedback">
-                      Feedback: {{ report.feedback }}
-                    </div>
-                  </div>
-                  <div class="report-item-actions">
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-primary"
-                      (click)="viewReport(report)"
-                      title="View Report"
-                    >
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-secondary"
-                      (click)="downloadReport(report)"
-                      title="Download Report"
-                    >
-                      <i class="bi bi-download"></i>
-                    </button>
-                  </div>
+                <!-- Training Reports Table -->
+                <div
+                  *ngIf="
+                    attendanceReports.length > 0 && !isLoadingAttendanceReports
+                  "
+                >
+                  <h4>Attendance Reports</h4>
+                  <table class="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                        <th>Supervisor Rating</th>
+                        <th>Environment Rating</th>
+                        <th>Benefit Rating</th>
+                        <th>Notes</th>
+                        <th>Entry Near Factory?</th>
+                        <th>Entry Distance (m)</th>
+                        <th>Exit Near Factory?</th>
+                        <th>Exit Distance (m)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let report of attendanceReports">
+                        <td>
+                          {{
+                            report.Date?.toDate
+                              ? (report.Date.toDate() | date: "short")
+                              : (report.Date | date: "short")
+                          }}
+                        </td>
+                        <td>{{ report.Status }}</td>
+                        <td>{{ report.TrainingDuration / 60 }} Hours</td>
+                        <td>{{ report.SupervisorRating }}</td>
+                        <td>{{ report.EnvironmentRating }}</td>
+                        <td>{{ report.BenefitRating }}</td>
+                        <td>{{ report.Notes }}</td>
+                        <td>
+                          <ng-container
+                            *ngIf="
+                              isNearFactory(report, 'entry').near !== null;
+                              else na
+                            "
+                          >
+                            {{
+                              isNearFactory(report, "entry").near ? "Yes" : "No"
+                            }}
+                          </ng-container>
+                          <ng-template #na>N/A</ng-template>
+                        </td>
+                        <td>
+                          <ng-container
+                            *ngIf="
+                              isNearFactory(report, 'entry').distance !== null;
+                              else na
+                            "
+                          >
+                            {{ isNearFactory(report, "entry").distance }} m
+                          </ng-container>
+                          <ng-template #na>N/A</ng-template>
+                        </td>
+                        <td>
+                          <ng-container
+                            *ngIf="
+                              isNearFactory(report, 'exit').near !== null;
+                              else na
+                            "
+                          >
+                            {{
+                              isNearFactory(report, "exit").near ? "Yes" : "No"
+                            }}
+                          </ng-container>
+                          <ng-template #na>N/A</ng-template>
+                        </td>
+                        <td>
+                          <ng-container
+                            *ngIf="
+                              isNearFactory(report, 'exit').distance !== null;
+                              else na
+                            "
+                          >
+                            {{ isNearFactory(report, "exit").distance }} m
+                          </ng-container>
+                          <ng-template #na>N/A</ng-template>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <button
+                    class="btn btn-outline-danger mb-5"
+                    (click)="downloadAttendanceReportsPdf()"
+                  >
+                    <i class="bi bi-download"></i> Download PDF
+                  </button>
                 </div>
+                <div
+                  *ngIf="isLoadingAttendanceReports"
+                  class="loading-container"
+                >
+                  <div class="spinner"></div>
+                  <p>Loading training reports...</p>
+                </div>
+              </div>
+              <div *ngIf="student.performance">
+                <h4>Evaluation Report</h4>
+                <table class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th>Aspect</th>
+                      <th>Score</th>
+                      <th>Max</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Neat Appearance</td>
+                      <td>{{ student.performance.neatAppearance }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Responsive Personality</td>
+                      <td>{{ student.performance.responsivePersonality }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Confident Relations</td>
+                      <td>{{ student.performance.confidentRelations }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Attendance</td>
+                      <td>{{ student.performance.attendance }}</td>
+                      <td>15</td>
+                    </tr>
+                    <tr>
+                      <td>Understanding Instructions</td>
+                      <td>
+                        {{ student.performance.understandingInstructions }}
+                      </td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Task Completion</td>
+                      <td>{{ student.performance.taskCompletion }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Effective Interaction</td>
+                      <td>{{ student.performance.effectiveInteraction }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Follow Up With Supervisor</td>
+                      <td>{{ student.performance.followUpWithSupervisor }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Adherence To Instructions</td>
+                      <td>{{ student.performance.adherenceToInstructions }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Report Writing</td>
+                      <td>{{ student.performance.reportWriting }}</td>
+                      <td>10</td>
+                    </tr>
+                    <tr>
+                      <td>Information Gathering</td>
+                      <td>{{ student.performance.informationGathering }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td>Adapt To Work Environment</td>
+                      <td>{{ student.performance.adaptToWorkEnvironment }}</td>
+                      <td>5</td>
+                    </tr>
+                    <tr>
+                      <td>Maintenance Skills</td>
+                      <td>{{ student.performance.maintenanceSkills }}</td>
+                      <td>3</td>
+                    </tr>
+                    <tr>
+                      <td><b>Overall Rating</b></td>
+                      <td colspan="2">
+                        <b
+                          >{{
+                            evaluationForm.get("overallRating")?.value || 0
+                          }}/60</b
+                        >
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Comments</td>
+                      <td colspan="2">
+                        {{ evaluationForm.get("comments")?.value }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <button
+                  class="btn btn-outline-danger"
+                  (click)="downloadEvaluationPdf()"
+                >
+                  <i class="bi bi-download"></i> Download Evaluation PDF
+                </button>
+                <button
+                  class="btn btn-outline-primary ms-2"
+                  (click)="downloadEvaluationWord()"
+                >
+                  <i class="bi bi-file-earmark-word"></i> Download Evaluation
+                  Word
+                </button>
               </div>
 
               <!-- Empty State -->

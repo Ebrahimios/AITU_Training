@@ -18,8 +18,18 @@ import { EditStudentModalComponent } from '../edit-student-modal/edit-student-mo
 import { Student, StudentReport } from '../../../interfaces/student';
 import { AuthService } from '../../../services/firebase.service';
 import { FactoryService, Supervisor } from '../../../services/factory.service';
-import { doc, setDoc, getDoc, updateDoc } from '@angular/fire/firestore';
+import {
+  collection,
+  query,
+  where,
+  doc,
+  setDoc,
+  getDoc, updateDoc,
+  getDocs,
+} from '@angular/fire/firestore';
 import { userSerivce } from '../../../services/user.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Extended student type with performance metrics
 interface StudentWithPerformance extends Student {
@@ -87,6 +97,8 @@ export class StudentDetailsModalComponent implements OnInit {
   isLoadingReport: boolean = false;
   isLoadingReports: boolean = false; // Added property for reports loading state
   studentReports: StudentReport[] = []; // Added property for student reports
+  attendanceReports: any[] = [];
+  isLoadingAttendanceReports = false;
   supervisors: Supervisor[] = [];
   birthDateString: string = ''; // For date input field
   supervisorNames: string[] = [];
@@ -201,6 +213,8 @@ export class StudentDetailsModalComponent implements OnInit {
 
     // Load student reports when the component initializes
     this.loadStudentReports();
+
+    this.loadAttendanceReports();
   }
 
   // باقي الكود بدون تغيير...
@@ -345,9 +359,427 @@ export class StudentDetailsModalComponent implements OnInit {
       comments: evaluationData.comments || '',
     });
   }
+  async loadAttendanceReports() {
+    this.isLoadingAttendanceReports = true;
+    this.attendanceReports = [];
+    try {
+      const firestore = this.authService['firestore'];
+      const reportsRef = collection(firestore, 'Attendances');
+      const q = query(reportsRef, where('Student_ID', '==', this.student.code));
+      const querySnapshot = await getDocs(q);
+      this.attendanceReports = querySnapshot.docs.map((doc) => doc.data());
+    } catch (error) {
+      console.error('Error loading attendance reports:', error);
+    }
+    this.isLoadingAttendanceReports = false;
+  }
+  downloadAttendanceReportsPdf() {
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`${this.student.name} - Attendance Reports`, 14, 14);
+
+    autoTable(doc, {
+      head: [
+        [
+          'Date',
+          'Status',
+          'Duration',
+          'Supervisor Rating',
+          'Environment Rating',
+          'Benefit Rating',
+          'Notes',
+          'Factory Location',
+          'Entry Near Factory?',
+          'Entry Distance (m)',
+          'Exit Near Factory?',
+          'Exit Distance (m)',
+        ],
+      ],
+      body: this.attendanceReports.map((r) => [
+        r.Date?.toDate
+          ? r.Date.toDate().toLocaleString()
+          : r.Date
+            ? new Date(r.Date).toLocaleString()
+            : '',
+        r.Status || '',
+        r.TrainingDuration || '',
+        r.SupervisorRating || '',
+        r.EnvironmentRating || '',
+        r.BenefitRating || '',
+        r.Notes || '',
+        r.FactoryLocation
+          ? `[${r.FactoryLocation.latitude}, ${r.FactoryLocation.longitude}]`
+          : '',
+        this.isNearFactory(r, 'entry').near === null
+          ? 'N/A'
+          : this.isNearFactory(r, 'entry').near
+            ? 'Yes'
+            : 'No',
+        this.isNearFactory(r, 'entry').distance === null
+          ? 'N/A'
+          : this.isNearFactory(r, 'entry').distance,
+        this.isNearFactory(r, 'exit').near === null
+          ? 'N/A'
+          : this.isNearFactory(r, 'exit').near
+            ? 'Yes'
+            : 'No',
+        this.isNearFactory(r, 'exit').distance === null
+          ? 'N/A'
+          : this.isNearFactory(r, 'exit').distance,
+      ]),
+      startY: 22,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      tableLineColor: [200, 200, 200],
+      tableLineWidth: 0.1,
+      margin: { left: 8, right: 8 },
+    });
+
+    const fileName = `${this.student.name || 'student'}-attendance.pdf`;
+    doc.save(fileName);
+  }
+
+  private calculateDistanceMeters(
+    loc1: { latitude: number; longitude: number },
+    loc2: { latitude: number; longitude: number },
+  ): number {
+    if (!loc1 || !loc2) return NaN;
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    const R = 6371000; // Earth radius in meters
+    const dLat = toRad(loc2.latitude - loc1.latitude);
+    const dLon = toRad(loc2.longitude - loc1.longitude);
+    const lat1 = toRad(loc1.latitude);
+    const lat2 = toRad(loc2.latitude);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c);
+  }
+
+  isNearFactory(
+    report: any,
+    type: 'entry' | 'exit',
+    thresholdMeters = 1000,
+  ): { near: boolean | null; distance: number | null } {
+    const factoryLoc = report.FactoryLocation;
+    const pointLoc =
+      type === 'entry' ? report.EnteringLocation : report.ExitingLocation;
+
+    if (
+      !factoryLoc ||
+      !factoryLoc.latitude ||
+      !factoryLoc.longitude ||
+      !pointLoc ||
+      !pointLoc.latitude ||
+      !pointLoc.longitude
+    ) {
+      return { near: null, distance: null };
+    }
+
+    const distance = this.calculateDistanceMeters(factoryLoc, pointLoc);
+    return { near: distance <= thresholdMeters, distance };
+  }
+
+  downloadEvaluationPdf() {
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`${this.student.name} - Evaluation Report`, 14, 14);
+
+    autoTable(doc, {
+      head: [['Aspect', 'Score', 'Max']],
+      body: [
+        ['Neat Appearance', this.student.performance?.neatAppearance, 3],
+        [
+          'Responsive Personality',
+          this.student.performance?.responsivePersonality,
+          3,
+        ],
+        [
+          'Confident Relations',
+          this.student.performance?.confidentRelations,
+          3,
+        ],
+        ['Attendance', this.student.performance?.attendance, 15],
+        [
+          'Understanding Instructions',
+          this.student.performance?.understandingInstructions,
+          3,
+        ],
+        ['Task Completion', this.student.performance?.taskCompletion, 3],
+        [
+          'Effective Interaction',
+          this.student.performance?.effectiveInteraction,
+          3,
+        ],
+        [
+          'Follow Up With Supervisor',
+          this.student.performance?.followUpWithSupervisor,
+          3,
+        ],
+        [
+          'Adherence To Instructions',
+          this.student.performance?.adherenceToInstructions,
+          3,
+        ],
+        ['Report Writing', this.student.performance?.reportWriting, 10],
+        [
+          'Information Gathering',
+          this.student.performance?.informationGathering,
+          3,
+        ],
+        [
+          'Adapt To Work Environment',
+          this.student.performance?.adaptToWorkEnvironment,
+          5,
+        ],
+        ['Maintenance Skills', this.student.performance?.maintenanceSkills, 3],
+        [
+          'Overall Rating',
+          this.evaluationForm.get('overallRating')?.value || 0,
+          60,
+        ],
+        ['Comments', this.evaluationForm.get('comments')?.value || '', ''],
+      ],
+      startY: 22,
+      styles: { fontSize: 10, cellPadding: 2 },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      tableLineColor: [200, 200, 200],
+      tableLineWidth: 0.1,
+      margin: { left: 8, right: 8 },
+    });
+
+    const fileName = `${this.student.name || 'student'}-evaluation.pdf`;
+    doc.save(fileName);
+  }
+  downloadAllReportsPdf() {
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text(`${this.student.name} - Attendance Reports`, 14, 14);
+
+    // Attendance Table
+    autoTable(doc, {
+      head: [
+        [
+          'Date',
+          'Status',
+          'Duration',
+          'Supervisor Rating',
+          'Environment Rating',
+          'Benefit Rating',
+          'Notes',
+          'Entry Near Factory?',
+          'Entry Distance (m)',
+          'Exit Near Factory?',
+          'Exit Distance (m)',
+        ],
+      ],
+      body: this.attendanceReports.map((r) => [
+        r.Date?.toDate
+          ? r.Date.toDate().toLocaleString()
+          : r.Date
+            ? new Date(r.Date).toLocaleString()
+            : '',
+        r.Status || '',
+        r.TrainingDuration || '',
+        r.SupervisorRating || '',
+        r.EnvironmentRating || '',
+        r.BenefitRating || '',
+        r.Notes || '',
+        this.isNearFactory(r, 'entry').near === null
+          ? 'N/A'
+          : this.isNearFactory(r, 'entry').near
+            ? 'Yes'
+            : 'No',
+        this.isNearFactory(r, 'entry').distance === null
+          ? 'N/A'
+          : this.isNearFactory(r, 'entry').distance,
+        this.isNearFactory(r, 'exit').near === null
+          ? 'N/A'
+          : this.isNearFactory(r, 'exit').near
+            ? 'Yes'
+            : 'No',
+        this.isNearFactory(r, 'exit').distance === null
+          ? 'N/A'
+          : this.isNearFactory(r, 'exit').distance,
+      ]),
+      startY: 22,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      tableLineColor: [200, 200, 200],
+      tableLineWidth: 0.1,
+      margin: { left: 8, right: 8 },
+    });
+
+    // Evaluation Table
+    const y = (doc as any).lastAutoTable?.finalY
+      ? (doc as any).lastAutoTable.finalY + 10
+      : 40;
+    doc.text(`${this.student.name} - Evaluation Report`, 14, y);
+
+    autoTable(doc, {
+      head: [['Aspect', 'Score', 'Max']],
+      body: [
+        ['Neat Appearance', this.student.performance?.neatAppearance, 3],
+        [
+          'Responsive Personality',
+          this.student.performance?.responsivePersonality,
+          3,
+        ],
+        [
+          'Confident Relations',
+          this.student.performance?.confidentRelations,
+          3,
+        ],
+        ['Attendance', this.student.performance?.attendance, 15],
+        [
+          'Understanding Instructions',
+          this.student.performance?.understandingInstructions,
+          3,
+        ],
+        ['Task Completion', this.student.performance?.taskCompletion, 3],
+        [
+          'Effective Interaction',
+          this.student.performance?.effectiveInteraction,
+          3,
+        ],
+        [
+          'Follow Up With Supervisor',
+          this.student.performance?.followUpWithSupervisor,
+          3,
+        ],
+        [
+          'Adherence To Instructions',
+          this.student.performance?.adherenceToInstructions,
+          3,
+        ],
+        ['Report Writing', this.student.performance?.reportWriting, 10],
+        [
+          'Information Gathering',
+          this.student.performance?.informationGathering,
+          3,
+        ],
+        [
+          'Adapt To Work Environment',
+          this.student.performance?.adaptToWorkEnvironment,
+          5,
+        ],
+        ['Maintenance Skills', this.student.performance?.maintenanceSkills, 3],
+        [
+          'Overall Rating',
+          this.evaluationForm.get('overallRating')?.value || 0,
+          60,
+        ],
+        ['Comments', this.evaluationForm.get('comments')?.value || '', ''],
+      ],
+      startY: y + 6,
+      styles: { fontSize: 10, cellPadding: 2 },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      tableLineColor: [200, 200, 200],
+      tableLineWidth: 0.1,
+      margin: { left: 8, right: 8 },
+    });
+
+    const fileName = `${this.student.name || 'student'}-all-reports.pdf`;
+    doc.save(fileName);
+  }
+
+  downloadAllReportsWord() {
+    let content = `${this.student.name} - Attendance Reports\n\n`;
+    content +=
+      'Date\tStatus\tDuration\tSupervisor Rating\tEnvironment Rating\tBenefit Rating\tNotes\tEntry Near Factory?\tEntry Distance (m)\tExit Near Factory?\tExit Distance (m)\n';
+    this.attendanceReports.forEach((r) => {
+      content +=
+        `${r.Date?.toDate ? r.Date.toDate().toLocaleString() : r.Date ? new Date(r.Date).toLocaleString() : ''}\t` +
+        `${r.Status || ''}\t` +
+        `${r.TrainingDuration || ''}\t` +
+        `${r.SupervisorRating || ''}\t` +
+        `${r.EnvironmentRating || ''}\t` +
+        `${r.BenefitRating || ''}\t` +
+        `${r.Notes || ''}\t` +
+        `${this.isNearFactory(r, 'entry').near === null ? 'N/A' : this.isNearFactory(r, 'entry').near ? 'Yes' : 'No'}\t` +
+        `${this.isNearFactory(r, 'entry').distance === null ? 'N/A' : this.isNearFactory(r, 'entry').distance}\t` +
+        `${this.isNearFactory(r, 'exit').near === null ? 'N/A' : this.isNearFactory(r, 'exit').near ? 'Yes' : 'No'}\t` +
+        `${this.isNearFactory(r, 'exit').distance === null ? 'N/A' : this.isNearFactory(r, 'exit').distance}\n`;
+    });
+
+    content += `\n${this.student.name} - Evaluation Report\n\n`;
+    content += 'Aspect\tScore\tMax\n';
+    content += `Neat Appearance\t${this.student.performance?.neatAppearance}\t3\n`;
+    content += `Responsive Personality\t${this.student.performance?.responsivePersonality}\t3\n`;
+    content += `Confident Relations\t${this.student.performance?.confidentRelations}\t3\n`;
+    content += `Attendance\t${this.student.performance?.attendance}\t15\n`;
+    content += `Understanding Instructions\t${this.student.performance?.understandingInstructions}\t3\n`;
+    content += `Task Completion\t${this.student.performance?.taskCompletion}\t3\n`;
+    content += `Effective Interaction\t${this.student.performance?.effectiveInteraction}\t3\n`;
+    content += `Follow Up With Supervisor\t${this.student.performance?.followUpWithSupervisor}\t3\n`;
+    content += `Adherence To Instructions\t${this.student.performance?.adherenceToInstructions}\t3\n`;
+    content += `Report Writing\t${this.student.performance?.reportWriting}\t10\n`;
+    content += `Information Gathering\t${this.student.performance?.informationGathering}\t3\n`;
+    content += `Adapt To Work Environment\t${this.student.performance?.adaptToWorkEnvironment}\t5\n`;
+    content += `Maintenance Skills\t${this.student.performance?.maintenanceSkills}\t3\n`;
+    content += `Overall Rating\t${this.evaluationForm.get('overallRating')?.value || 0}\t60\n`;
+    content += `Comments\t${this.evaluationForm.get('comments')?.value || ''}\n`;
+
+    const blob = new Blob([content], { type: 'application/msword' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${this.student.name || 'student'}-all-reports.doc`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+  downloadEvaluationWord() {
+    let content = `${this.student.name} - Evaluation Report\n\n`;
+    content += 'Aspect\tScore\tMax\n';
+    content += `Neat Appearance\t${this.student.performance?.neatAppearance}\t3\n`;
+    content += `Responsive Personality\t${this.student.performance?.responsivePersonality}\t3\n`;
+    content += `Confident Relations\t${this.student.performance?.confidentRelations}\t3\n`;
+    content += `Attendance\t${this.student.performance?.attendance}\t15\n`;
+    content += `Understanding Instructions\t${this.student.performance?.understandingInstructions}\t3\n`;
+    content += `Task Completion\t${this.student.performance?.taskCompletion}\t3\n`;
+    content += `Effective Interaction\t${this.student.performance?.effectiveInteraction}\t3\n`;
+    content += `Follow Up With Supervisor\t${this.student.performance?.followUpWithSupervisor}\t3\n`;
+    content += `Adherence To Instructions\t${this.student.performance?.adherenceToInstructions}\t3\n`;
+    content += `Report Writing\t${this.student.performance?.reportWriting}\t10\n`;
+    content += `Information Gathering\t${this.student.performance?.informationGathering}\t3\n`;
+    content += `Adapt To Work Environment\t${this.student.performance?.adaptToWorkEnvironment}\t5\n`;
+    content += `Maintenance Skills\t${this.student.performance?.maintenanceSkills}\t3\n`;
+    content += `Overall Rating\t${this.evaluationForm.get('overallRating')?.value || 0}\t60\n`;
+    content += `Comments\t${this.evaluationForm.get('comments')?.value || ''}\n`;
+
+    const blob = new Blob([content], { type: 'application/msword' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${this.student.name || 'student'}-evaluation.doc`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
 
   calculateOverallRating() {
-    console.log("hello world");
+    console.log('hello world');
     const values = this.evaluationForm.value;
 
     // Personal and Ethical Aspects (9 points total)
@@ -841,8 +1273,7 @@ export class StudentDetailsModalComponent implements OnInit {
           email: this.student.email?.trim() || '',
           birthDate:
             this.student.birthDate || new Date().toISOString().split('T')[0],
-          createOn:
-            this.student.createOn || new Date().toISOString(),
+          createOn: this.student.createOn || new Date().toISOString(),
           gender: this.student.gender || 'غير محدد',
           department: this.student.department || '',
           birthAddress: this.student.birthAddress || '',

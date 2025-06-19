@@ -11,13 +11,17 @@
 }
 
 @keyframes backdropFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Modal structure */
 .modal-dialog {
-  max-width: 850px;
+  max-width: 1500px;
   margin: 1.75rem auto;
 }
 
@@ -39,7 +43,9 @@
   padding: 0;
   width: 100%;
   border-radius: 12px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1051;
   animation: modalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -215,7 +221,9 @@
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .overall-label {
@@ -305,7 +313,7 @@
 }
 
 .rating-fill::after {
-  content: '';
+  content: "";
   position: absolute;
   right: -6px;
   top: 50%;
@@ -370,7 +378,9 @@
   align-items: center;
   gap: 0.5rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Report Section Styles */
@@ -449,7 +459,9 @@
   border-radius: 10px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .upload-progress-info {
@@ -511,7 +523,9 @@
 }
 
 .report-item:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
 }
 
@@ -599,7 +613,9 @@
 
 .modern-submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .modern-submit-btn:disabled {
@@ -618,7 +634,7 @@
 
 /* Student details styling */
 .student-info {
-  font-family: 'Inter', 'Roboto', sans-serif;
+  font-family: "Inter", "Roboto", sans-serif;
 }
 
 .info-section,
@@ -629,16 +645,22 @@
   padding: 1.5rem;
   border-radius: 12px;
   background-color: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(226, 232, 240, 0.8);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
 }
 
 .info-section:hover,
 .progress-section:hover,
 .reports-section:hover,
 .evaluation-section:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 h3 {
@@ -734,7 +756,7 @@ h3 {
 }
 
 .tab-button.active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -1px;
   left: 0;
@@ -746,8 +768,12 @@ h3 {
 }
 
 @keyframes slideIn {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .tab-button i {
@@ -764,8 +790,14 @@ h3 {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Progress styling */
@@ -789,7 +821,9 @@ h3 {
 
 .progress-item:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-color: #cbd5e0;
 }
 
@@ -868,13 +902,19 @@ h3 {
   background: #ffffff;
   padding: 1.75rem;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(226, 232, 240, 0.8);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
 }
 
 .evaluation-section:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .form-grid {
@@ -968,7 +1008,9 @@ h3 {
 .btn-primary:hover {
   background: linear-gradient(to right, #2563eb, #3b82f6);
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .btn-primary:active {
@@ -991,7 +1033,9 @@ h3 {
 .btn-secondary:hover {
   background-color: #e2e8f0;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 .btn-secondary:active {
@@ -1008,7 +1052,9 @@ h3 {
   background-color: #fef2f2;
   color: #b91c1c;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1), 0 2px 4px -1px rgba(239, 68, 68, 0.06);
+  box-shadow:
+    0 4px 6px -1px rgba(239, 68, 68, 0.1),
+    0 2px 4px -1px rgba(239, 68, 68, 0.06);
 }
 
 .btn-outline-danger:active {
@@ -1101,4 +1147,37 @@ h3 {
     opacity: 1;
     transform: translateY(0);
   }
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  background: #fff;
+  font-size: 0.8rem;
+}
+
+.table th,
+.table td {
+  border: 1px solid #e0e0e0;
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.table th {
+  background: #2980b9;
+  color: #fff;
+  font-weight: 600;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f8f9fa;
+}
+
+.table-bordered {
+  border: 1px solid #dee2e6;
+}
+
+.table thead th {
+  border-bottom: 2px solid #dee2e6;
 }
