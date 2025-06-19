@@ -443,10 +443,21 @@ export class AuthService {
   /**
    * Get all students (one-time fetch, kept for backward compatibility)
    */
-  public async getAllStudents(): Promise<Student[]> {
+  public async getAllStudents(supervisorName?:string): Promise<Student[]> {
     try {
-      const studentsCollection = collection(this.firestore, 'StudentsTable');
-      const querySnapshot = await getDocs(studentsCollection);
+      let querySnapshot;
+      if (supervisorName && supervisorName.trim() !== "") {
+        // If supervisorName is provided, filter by supervisor field
+        const studentsQuery = query(
+          collection(this.firestore, 'StudentsTable'),
+          where('supervisor', '==', supervisorName)
+        );
+        querySnapshot = await getDocs(studentsQuery);
+      } else {
+        // If supervisorName is not provided, get all students
+        const studentsCollection = collection(this.firestore, 'StudentsTable');
+        querySnapshot = await getDocs(studentsCollection);
+      }
       const students: Student[] = [];
 
       querySnapshot.forEach((doc) => {
@@ -1318,4 +1329,6 @@ export class AuthService {
       return false;
     }
   }
+
+  
 }

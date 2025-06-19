@@ -19,6 +19,7 @@ import { Student, StudentReport } from '../../../interfaces/student';
 import { AuthService } from '../../../services/firebase.service';
 import { FactoryService, Supervisor } from '../../../services/factory.service';
 import { doc, setDoc, getDoc } from '@angular/fire/firestore';
+import { userSerivce } from '../../../services/user.service';
 
 // Extended student type with performance metrics
 interface StudentWithPerformance extends Student {
@@ -91,6 +92,7 @@ export class StudentDetailsModalComponent implements OnInit {
   supervisorNames: string[] = [];
 
   constructor(
+    public userService : userSerivce,
     public dialogRef: MatDialogRef<StudentDetailsModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { student: Student },
     private fb: FormBuilder,
@@ -207,7 +209,11 @@ export class StudentDetailsModalComponent implements OnInit {
     this.evaluationForm = this.fb.group({
       // Personal and Ethical Aspects (9 points total)
       neatAppearance: [
-        0,
+        {
+          value:0,
+          disabled:!this.userService.isAdmin
+        },
+        
         [Validators.required, Validators.min(0), Validators.max(3)],
       ],
       responsivePersonality: [
@@ -265,9 +271,13 @@ export class StudentDetailsModalComponent implements OnInit {
       comments: ['', [Validators.required, Validators.minLength(10)]],
     });
 
-    // this.evaluationForm.valueChanges.subscribe(() => {
-    //   this.calculateOverallRating();
-    // });
+    if (!this.userService.isAdmin) {
+      Object.keys(this.evaluationForm.controls).forEach(key => {
+        if(key !== "attendance"){
+          this.evaluationForm.get(key)?.disable();
+        }
+      });
+    }
   }
 
   private calculateAverageRating(values: any) {
@@ -585,7 +595,11 @@ export class StudentDetailsModalComponent implements OnInit {
     if (this.evaluationForm.valid && this.student && this.student.code) {
       this.isLoading = true;
 
+      const cleaned = Object.fromEntries(
+        Object.entries(this.student.performance as any).filter(([_, value]) => value !== undefined)
+      );
       const evaluation: CapacityEvaluation = {
+        ...cleaned,
         ...this.evaluationForm.value,
         lastUpdated: new Date().getTime(), // Store as timestamp
       };

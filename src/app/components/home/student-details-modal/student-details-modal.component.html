@@ -88,7 +88,7 @@
                   type="button"
                   class="btn btn-primary"
                   (click)="toggleEditMode()"
-                  [disabled]="isLoading"
+                  [disabled]="isLoading || !this.userService.isAdmin"
                 >
                   <span *ngIf="!isLoading">
                     <i
@@ -937,6 +937,7 @@
                         max="3"
                         step="1"
                         formControlName="neatAppearance"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -968,6 +969,7 @@
                         max="3"
                         step="1"
                         formControlName="responsivePersonality"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -999,6 +1001,7 @@
                         max="3"
                         step="1"
                         formControlName="confidentRelations"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1036,6 +1039,7 @@
                         max="15"
                         step="1"
                         formControlName="attendance"
+                        
                       />
                       <div class="rating-track">
                         <div
@@ -1070,6 +1074,7 @@
                         max="3"
                         step="1"
                         formControlName="understandingInstructions"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1102,6 +1107,7 @@
                         max="3"
                         step="1"
                         formControlName="taskCompletion"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1136,6 +1142,7 @@
                         max="3"
                         step="1"
                         formControlName="effectiveInteraction"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1170,6 +1177,7 @@
                         max="3"
                         step="1"
                         formControlName="followUpWithSupervisor"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1205,6 +1213,7 @@
                         max="3"
                         step="1"
                         formControlName="adherenceToInstructions"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1237,6 +1246,7 @@
                         max="10"
                         step="1"
                         formControlName="reportWriting"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1268,6 +1278,7 @@
                         max="3"
                         step="1"
                         formControlName="informationGathering"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1302,6 +1313,7 @@
                         max="5"
                         step="1"
                         formControlName="adaptToWorkEnvironment"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1334,6 +1346,7 @@
                         max="3"
                         step="1"
                         formControlName="maintenanceSkills"
+                        [disabled]="!this.userService.isAdmin"
                       />
                       <div class="rating-track">
                         <div
@@ -1355,6 +1368,7 @@
                     formControlName="comments"
                     class="modern-textarea"
                     placeholder="Add any additional comments or observations about the trainee's performance..."
+                    [disabled]="!this.userService.isAdmin"
                   ></textarea>
                 </div>
 
@@ -1364,6 +1378,7 @@
                     type="submit"
                     class="modern-submit-btn"
                     [disabled]="!evaluationForm.valid"
+                    
                   >
                     <i class="fas fa-save"></i> Save Evaluation
                     <span

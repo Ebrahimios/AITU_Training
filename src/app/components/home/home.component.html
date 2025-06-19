@@ -17,11 +17,17 @@
         routerLink="/students-distribution"
         routerLinkActive="active"
         class="nav-link"
+        *ngIf="this.userService.isAdmin"
       >
         <i class="bi bi-people-fill"></i>
         <span>{{ translationService.translate("students_distribution") }}</span>
       </a>
-      <a routerLink="/analytics" routerLinkActive="active" class="nav-link">
+      <a 
+        routerLink="/analytics" 
+        routerLinkActive="active" 
+        class="nav-link" 
+        *ngIf="this.userService.isAdmin"
+      >
         <i class="bi bi-bar-chart-fill"></i>
         <span>{{ translationService.translate("analytics") }}</span>
       </a>
