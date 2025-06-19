@@ -102,7 +102,19 @@
             <i class="bi bi-download"></i>
             {{ translationService.translate("export") }}
           </button>
-
+          <label
+            class="btn btn-outline-success mb-0"
+            style="margin-left: 8px; cursor: pointer"
+          >
+            <i class="bi bi-upload"></i>
+            {{ translationService.translate("import_csv") || "Import CSV" }}
+            <input
+              type="file"
+              accept=".csv"
+              (change)="onCsvFileSelected($event)"
+              hidden
+            />
+          </label>
           <!-- Add Student Button -->
           <button
             class="btn btn-primary"
