@@ -22,8 +22,18 @@ import { Subscription } from 'rxjs';
 
 import { Student } from '../../interfaces/student';
 import { userSerivce } from '../../services/user.service';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { MatMenuModule } from '@angular/material/menu';
 
 // Using imported TranslationKeys from translation service
+(jsPDF as any).API.events.push([
+  'addFonts',
+  function (this: any) {
+    this.addFileToVFS('Vazirmatn-Regular.ttf', 'BASE64_STRING_HERE');
+    this.addFont('Vazirmatn-Regular.ttf', 'Vazirmatn', 'normal');
+  },
+]);
 
 @Component({
   selector: 'app-home',
@@ -34,6 +44,7 @@ import { userSerivce } from '../../services/user.service';
     MatIconModule,
     RouterModule,
     NavbarComponent,
+    MatMenuModule,
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
@@ -69,6 +80,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   showSort: boolean = false;
   currentPage: number = 1;
   itemsPerPage: number = 5;
+  exportFormat: string = 'csv';
 
   // Date filter options
   years: string[] = this.generateYearsArray(2017, new Date().getFullYear() + 1);
@@ -273,7 +285,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     try {
       this.students = [];
       let studentsData;
-      console.log(this.userService)
+      console.log(this.userService);
       const userData = this.userService?.userData;
       if (
         !this.userService.isAdmin &&
@@ -283,7 +295,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       ) {
         const supervisorId = userData.id;
         const superName = `${userData.firstName} ${userData.lastName}`;
-        studentsData = await this.authService.getAllStudents(supervisorId,superName);
+        studentsData = await this.authService.getAllStudents(
+          supervisorId,
+          superName,
+        );
       } else {
         studentsData = await this.authService.getAllStudents();
       }
@@ -338,12 +353,15 @@ export class HomeComponent implements OnInit, OnDestroy {
       ) {
         const supervisorId = userData.id;
         const superName = `${userData.firstName} ${userData.lastName}`;
-        const students: Student[] = await this.authService.getAllStudents(supervisorId,superName);
+        const students: Student[] = await this.authService.getAllStudents(
+          supervisorId,
+          superName,
+        );
         this.students = students;
         this.filteredStudents = students;
         this.totalStudents = students.length;
       } else {
-        const students : Student[] = await this.authService.getAllStudents();
+        const students: Student[] = await this.authService.getAllStudents();
         this.students = students;
         this.filteredStudents = students;
         this.totalStudents = students.length;
@@ -734,6 +752,62 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.applyFilters();
     }
   }
+  handleExport() {
+    const format = this.exportFormat.toLowerCase();
+    if (format === 'csv') {
+      this.exportData();
+    } else if (format === 'pdf') {
+      this.exportPDF();
+    }
+  }
+
+  exportPDF() {
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    doc.setFont('Vazirmatn');
+    doc.setFontSize(14);
+
+    const headers = [
+      [
+        'ID',
+        'Student',
+        'Department',
+        'Factory',
+        'Batch',
+        'Stage',
+        'Date',
+        'Supervisor',
+      ],
+    ];
+
+    const data = this.filteredStudents.map((student) => [
+      student.code || '',
+      student.name || '',
+      student.department || '',
+      student.factory || '',
+      student.batch || '',
+      student.stage || '',
+      student.createOn ? new Date(student.createOn).toLocaleDateString() : '',
+      student.supervisor || '',
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 22,
+      styles: { fontSize: 10, cellPadding: 2 },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      tableLineColor: [200, 200, 200],
+      tableLineWidth: 0.1,
+      margin: { left: 8, right: 8 },
+    });
+
+    doc.save('students_export.pdf');
+  }
 
   exportData() {
     const headers = [
@@ -762,7 +836,11 @@ export class HomeComponent implements OnInit, OnDestroy {
       ...csvData.map((row) => row.map((cell) => `"${cell}"`).join(',')),
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Add BOM here:
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], {
+      type: 'text/csv;charset=utf-8;',
+    });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -772,9 +850,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     link.click();
     document.body.removeChild(link);
   }
-
-
-  
 
   get departmentStats() {
     const stats = this.departments.map((dept) => {
