@@ -7,15 +7,13 @@ import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
 import {
   TranslationService,
-  TranslationKeys,
 } from '../../services/translation.service';
 import { AuthService } from '../../services/firebase.service';
 import { EditStudentModalComponent } from './edit-student-modal/edit-student-modal.component';
 import { StudentDetailsModalComponent } from './student-details-modal/student-details-modal.component';
 import {
   FactoryService,
-  Factory,
-  Supervisor,
+
 } from '../../services/factory.service';
 import { DataUpdateService } from '../../services/data-update.service';
 import { Subscription } from 'rxjs';
@@ -24,8 +22,8 @@ import { Student } from '../../interfaces/student';
 import { userSerivce } from '../../services/user.service';
 // import jsPDF from 'jspdf';
 // import autoTable from 'jspdf-autotable';
-import { MatMenuModule } from '@angular/material/menu';
 import pdfMake from 'pdfmake/build/pdfmake';
+
 import '../../../assets/vfs_fonts';
 import { TDocumentDefinitions } from 'pdfmake/interfaces';
 
@@ -47,7 +45,6 @@ import { TDocumentDefinitions } from 'pdfmake/interfaces';
     MatIconModule,
     RouterModule,
     NavbarComponent,
-    MatMenuModule,
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
@@ -66,8 +63,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   allFactories: any[] = [];
 
   departments: string[] = [];
-  factories: string[] = [];
-  supervisors: string[] = [];
+  factories: any[] = [];
+  supervisors: any[] = [];
   allBatches: string[] = [];
   batches: string[] = [];
   stages: string[] = [];
@@ -123,15 +120,10 @@ export class HomeComponent implements OnInit, OnDestroy {
       },
     );
 
-    // Get supervisors from factory service
-    this.factoryService.supervisors$.subscribe((supervisors) => {
-      this.supervisors = supervisors.map((s) => s.name);
-    });
 
     // Get factories count
-    this.factoryService.factories$.subscribe((factories) => {
-      this.totalFactories = factories.length;
-    });
+
+    
   }
 
   private initializeTranslatedContent() {
@@ -142,19 +134,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.translationService.translate('electrical'),
     ];
 
-    // Initialize factories
-    this.factories = [
-      this.translationService.translate('factory_a'),
-      this.translationService.translate('factory_b'),
-      this.translationService.translate('factory_c'),
-    ];
 
     // Initialize supervisors
-    this.supervisors = [
-      this.translationService.translate('supervisor_a'),
-      this.translationService.translate('supervisor_b'),
-      this.translationService.translate('supervisor_c'),
-    ];
 
     // Initialize batches
     this.allBatches = [
@@ -213,11 +194,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     await this.loadAllData();
     this.totalStudents = this.students.length;
     this.filteredStudents = [...this.students];
-
-    // Get the total number of factories from factory service
-    this.factoryService.factories$.subscribe((factories) => {
-      this.totalFactories = factories.length;
-    });
 
     // Subscribe to student data updates
     this.dataUpdateSubscription =
@@ -301,6 +277,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           supervisorId,
           superName,
         );
+        // this.factories = await this.authService.getFactoryByUserId(supervisorId!);
       } else {
         studentsData = await this.authService.getAllStudents();
       }
@@ -359,6 +336,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           supervisorId,
           superName,
         );
+        this.totalFactories =         await this.authService.getFactoryByUserId(supervisorId!);
         this.students = students;
         this.filteredStudents = students;
         this.totalStudents = students.length;
@@ -370,15 +348,18 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
 
       // Get all factories from Firebase
+      if(this.userService.isAdmin){
       const factories = await this.authService.getAllFactories();
       this.allFactories = factories;
       this.totalFactories = factories.length;
-
+      }
       // Extract all unique departments, stages, and batches from students
       this.extractUniqueValues();
 
       // Get all supervisors from Firebase
-      this.allSupervisors = await this.authService.getAllSupervisors();
+      this.allSupervisors = await this.authService.getAllSupervisorsUsers();
+      this.supervisors = await this.authService.getAllSupervisorsUsers();
+
 
       // Calculate growth rate based on student creation dates
       this.calculateGrowthRate();
@@ -940,5 +921,41 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   getStudentStatusText(student: Student): string {
     return student.state || 'Inactive';
+  }
+
+  async onPdfFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    const fileName = file.name;
+    const supabaseUrl = 'https://cjzaqgnhcpjtlswhnbda.supabase.co';
+    const supabaseBucket = 'pdfs'; // Change to your bucket name
+    const supabaseApiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqemFxZ25oY3BqdGxzd2huYmRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjI5NzYwMywiZXhwIjoyMDYxODczNjAzfQ.kkww1tmFwjDvC9uEKINuGzwrv_qLdjK7u9OBfci8mcA'; // Replace with your Supabase service role key
+
+    // Prepare the upload URL
+    const uploadUrl = `${supabaseUrl}/storage/v1/object/${supabaseBucket}/${fileName}`;
+
+    try {
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseApiKey,
+          'Authorization': `Bearer ${supabaseApiKey}`,
+          'Content-Type': file.type,
+        },
+        body: file,
+      });
+
+      if (!response.ok) {
+        alert('Failed to upload PDF file to Supabase Storage.');
+        return;
+      }
+
+      alert('PDF uploaded successfully!');
+    } catch (error) {
+      alert('Error uploading PDF file.');
+      console.error(error);
+    }
   }
 }

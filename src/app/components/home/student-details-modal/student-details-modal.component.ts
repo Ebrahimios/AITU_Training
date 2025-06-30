@@ -31,6 +31,7 @@ import { userSerivce } from '../../../services/user.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+
 // Extended student type with performance metrics
 interface StudentWithPerformance extends Student {
   progress?: number;

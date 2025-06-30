@@ -1044,19 +1044,21 @@
                 </h4>
                 <div class="modern-rating-grid">
                   <!-- Attendance -->
-                  <div class="modern-rating-item">
-                    <div class="rating-header">
+                  <div  class="modern-rating-item">
+                    <div  class="rating-header">
                       <label
                         >Regular attendance and punctuality during
                         training</label
                       >
-                      <span class="rating-value"
+                      <span *ngIf="userService.isAdmin" class="rating-value"
                         >{{
                           evaluationForm.get("attendance")?.value || 0
                         }}/15</span
                       >
                     </div>
+                    <div *ngIf="!userService.isAdmin" style="color: red;" class="rating-header">Only Admin Can input it</div>
                     <div
+                    *ngIf="userService.isAdmin"
                       class="rating-slider"
                       (click)="adjustRating($event, 'attendance', 15)"
                     >

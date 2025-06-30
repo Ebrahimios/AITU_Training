@@ -54,7 +54,7 @@ export class StudentDistributionComponent implements OnInit {
   activeTab: 'students' | 'supervisors' = 'students';
   filteredSupervisors: Supervisor[] = [];
 
-  factoryTypes: string[] = ['All', 'Internal', 'External'];
+  factoryTypes: string[] = ['Internal', 'External'];
   selectedFactoryType: string = 'All';
   isEditing: boolean = false;
   originalFactoryData: Factory | null = null;
@@ -93,7 +93,7 @@ export class StudentDistributionComponent implements OnInit {
 
   departments: string[] = [];
   stages: string[] = [];
-  batches: string[] = [];
+  batches: any[] = [];
   selectedDepartment: string = 'All';
   selectedStage: string = 'All';
   selectedBatch: string = 'All';
@@ -162,6 +162,7 @@ export class StudentDistributionComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       console.log('Initializing student-distribution component');
+      this.batches = this.filteredBatches
 
       // Subscribe to factories
       this.factoryService.factories$.subscribe((factories) => {
@@ -200,7 +201,21 @@ export class StudentDistributionComponent implements OnInit {
       console.error('Error in ngOnInit:', error);
     }
   }
-
+  handelStageChange(){
+    this.selectedBatch = "All"
+  }
+  get filteredBatches(): string[] {
+    switch (this.selectedStage) {
+      case 'مدرسة':
+        return ['1', '2', '3'];
+      case 'كلية متوسطة':
+        return ['1', '2'];
+      case 'كلية عليا':
+        return ['3', '4'];
+      default:
+        return this.batches;
+    }
+  }
   async loadStudentsFromFirebase(): Promise<void> {
     try {
       // Get students from Firebase
@@ -241,11 +256,7 @@ export class StudentDistributionComponent implements OnInit {
         this.students.map((s) => s.department).filter((v): v is string => !!v),
       ),
     );
-    this.batches = Array.from(
-      new Set(
-        this.students.map((s) => s.batch).filter((v): v is string => !!v),
-      ),
-    );
+
     this.stages = Array.from(
       new Set(
         this.students.map((s) => s.stage).filter((v): v is string => !!v),

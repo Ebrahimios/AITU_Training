@@ -335,6 +335,13 @@ select {
   text-overflow: ellipsis;
   max-width: 100%;
 }
+.filter-item{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: start;
+  justify-content: center;
+}
 
 .student-card.cdk-drag-preview .student-info p {
   font-size: 0.65rem;

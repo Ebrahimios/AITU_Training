@@ -27,6 +27,7 @@ import {
   onSnapshot,
   query,
   where,
+  getFirestore,
 } from '@angular/fire/firestore';
 import { Student } from '../interfaces/student';
 import { DataSource } from '@angular/cdk/collections';
@@ -1091,6 +1092,20 @@ export class AuthService {
         return false;
     }
   }
+  public async getFactoryByUserId(id: string): Promise<number> {
+    
+const db = getFirestore();
+const userId = id; // أو uid بتاع المستخدم
+
+    const factoriesRef = collection(db, "Factories");
+const q = query(factoriesRef, where("supervisorIdsArray", "array-contains", userId));
+
+const querySnapshot = await getDocs(q);
+querySnapshot.forEach((doc) => {
+console.log(doc.id, " => ", doc.data());
+});
+return querySnapshot.size
+  }
 
   public async addSupervisorsToFactory(
       factoryId: string,
@@ -1119,6 +1134,7 @@ export class AuthService {
                 newSupervisors.push(supervisor);
             }
         });
+        
 
         await Promise.all(checkPromises);
 

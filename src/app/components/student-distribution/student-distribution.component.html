@@ -22,33 +22,44 @@
           />
         </div>
         <div class="filters-row">
+        <div class="filter-item">
+          <label>{{ translationService.translate('filter_by_department') }}</label>
           <select [(ngModel)]="selectedDepartment" class="form-select">
-            <option value="All">{{ translationService.translate('filter_by_department') }}</option>
+            <option value="All">{{ "All" }}</option>
             <option *ngFor="let dept of departments" [value]="dept">
               {{ dept }}
             </option>
           </select>
-
-          <select [(ngModel)]="selectedStage" class="form-select">
-            <option value="All">{{ translationService.translate('filter_by_stage') }}</option>
+        </div>
+        <div class="filter-item">
+          <label>{{ translationService.translate('filter_by_stage') }}</label>
+          <select (change)="handelStageChange()" [(ngModel)]="selectedStage" class="form-select">
+            <option value="All">{{ "All" }}</option>
             <option *ngFor="let stage of stages" [value]="stage">
               {{ stage }}
             </option>
           </select>
-
-          <select [(ngModel)]="selectedBatch" class="form-select">
-            <option value="All">{{ translationService.translate('filter_by_batch') }}</option>
-            <option *ngFor="let batch of batches" [value]="batch">
+        </div>
+        <div class="filter-item">
+          <label>{{ translationService.translate('filter_by_batch') }}</label>
+          <select 
+          [disabled]="selectedStage == 'All'"
+          [(ngModel)]="selectedBatch" class="form-select">
+            <option value="All">{{ "All" }}</option>
+            <option *ngFor="let batch of filteredBatches" [value]="batch">
               {{ batch }}
             </option>
           </select>
-
+        </div>
+        <div class="filter-item">
+          <label>{{ translationService.translate('filter_by_factory_type') }}</label>
           <select [(ngModel)]="selectedFactoryType" class="form-select">
-            <option value="All">{{ translationService.translate('filter_by_factory_type') }}</option>
+            <option value="All">{{ "All" }}</option>
             <option *ngFor="let type of factoryTypes" [value]="type">
               {{ type }}
             </option>
           </select>
+        </div>
         </div>
         <div class="add-factory-button">
           <button

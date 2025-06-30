@@ -44,7 +44,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   firebaseStudents: FirebaseStudent[] = [];
   factories: Factory[] = [];
   firebaseFactories: FirebaseFactory[] = [];
-  supervisors: FirebaseSupervisor[] = [];
+  supervisors: any[] = [];
   departments: string[] = [];
   departmentCounts: number[] = [];
   factoryNames: string[] = [];
@@ -156,7 +156,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
       this.totalFactories = this.firebaseFactories.length;
 
       // Load supervisors from Firebase
-      this.supervisors = await this.authService.getAllSupervisors();
+      this.supervisors = await this.authService.getAllSupervisorsUsers();
       this.totalSupervisors = this.supervisors.length;
 
       // Calculate KPIs and prepare chart data
