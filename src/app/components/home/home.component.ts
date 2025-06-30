@@ -22,18 +22,21 @@ import { Subscription } from 'rxjs';
 
 import { Student } from '../../interfaces/student';
 import { userSerivce } from '../../services/user.service';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// import jsPDF from 'jspdf';
+// import autoTable from 'jspdf-autotable';
 import { MatMenuModule } from '@angular/material/menu';
+import pdfMake from 'pdfmake/build/pdfmake';
+import '../../../assets/vfs_fonts';
+import { TDocumentDefinitions } from 'pdfmake/interfaces';
 
 // Using imported TranslationKeys from translation service
-(jsPDF as any).API.events.push([
-  'addFonts',
-  function (this: any) {
-    this.addFileToVFS('Vazirmatn-Regular.ttf', 'BASE64_STRING_HERE');
-    this.addFont('Vazirmatn-Regular.ttf', 'Vazirmatn', 'normal');
-  },
-]);
+// (jsPDF as any).API.events.push([
+//   'addFonts',
+//   function (this: any) {
+//     this.addFileToVFS('Vazirmatn-Regular.ttf', 'BASE64_STRING_HERE');
+//     this.addFont('Vazirmatn-Regular.ttf', 'Vazirmatn', 'normal');
+//   },
+// ]);
 
 @Component({
   selector: 'app-home',
@@ -80,7 +83,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   showSort: boolean = false;
   currentPage: number = 1;
   itemsPerPage: number = 5;
-  exportFormat: string = 'csv';
 
   // Date filter options
   years: string[] = this.generateYearsArray(2017, new Date().getFullYear() + 1);
@@ -330,8 +332,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         return processedStudent;
       });
-      this.filteredStudents = [...this.students];
       this.totalStudents = this.students.length;
+      this.filteredStudents = [...this.students];
     } catch (error) {
       console.error('Error loading students:', error);
       // Initialize with empty arrays if there's an error
@@ -752,8 +754,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.applyFilters();
     }
   }
-  handleExport() {
-    const format = this.exportFormat.toLowerCase();
+  handleExport(format: string) {
     if (format === 'csv') {
       this.exportData();
     } else if (format === 'pdf') {
@@ -762,51 +763,71 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   exportPDF() {
-    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    doc.setFont('Vazirmatn');
-    doc.setFontSize(14);
-
-    const headers = [
+    const headers: { text: string; style: string; alignment: string }[][] = [
       [
-        'ID',
-        'Student',
-        'Department',
-        'Factory',
-        'Batch',
-        'Stage',
-        'Date',
-        'Supervisor',
+        { text: 'ID', style: 'tableHeader', alignment: 'center' },
+        { text: 'Student', style: 'tableHeader', alignment: 'center' },
+        { text: 'Department', style: 'tableHeader', alignment: 'center' },
+        { text: 'Factory', style: 'tableHeader', alignment: 'center' },
+        { text: 'Batch', style: 'tableHeader', alignment: 'center' },
+        { text: 'Stage', style: 'tableHeader', alignment: 'center' },
+        { text: 'Date', style: 'tableHeader', alignment: 'center' },
+        { text: 'Supervisor', style: 'tableHeader', alignment: 'center' },
       ],
     ];
 
-    const data = this.filteredStudents.map((student) => [
+    const body = this.filteredStudents.map((student) => [
       student.code || '',
       student.name || '',
       student.department || '',
       student.factory || '',
       student.batch || '',
       student.stage || '',
-      student.createOn ? new Date(student.createOn).toLocaleDateString() : '',
+      student.createOn
+        ? new Date(student.createOn).toLocaleDateString('ar-EG')
+        : '',
       student.supervisor || '',
     ]);
 
-    autoTable(doc, {
-      head: headers,
-      body: data,
-      startY: 22,
-      styles: { fontSize: 10, cellPadding: 2 },
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: 255,
-        fontStyle: 'bold',
-      },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      tableLineColor: [200, 200, 200],
-      tableLineWidth: 0.1,
-      margin: { left: 8, right: 8 },
-    });
+    const tableBody: any[] = [...headers, ...body];
 
-    doc.save('students_export.pdf');
+    const docDefinition: TDocumentDefinitions = {
+      content: [
+        {
+          text: 'Students Report',
+          style: 'header',
+          alignment: 'center',
+          margin: [0, 0, 0, 20],
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['auto', '*', '*', '*', '*', '*', 'auto', '*'],
+            body: tableBody, // ✅ هنا بنستخدم body فقط
+          },
+          layout: 'lightHorizontalLines',
+        },
+      ],
+      defaultStyle: {
+        font: 'Vazirmatn',
+        fontSize: 10,
+        alignment: 'right',
+      },
+      styles: {
+        header: {
+          fontSize: 16,
+          bold: true,
+        },
+        tableHeader: {
+          bold: true,
+          color: 'white',
+          fillColor: '#2980b9',
+        },
+      },
+      pageOrientation: 'portrait',
+    };
+
+    pdfMake.createPdf(docDefinition).download('students_export.pdf');
   }
 
   exportData() {
@@ -899,7 +920,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
-      await this.loadStudents();
       if (result) {
         // Reload students from Firebase after any change
 

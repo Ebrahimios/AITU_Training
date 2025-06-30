@@ -91,33 +91,22 @@
             </button>
           </div>
 
-          <!-- Export Button -->
-          <div class="input-group" style="width: auto">
-            <label class="input-group-text" for="exportSelect">
-              <i class="bi bi-download"></i>
-              {{ translationService.translate("export") || "Export" }}
-            </label>
-            <select
-              id="exportSelect"
-              class="form-select"
-              [(ngModel)]="exportFormat"
-              (change)="handleExport()"
+          <!-- Export Buttons -->
+          <div class="btn-group ms-2">
+            <button
+              class="btn btn-outline-success"
+              (click)="handleExport('csv')"
             >
-              <option value="" disabled selected>
-                {{
-                  translationService.translate("choose_export_format") ||
-                    "Choose format"
-                }}
-              </option>
-              <option [value]="'csv'">
-                <i class="bi bi-file-earmark-spreadsheet"></i>
-                {{ translationService.translate("export_csv") || "Export CSV" }}
-              </option>
-              <option [value]="'pdf'">
-                <i class="bi bi-file-earmark-pdf"></i>
-                {{ translationService.translate("export_pdf") || "Export PDF" }}
-              </option>
-            </select>
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+              {{ "Export CSV" }}
+            </button>
+            <button
+              class="btn btn-outline-danger"
+              (click)="handleExport('pdf')"
+            >
+              <i class="bi bi-file-earmark-pdf"></i>
+              {{ "Export PDF" }}
+            </button>
           </div>
 
           <label

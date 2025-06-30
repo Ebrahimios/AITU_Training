@@ -1075,7 +1075,6 @@ export class StudentDetailsModalComponent implements OnInit {
                 duration: 3000,
               },
             );
-            this.dialogRef.close();
           } else {
             this.snackBar.open(
               'Error submitting evaluation to Firebase',
@@ -1120,7 +1119,7 @@ export class StudentDetailsModalComponent implements OnInit {
       );
 
       // Save the evaluation data
-      await updateDoc(evaluationRef, {
+      await setDoc(evaluationRef, {
         ...evaluation,
         updatedBy: this.authService.currentUserValue?.id || 'unknown',
         updatedAt: new Date().getTime(),
