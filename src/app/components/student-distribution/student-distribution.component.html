@@ -259,7 +259,7 @@
               <div class="supervisors-header">
                 <h4>Supervisors</h4>
                 <span class="supervisor-capacity"
-                  >{{ factory.assignedSupervisors }}/{{ factory.supervisorCapacity || 0 }}</span
+                  >{{ factory.assignedSupervisors}}</span
                 >
               </div>
               <div
@@ -300,6 +300,12 @@
               [cdkDropListConnectedTo]="[studentList]"
               (cdkDropListDropped)="onDrop($event, factory)"
             >
+            <div class="supervisors-header">
+              <h4>Students</h4>
+              <span class="supervisor-capacity"
+                >{{ factory.assignedStudents}}</span
+              >
+            </div>
               <div class="dropzone-content" *ngIf="factory.students.length === 0">
                 <i class="bi bi-plus-circle"></i>
                 <span *ngIf="factory.assignedStudents < factory.capacity">

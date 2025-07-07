@@ -467,7 +467,7 @@ export class StudentDetailsModalComponent implements OnInit {
   isNearFactory(
     report: any,
     type: 'entry' | 'exit',
-    thresholdMeters = 1000,
+    thresholdMeters = 400,
   ): { near: boolean | null; distance: number | null } {
     const factoryLoc = report.FactoryLocation;
     const pointLoc =
