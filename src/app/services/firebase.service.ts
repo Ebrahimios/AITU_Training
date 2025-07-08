@@ -28,6 +28,7 @@ import {
   query,
   where,
   getFirestore,
+  Timestamp
 } from '@angular/fire/firestore';
 import { Student } from '../interfaces/student';
 import { DataSource } from '@angular/cdk/collections';
@@ -1515,6 +1516,90 @@ return querySnapshot.size
     } catch (error) {
       console.error('Error updating user profile and auth:', error);
       return false;
+    }
+  }
+
+  public async getStudentTrainingImage(imageDate: Date, studentId: string): Promise<string[]> {
+    try {
+      const firestore = this.firestore;
+      const imagesRef = collection(firestore, 'studenttrainingimages');
+  
+      // Create Firestore-compatible timestamps
+      const startOfDay = new Date(imageDate);
+      startOfDay.setHours(0, 0, 0, 0);
+  
+      const endOfDay = new Date(imageDate);
+      endOfDay.setHours(23, 59, 59, 999);
+  
+      // Convert to Firestore Timestamps
+      const startTimestamp = Timestamp.fromDate(startOfDay);
+      const endTimestamp = Timestamp.fromDate(endOfDay);
+  
+      // Query with Timestamp comparison
+      const q = query(
+        imagesRef,
+        where('studentId', '==', studentId),
+        where('uploadDate', '>=', startTimestamp),
+        where('uploadDate', '<=', endTimestamp)
+      );
+  
+      const querySnapshot = await getDocs(q);
+      const urls: string[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data['imageUrl']) {
+          urls.push(data['imageUrl']);
+        }
+      });
+  
+      return urls;
+    } catch (error) {
+      console.error('Error fetching student training images:', error);
+      return [];
+    }
+  }
+
+
+
+  public async getTodaysAttendance(): Promise<Set<string>> {
+    try {
+      const firestore = this.firestore;
+      const attendanceRef = collection(firestore, 'Attendances');
+
+      // Define start and end of today
+      const now = new Date();
+      const startOfDay = new Date(now);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(now);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Convert to Firestore Timestamps
+      const startTimestamp = Timestamp.fromDate(startOfDay);
+      const endTimestamp = Timestamp.fromDate(endOfDay);
+
+      // Query Attendances where EnteringTime is today
+      const q = query(
+        attendanceRef,
+        where('EnteringTime', '>=', startTimestamp),
+        where('EnteringTime', '<=', endTimestamp)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const studentIdSet: Set<string> = new Set();
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log(data)
+        if (data['Student_ID']) {
+          studentIdSet.add(data['Student_ID']);
+        }
+      });
+
+      return studentIdSet;
+    } catch (error) {
+      console.error('Error fetching today\'s attendance:', error);
+      return new Set();
     }
   }
 

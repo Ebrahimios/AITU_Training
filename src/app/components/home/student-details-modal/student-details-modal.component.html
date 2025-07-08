@@ -1538,6 +1538,7 @@
                         <th>Entry Distance (m)</th>
                         <th>Exit Near Factory?</th>
                         <th>Exit Distance (m)</th>
+                        <th>NoteBook</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1602,6 +1603,9 @@
                             {{ isNearFactory(report, "exit").distance }} m
                           </ng-container>
                           <ng-template #na>N/A</ng-template>
+                        </td>
+                        <td>
+                          <button class="btn btn-outline-primary" (click)="showNoteBookModal(report.Date.toDate(),report.TrainingNotebook)" >Show</button>
                         </td>
                       </tr>
                     </tbody>

@@ -30,6 +30,7 @@ import {
 import { userSerivce } from '../../../services/user.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { NoteBookModalComponent } from './note-book-modal.component';
 
 
 // Extended student type with performance metrics
@@ -82,7 +83,7 @@ interface CapacityEvaluation {
 
 @Component({
   selector: 'app-student-details-modal',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatDialogModule, NoteBookModalComponent],
   templateUrl: './student-details-modal.component.html',
   styleUrls: ['./student-details-modal.component.css'],
 })
@@ -967,6 +968,9 @@ export class StudentDetailsModalComponent implements OnInit {
       this.isLoadingReports = false;
     }, 1000);
 
+
+
+
     // In a real implementation with Firebase, it would look something like this:
     /*
     this.firestore
@@ -996,6 +1000,8 @@ export class StudentDetailsModalComponent implements OnInit {
       });
     */
   }
+
+  
 
   /**
    * Opens a report in a new tab
@@ -1246,6 +1252,23 @@ export class StudentDetailsModalComponent implements OnInit {
         this.student.birthDate = undefined;
       }
     }
+  }
+
+
+  async showNoteBookModal(notebookDate:Date,noteBookText:string){
+    let images : string[] = []
+    if(notebookDate && this.student.code) {
+      images = await this?.authService?.getStudentTrainingImage(notebookDate,this.student.code);
+    }
+    this.dialog.open(NoteBookModalComponent, {
+      data: {
+        notebookDate: notebookDate,
+        studentId: this.student.code || '',
+        noteBookText: noteBookText || '',
+        studentImages:images,
+        studentFactory:this.student.factory
+      },
+    });
   }
 
   toggleEditMode(): void {

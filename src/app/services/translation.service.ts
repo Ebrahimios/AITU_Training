@@ -23,6 +23,8 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     active: 'Active',
     growth: 'Growth',
 
+    attendance:"attendance",
+
     // Table Headers
     student: 'Student',
     department: 'Department',
@@ -176,6 +178,8 @@ const translations: Record<'en' | 'ar', Record<string, string>> = {
     profile: 'الملف الشخصي',
     logout: 'تسجيل الخروج',
     import_csv: 'Import CSV',
+
+    attendance:"حالة الحضوؤ",
 
     // Dashboard
     dashboard: 'لوحة التحكم',

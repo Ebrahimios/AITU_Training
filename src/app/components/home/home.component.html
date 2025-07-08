@@ -338,6 +338,25 @@
                 </option>
               </select>
             </div>
+
+            <div class="filter-section">
+              <h5>{{ translationService.translate("attendance") }}</h5>
+              <select
+                class="form-select"
+                [(ngModel)]="attendanceState"
+                (change)="filterByAttendance(attendanceState)"
+              >
+                <option value="all">
+                  {{ translationService.translate("all") }}
+                </option>
+                <option  value="attend">
+                  attended
+                </option>
+                <option  value="nAttend">
+                  didn't attend
+                </option>
+              </select>
+            </div>
             <div class="filter-section">
               <h5>{{ translationService.translate("reset") }}</h5>
 

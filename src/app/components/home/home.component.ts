@@ -36,6 +36,8 @@ import { TDocumentDefinitions } from 'pdfmake/interfaces';
 //   },
 // ]);
 
+type TattendanceState = "all" | "attend" | "nAttend";
+
 @Component({
   selector: 'app-home',
   imports: [
@@ -76,6 +78,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   selectedYear: string = '';
   selectedMonth: string = '';
   selectedDay: string = '';
+  attendanceState: TattendanceState = "all";
   showFilters: boolean = false;
   showSort: boolean = false;
   currentPage: number = 1;
@@ -626,7 +629,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  applyFilters() {
+  filterByAttendance(attend:TattendanceState){
+    this.attendanceState = attend;
+    console.log(this.attendanceState);
+    
+    this.applyFilters();
+  }
+
+
+
+
+  async applyFilters() {
+    let todaysAttendance: Set<string> | null = null;
+    if (this.attendanceState != "all") {
+      todaysAttendance = await this.authService.getTodaysAttendance();
+    }
     this.filteredStudents = this.students.filter((student) => {
       // Basic info filtering
       const matchesSearch = this.searchTerm
@@ -653,6 +670,9 @@ export class HomeComponent implements OnInit, OnDestroy {
       let matchesMonth = true;
       let matchesDay = true;
 
+
+      
+
       if (this.selectedYear && student.createOn) {
         // Convert timestamp to Date to get year
         const date = new Date(student.createOn);
@@ -671,6 +691,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         matchesDay = date.getDate().toString() === this.selectedDay;
       }
 
+
+      let matchesAttendace;
+
+      if(this.attendanceState == 'attend') matchesAttendace = todaysAttendance?.has(student.code)
+      else if(this.attendanceState == "nAttend") matchesAttendace = !(todaysAttendance && todaysAttendance.has(student.code))
+      else matchesAttendace = true
+
       return (
         matchesSearch &&
         matchesDepartment &&
@@ -680,7 +707,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         matchesStage &&
         matchesYear &&
         matchesMonth &&
-        matchesDay
+        matchesDay &&
+        matchesAttendace
       );
     });
 
