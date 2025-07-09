@@ -763,6 +763,12 @@ export class AuthService {
         this.factoriesSubject.next([]);
     }
   }
+  public async getFactoriesBySupervisor(supervisorId: string): Promise<FirebaseFactory[]> {
+    const factoriesCollection = collection(this.firestore, 'Factories');
+    const q = query(factoriesCollection, where("supervisorIdsArray", "array-contains", supervisorId));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => doc.data() as FirebaseFactory);
+  }
 
   /**
    * Get all factories (one-time fetch, kept for backward compatibility)

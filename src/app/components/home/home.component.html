@@ -263,8 +263,8 @@
                 <option value="">
                   {{ translationService.translate("all") }}
                 </option>
-                <option *ngFor="let factory of factories" [value]="factory">
-                  {{ factory }}
+                <option *ngFor="let factory of allFactories" [value]="factory.name">
+                  {{ factory.name }}
                 </option>
               </select>
             </div>

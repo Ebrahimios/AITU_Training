@@ -128,6 +128,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     
   }
+ 
 
   private initializeTranslatedContent() {
     // Initialize departments
@@ -355,6 +356,12 @@ export class HomeComponent implements OnInit, OnDestroy {
       const factories = await this.authService.getAllFactories();
       this.allFactories = factories;
       this.totalFactories = factories.length;
+      }
+
+      if (!this.userService.isAdmin && this.userService.userData && this.userService.userData.id) {
+        const factories = await this.authService.getFactoriesBySupervisor(this.userService.userData.id);
+        this.allFactories = factories;
+        this.totalFactories = factories.length;
       }
       // Extract all unique departments, stages, and batches from students
       this.extractUniqueValues();
