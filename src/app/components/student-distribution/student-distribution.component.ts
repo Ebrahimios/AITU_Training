@@ -52,7 +52,7 @@ export interface Factory {
 export class StudentDistributionComponent implements OnInit {
   @ViewChildren(CdkDropList) dropLists!: QueryList<CdkDropList>;
   activeTab: 'students' | 'supervisors' = 'students';
-  filteredSupervisors: Supervisor[] = [];
+  _filteredSupervisors: Supervisor[] = [];
 
   factoryTypes: string[] = ['Internal', 'External'];
   selectedFactoryType: string = 'All';
@@ -79,7 +79,7 @@ export class StudentDistributionComponent implements OnInit {
   }
 
   async loadSuperVisorsData() {
-    this.filteredSupervisors = await this.authService.getAllSupervisorsUsers()
+    this._filteredSupervisors = await this.authService.getAllSupervisorsUsers()
   }
 
   setActiveTab(tab: 'students' | 'supervisors') {
@@ -139,6 +139,13 @@ export class StudentDistributionComponent implements OnInit {
     });
   }
 
+  get filteredSupervisors(): Supervisor[]{
+    return this._filteredSupervisors.filter((supervisor)=>{
+      return (supervisor.firstName + " " + supervisor.lastName).toLocaleLowerCase().includes(this.searchTerm.toLowerCase());
+    })
+  }
+  
+
   get filteredFactories(): Factory[] {
     return this.factories
       .filter(
@@ -156,7 +163,7 @@ export class StudentDistributionComponent implements OnInit {
   }
 
   get selectedSupervisors(): Supervisor[] {
-    return this.filteredSupervisors.filter((supervisor) => supervisor.selected);
+    return this._filteredSupervisors.filter((supervisor) => supervisor.selected);
   }
 
   async ngOnInit(): Promise<void> {
@@ -387,7 +394,7 @@ export class StudentDistributionComponent implements OnInit {
 
   toggleSelectAllSupervisors(): void {
     this.selectAll = !this.selectAll;
-    this.filteredSupervisors.forEach((supervisor) => {
+    this._filteredSupervisors.forEach((supervisor) => {
       supervisor.selected = this.selectAll;
     });
   }
@@ -416,13 +423,13 @@ export class StudentDistributionComponent implements OnInit {
     if (event.ctrlKey || event.metaKey) {
       supervisor.selected = !supervisor.selected;
     } else if (event.shiftKey && this.lastSelectedSupervisor) {
-      const currentIndex = this.filteredSupervisors.indexOf(supervisor);
-      const lastIndex = this.filteredSupervisors.indexOf(this.lastSelectedSupervisor);
+      const currentIndex = this._filteredSupervisors.indexOf(supervisor);
+      const lastIndex = this._filteredSupervisors.indexOf(this.lastSelectedSupervisor);
       const start = Math.min(currentIndex, lastIndex);
       const end = Math.max(currentIndex, lastIndex);
 
       for (let i = start; i <= end; i++) {
-        this.filteredSupervisors[i].selected = true;
+        this._filteredSupervisors[i].selected = true;
       }
     } else {
       supervisor.selected = !supervisor.selected;
@@ -579,10 +586,10 @@ export class StudentDistributionComponent implements OnInit {
 
   assignToFactorySupervisor(supervisor: Supervisor, factory: Factory): void {
     // Update supervisor's factory assignment
-    const index = this.filteredSupervisors.findIndex((s) => s.id === supervisor.id);
+    const index = this._filteredSupervisors.findIndex((s) => s.id === supervisor.id);
     if (index !== -1) {
       // Update in local array
-      this.filteredSupervisors[index].factory = factory.name;
+      this._filteredSupervisors[index].factory = factory.name;
       supervisor.factory = factory.name;
       supervisor.selected = false;
 
@@ -601,10 +608,10 @@ export class StudentDistributionComponent implements OnInit {
   assignToFactorySupervisors(supervisors: Supervisor[], factory: Factory): void {
     // Update supervisors' factory assignment
     supervisors.forEach(supervisor => {
-      const index = this.filteredSupervisors.findIndex((s) => s.id === supervisor.id);
+      const index = this._filteredSupervisors.findIndex((s) => s.id === supervisor.id);
       if (index !== -1) {
         // Update in local array
-        this.filteredSupervisors[index].factory = factory.name;
+        this._filteredSupervisors[index].factory = factory.name;
         supervisor.factory = factory.name;
         supervisor.selected = false;
 

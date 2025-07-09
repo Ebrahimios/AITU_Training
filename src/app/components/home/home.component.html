@@ -281,9 +281,9 @@
                 </option>
                 <option
                   *ngFor="let supervisor of supervisors"
-                  [value]="supervisor"
+                  [value]="supervisor.id"
                 >
-                  {{ supervisor }}
+                  {{ supervisor.firstName + " " + supervisor.lastName }}
                 </option>
               </select>
             </div>
