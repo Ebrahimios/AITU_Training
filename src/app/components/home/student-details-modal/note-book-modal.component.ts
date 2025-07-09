@@ -86,10 +86,10 @@ interface NoteBookEntry {
       box-shadow: 0 8px 32px rgba(0,0,0,0.25);
       z-index: 2002;
       width: 80vw;
-    //   max-width: 1200px;
+    
       min-height: 500px;
-      height:90vh;
-    //   max-height: 90vh;
+      // height:90vh;
+
       padding: 32px;
       display: flex;
       flex-direction: column;
@@ -239,6 +239,7 @@ interface NoteBookEntry {
       margin-top: 24px;
       padding-top: 16px;
       border-top: 1px solid #e0e0e0;
+      
     }
     .notebook-modal-actions button[mat-stroked-button] {
       min-width: 120px;

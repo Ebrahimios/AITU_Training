@@ -394,6 +394,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         stagesSet.add(student.stage);
       }
     });
+    console.log(stagesSet)
     this.stages = Array.from(stagesSet);
 
     // Extract unique batches
@@ -641,8 +642,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   async applyFilters() {
     let todaysAttendance: Set<string> | null = null;
+    let allSuperVisorStudents : Student[] | null
     if (this.attendanceState != "all") {
       todaysAttendance = await this.authService.getTodaysAttendance();
+    }
+    if(this.selectedSupervisor != "all"){
+      //supervisors handling
+      allSuperVisorStudents = await this.authService.getAllStudents(this.selectedSupervisor,"placeHolder");
     }
     this.filteredStudents = this.students.filter((student) => {
       // Basic info filtering
@@ -654,9 +660,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         student.department === this.selectedDepartment;
       const matchesFactory =
         !this.selectedFactory || student.factory === this.selectedFactory;
-      const matchesSupervisor =
-        !this.selectedSupervisor ||
-        student.supervisor === this.selectedSupervisor;
+      
 
       // Batch filtering - check if student.batch matches selectedBatch
       const matchesBatch =
@@ -691,12 +695,30 @@ export class HomeComponent implements OnInit, OnDestroy {
         matchesDay = date.getDate().toString() === this.selectedDay;
       }
 
-
+      // attendance handling
       let matchesAttendace;
 
       if(this.attendanceState == 'attend') matchesAttendace = todaysAttendance?.has(student.code)
       else if(this.attendanceState == "nAttend") matchesAttendace = !(todaysAttendance && todaysAttendance.has(student.code))
       else matchesAttendace = true
+    
+      // supervisor handling
+
+      let matchesSupervisor = false;
+
+      if (this.selectedSupervisor && this.selectedSupervisor !== "all") {
+        
+        matchesSupervisor = allSuperVisorStudents
+          ? allSuperVisorStudents.some(
+              (supervisorStudent: Student) => supervisorStudent.code === student.code
+            )
+          : false;
+      } else if (this.selectedSupervisor === "all" || !this.selectedSupervisor) {
+        matchesSupervisor = true;
+      } else {
+        matchesSupervisor = false;
+      }
+      
 
       return (
         matchesSearch &&
@@ -894,13 +916,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   get filteredBatches(): string[] {
-    switch (this.selectedStage) {
-      case 'School':
-        return ['Batch 1', 'Batch 2', 'Batch 3'];
-      case 'Institute':
-        return ['Batch 1', 'Batch 2'];
-      case 'Faculty':
-        return ['Batch 3', 'Batch 4'];
+    switch(this.selectedStage){
+      case "مدرسة":
+        return ["1","2","3"];
+      case "كلية متوسطة":
+        return ["1","2"];
+      case "كلية عليا":
+        return ["3","4"]
       default:
         return this.allBatches;
     }
