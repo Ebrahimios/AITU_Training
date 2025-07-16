@@ -446,6 +446,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         return;
       }
       let addedCount = 0;
+      console.log(studentsToAdd['data'])
       for (const student of studentsToAdd['data']) {
         // Ensure required fields exist
         if (student['Student Code'] && student['Student Name']) {

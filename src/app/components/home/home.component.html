@@ -117,6 +117,21 @@
               hidden
             />
           </button>
+          <button
+          *ngIf="userService.isAdmin"
+            class="btn btn-outline-success"
+            (click)="csvFileInput.click()"
+          >
+            <i class="bi bi-upload"></i>
+            Import CSV
+            <input
+              #csvFileInput
+              type="file"
+              accept=".csv"
+              (change)="onCsvFileSelected($event)"
+              hidden
+            />
+          </button>
           <!-- Add Student Button -->
           <button
           *ngIf="userService.isAdmin"
