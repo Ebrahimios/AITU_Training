@@ -370,6 +370,7 @@ export class StudentDetailsModalComponent implements OnInit {
       const q = query(reportsRef, where('Student_ID', '==', this.student.code));
       const querySnapshot = await getDocs(q);
       this.attendanceReports = querySnapshot.docs.map((doc) => doc.data());
+      console.log(this.attendanceReports);
     } catch (error) {
       console.error('Error loading attendance reports:', error);
     }
@@ -1301,11 +1302,13 @@ export class StudentDetailsModalComponent implements OnInit {
           department: this.student.department || '',
           birthAddress: this.student.birthAddress || '',
           factory: this.student.factory || '',
-          batch: this.student.batch?.toString() || '1',
+          batch: this.student.batch?.toString() || '',
           stage: this.student.stage || '',
           factoryType: this.student.factoryType || true,
           selected: this.student.selected ?? false,
           supervisor: this.student.supervisor || '',
+          certificate: this.student.certificate || '',
+          distribution_type: this.student.distribution_type || '',
         };
         // Additional validation before sending
         if (!updatedStudent.code) {

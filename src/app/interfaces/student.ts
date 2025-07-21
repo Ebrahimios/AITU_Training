@@ -29,5 +29,7 @@ export interface Student {
     batch?: string;
     supervisor?: string | null;
     report?: StudentReport;
-    isStudent?: boolean
+    isStudent?: boolean;
+    certificate?: string | null;
+    distribution_type?: string | null;
   }

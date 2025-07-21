@@ -246,18 +246,16 @@
                   </select>
                 </div>
                 <div class="info-item">
-                  <span class="label">Factory Type:</span>
+                  <span class="label">Certificate:</span>
                   <span class="value" *ngIf="!isEditMode">{{
-                    student.factoryType ? "Type A" : "Type B"
+                    student.certificate || '-' 
                   }}</span>
-                  <select
-                    class="form-select"
-                    *ngIf="isEditMode"
-                    [(ngModel)]="student.factoryType"
-                  >
-                    <option [ngValue]="true">Type A</option>
-                    <option [ngValue]="false">Type B</option>
-                  </select>
+                  <input
+                  type="text"
+                  class="form-control"
+                  *ngIf="isEditMode"
+                  [(ngModel)]="student.certificate"
+                />
                 </div>
                 <div class="info-item">
                   <span class="label">Stage:</span>
@@ -319,6 +317,19 @@
                     [(ngModel)]="student.batch"
                   />
                 </div>
+                <div class="info-item">
+                  <span class="label">Distribution Type:</span>
+                  <span class="value" *ngIf="!isEditMode">{{ student.distribution_type || '-' }}</span>
+                  <select
+                    class="form-select"
+                    *ngIf="isEditMode"
+                    [(ngModel)]="student.distribution_type"
+                  >
+                    <option value="self">Self</option>
+                    <option value="college">College</option>
+                  </select>
+                </div>
+
               </div>
             </div>
           </div>

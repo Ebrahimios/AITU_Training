@@ -80,6 +80,11 @@ import { Observable, map } from 'rxjs';
           </div>
 
           <div class="mb-3">
+            <label for="certificate" class="form-label">Certificate</label>
+            <input type="text" class="form-control" id="certificate" formControlName="certificate" placeholder="Enter certificate info (optional)">
+          </div>
+
+          <div class="mb-3">
             <label for="state" class="form-label">Student Status</label>
               <select class="form-select" id="state" formControlName="state">
                 <option value="">Select Status</option>
@@ -274,22 +279,11 @@ export class EditStudentModalComponent {
       code: [student?.code || '', Validators.required],
       name: [student?.name || '', Validators.required],
       address: [student?.address || '', Validators.required],
-      nationalID: [
-        student?.nationalID || '',
-        [
-          Validators.required,
-          Validators.minLength(15),
-          Validators.maxLength(15),
-          Validators.pattern('^[0-9]*$'),
-          this.nationalIDExistsValidator.bind(this)
-        ]
-      ],
-      phone: [student?.phone || '', [
-        Validators.required,
-        Validators.maxLength(15),
-        Validators.pattern('^[0-9]*$')
-      ]],
-      state: [student?.state || '', Validators.required]
+      nationalID: [student?.nationalID || '', [Validators.required, Validators.minLength(15), Validators.maxLength(15), Validators.pattern('^[0-9]*$')]],
+      phone: [student?.phone || '', [Validators.required, Validators.maxLength(15), Validators.pattern('^[0-9]*$')]],
+      state: [student?.state || '', Validators.required],
+      certificate: [student?.certificate || ''],
+      distribution_type: [student?.distribution_type || ''],
     });
   }
 
@@ -357,7 +351,9 @@ export class EditStudentModalComponent {
         nationalID: formValue.nationalID,
         phone: formValue.phone,
         state: formValue.state,
-        selected: false
+        selected: false,
+        certificate: formValue.certificate || null,
+        distribution_type: formValue.distribution_type || null
       };
       console.log('Student data to save:', studentData);
 

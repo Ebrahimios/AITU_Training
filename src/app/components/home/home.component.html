@@ -419,6 +419,8 @@
               <th>{{ translationService.translate("factory") }}</th>
               <th>{{ translationService.translate("date") }}</th>
               <th>{{ translationService.translate("supervisor") }}</th>
+              <th>Certificate</th>
+              <th>Distribution Type</th>
             </tr>
           </thead>
           <tbody>
@@ -451,6 +453,8 @@
               <td>{{ student.factory }}</td>
               <td>{{ student.createOn | date: "yyyy-MM-dd HH:mm:ss" }}</td>
               <td>{{ student.supervisor }}</td>
+              <td>{{ student.certificate || '-' }}</td>
+              <td>{{ student.distribution_type || '-' }}</td>
             </tr>
           </tbody>
         </table>

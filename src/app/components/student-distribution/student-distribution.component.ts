@@ -117,6 +117,7 @@ export class StudentDistributionComponent implements OnInit {
 
   get filteredStudents(): Student[] {
     return this.students.filter((student) => {
+      const matchesDistributionType = student.distribution_type === 'college';
       const matchesDepartment =
         this.selectedDepartment === 'All' ||
         student.department === this.selectedDepartment;
@@ -130,6 +131,7 @@ export class StudentDistributionComponent implements OnInit {
       const notAssigned = !student.factory || student.factory === '';
 
       return (
+        matchesDistributionType &&
         matchesDepartment &&
         matchesStage &&
         matchesBatch &&

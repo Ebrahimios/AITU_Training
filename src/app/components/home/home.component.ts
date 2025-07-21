@@ -311,6 +311,11 @@ export class HomeComponent implements OnInit, OnDestroy {
           // If it's already a string, leave it as is
         }
 
+        // Ensure certificate is present
+        if (!('certificate' in processedStudent)) {
+          processedStudent.certificate = null;
+        }
+
         return processedStudent;
       });
       this.totalStudents = this.students.length;
@@ -459,7 +464,9 @@ export class HomeComponent implements OnInit, OnDestroy {
               phone: student['Phone Number'],
               state: student['Student Status'],
               selected: false,
-              createOn: Date.now().toString(), // Set current date as createOn
+              createOn: student['Date'] ?? Date.now().toString(), // Set current date as createOn
+              certificate: student['Certificate'] ?? null,
+              distribution_type: student['Distribution Type'] ?? null,
             });
             addedCount++;
           } catch (err) {

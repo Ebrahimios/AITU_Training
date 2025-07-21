@@ -245,6 +245,8 @@ export class AuthService {
         factoryType: true,
         grade: 0,
         supervisor: student.supervisor || null, // Add supervisor field with default null
+        certificate: student.certificate ?? null,
+        distribution_type: student.distribution_type ?? null,
       });
     } catch (error) {
       console.error('Error sending student data:', error);
@@ -276,6 +278,8 @@ export class AuthService {
         factoryType: data.factoryType,
         supervisor: data.supervisor, // Add supervisor field
         isStudent: true,
+        certificate: data['certificate'] ?? null,
+        distribution_type: data['distribution_type'] ?? null,
       };
     } else {
       console.error('No such document in Firestore!');
@@ -418,9 +422,10 @@ export class AuthService {
               factory: data['factory'],
               batch: data['batch'],
               stage: data['stage'],
-              factoryType: data['factoryType'],
               selected: data['selected'],
               supervisor: data['supervisor'], // Add supervisor field
+              certificate: data['certificate'] ?? null,
+              distribution_type: data['distribution_type'] ?? null,
             };
             students.push(student);
           });
@@ -501,6 +506,8 @@ export class AuthService {
               selected: data['selected'],
               supervisor: supervisorName,
               isStudent: true,
+              certificate: data['certificate'] ?? null,
+              distribution_type: data['distribution_type'] ?? null,
             };
             factoryStudents.push(student);
           });
@@ -537,6 +544,8 @@ export class AuthService {
             selected: data['selected'],
             supervisor: data['supervisor'],
             isStudent: true,
+            certificate: data['certificate'] ?? null,
+            distribution_type: data['distribution_type'] ?? null,
           };
           students.push(student);
         });
@@ -591,6 +600,8 @@ export class AuthService {
           selected: data['selected'],
           supervisor: data['supervisor'], // Add supervisor field
           isStudent: true,
+          certificate: data['certificate'] ?? null,
+          distribution_type: data['distribution_type'] ?? null,
         };
         students.push(student);
       });
@@ -630,6 +641,8 @@ export class AuthService {
         stage: student.stage,
         selected: student.selected,
         supervisor: student.supervisor, // Add supervisor field to update
+        certificate: student.certificate ?? null,
+        distribution_type: student.distribution_type ?? null,
       });
       return true;
     } catch (error) {
@@ -1531,7 +1544,7 @@ return querySnapshot.size
   public async getStudentTrainingImage(imageDate: Date, studentId: string): Promise<string[]> {
     try {
       const firestore = this.firestore;
-      const imagesRef = collection(firestore, 'studenttrainingimages');
+      const imagesRef = collection(firestore, 'StudentDiary');
   
       // Create Firestore-compatible timestamps
       const startOfDay = new Date(imageDate);
@@ -1548,16 +1561,16 @@ return querySnapshot.size
       const q = query(
         imagesRef,
         where('studentId', '==', studentId),
-        where('uploadDate', '>=', startTimestamp),
-        where('uploadDate', '<=', endTimestamp)
+        where('date', '>=', startTimestamp),
+        where('date', '<=', endTimestamp)
       );
   
       const querySnapshot = await getDocs(q);
       const urls: string[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data['imageUrl']) {
-          urls.push(data['imageUrl']);
+        if (data['images']) {
+          urls.push(data['images']);
         }
       });
   
